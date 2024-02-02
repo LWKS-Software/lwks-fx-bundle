@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-01-29
+// @Released 2024-02-02
 // @Author jwrl
 // @Created 2024-01-28
 
@@ -34,6 +34,9 @@
 // Updated 2024-01-29 jwrl.
 // Added individual opacity settings to V1 - V4.
 // Added mask tracking to the drop shadow.
+//
+// Updated 2024-02-02 jwrl.
+// Removed pointless aspect ratio scaling adjustments and simplified the maths.
 //-----------------------------------------------------------------------------------------//
 
 #include "_utils.fx"
@@ -225,37 +228,25 @@ DeclarePass (Fgd)
    return lerp (retval, topvid, topvid.a);
 }
 
-DeclareEntryPoint (FlexiTransform)
+DeclareEntryPoint (QuadSplitTransform)
 // Because we have mapped the foreground onto the sequence coordinates we no
 // longer need to correct for resolution and aspect ratio differences.
 {
    // First we recover the raw scale factors.
 
-   float xScale = max (0.0001, MasterScale * XScale);
-   float yScale = max (0.0001, MasterScale * YScale);
+   float2 xyScale = max (1.0e-6.xx, MasterScale * float2 (XScale, YScale));
 
-   // Now we create the drop shadow offset and put that in xy0.  Then we adjust
-   // the foreground position (xy1) and from that calculate the drop shadow
-   // coordinates using the xy0 offset and put that in xy2.  The values of both
-   // are centred around the screen midpoint.
+   // Now we create the drop shadow offset and put that in xy0.  It's the one
+   // parameter that must be corrected for the output aspect ratio.  Then we
+   // adjust the foreground position, scale it and from that calculate the
+   // drop shadow coordinates using the xy0 offset and put that in xy2.
+   // Finally xy0 is corrected for scaling then used to make the drop shadow
+   // mask offset in xy3.
 
-   float2 xy0 = float2 (ShadeX, ShadeY);
-   float2 xy1 = uv6 + float2 (0.5 - Xpos, Ypos - 0.5);
+   float2 xy0 = float2 (ShadeX / _OutputAspectRatio, -ShadeY);
+   float2 xy1 = ((uv6 - float2 (Xpos, 1.0 - Ypos)) / xyScale) + 0.5.xx;
    float2 xy2 = xy1 - xy0;
-
-   // We now perform the scaling of the foreground coordinates, allowing for
-   // the aspect ratio.  The drop shadow offset is scaled to match to the
-   // foreground scaling.
-
-   xy1.x = (xy1.x - 0.5) * _OutputAspectRatio / xScale;
-   xy1.y = (xy1.y - 0.5) / yScale;
-   xy2.x = lerp (xy1.x, (xy2.x - 0.5) * _OutputAspectRatio / xScale, xScale);
-   xy2.y = lerp (xy1.y, (xy2.y - 0.5) / yScale, yScale);
-
-   // Aspect ratio adjustment and centring is now removed for xy1 and xy2.
-
-   xy1.x /= _OutputAspectRatio; xy1 += 0.5.xx;
-   xy2.x /= _OutputAspectRatio; xy2 += 0.5.xx;
+   float2 xy3 = uv6 - (xy0 * xyScale);
 
    // Recover the background and foreground and calculate the drop shadow
    // amount.  Apply the mask and opacity to the foreground.
@@ -270,7 +261,7 @@ DeclareEntryPoint (FlexiTransform)
    // drop shadow will appear to be caused by the masked foreground.
 
    shadow *= ReadPixel (Fgd, xy2).a;
-   shadow *= ReadPixel (Mask, uv6 - xy0).x;
+   shadow *= ReadPixel (Mask, xy3).x;
 
    float4 retval = lerp (Bgnd, kTransparentBlack, shadow);
 
