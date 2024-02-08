@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-02-02
+// @Released 2024-02-08
 // @Author jwrl
 // @Created 2024-01-28
 
@@ -23,6 +23,17 @@
  left, and finally V4 at bottom right.  There is enough adjustment range to move
  any to whatever quadrant you need.
 
+ Finally, the background can be zoomed.  Unfortunately it is not possible to match
+ the on-screen zoom scaling and positioning of the Lightworks effect, so a switch
+ has been provided to reduce the video levels outside the zoom and position bounds.
+ In that mode the sense of the background position adjustments are correct, but
+ when in working mode movement appears inverted.  That's because the grey boundary
+ mask moves during setup to show the area that will occupy the screen.
+
+ This mode also hides the quad split, and will affect the output of the effect.
+ The same range of adjustment is available as the Lightworks zoom provides.  The
+ Lightworks masking does not affect the zoomed background.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -31,23 +42,28 @@
 //
 // Version history:
 //
-// Updated 2024-01-29 jwrl.
-// Added individual opacity settings to V1 - V4.
-// Added mask tracking to the drop shadow.
+// Updated 2024-02-08 jwrl.
+// Added zoom capability to the background.
 //
 // Updated 2024-02-02 jwrl.
 // Removed pointless aspect ratio scaling adjustments and simplified the maths.
+//
+// Updated 2024-01-29 jwrl.
+// Added individual opacity settings to V1 - V4.
+// Added mask tracking to the drop shadow.
 //-----------------------------------------------------------------------------------------//
 
 #include "_utils.fx"
 
-DeclareLightworksEffect ("Quad split with transform", "DVE", "Transform plus", "A quad split with master transform", CanSize);
+DeclareLightworksEffect ("Quad split with transform", "DVE", "Transform plus", "A quad split with master transform and background zoom", CanSize);
 
 //-----------------------------------------------------------------------------------------//
 // Inputs
 //-----------------------------------------------------------------------------------------//
 
-DeclareInputs (V1, V2, V3, V4, Bg);
+DeclareInputs (V1, V2, V3, V4);
+
+DeclareInput (Bg, Linear);
 
 DeclareMask;
 
@@ -124,6 +140,11 @@ DeclareFloatParam (Lcrop4, "Left", "Video 4 > Crop", kNoFlags, 0.0, 0.0, 1.0);
 DeclareFloatParam (Rcrop4, "Right", "Video 4 > Crop", kNoFlags, 1.0, 0.0, 1.0);
 DeclareFloatParam (Bcrop4, "Bottom", "Video 4 > Crop", kNoFlags, 0.0, 0.0, 1.0);
 
+DeclareBoolParam (ShowBounds, "Show bounds", "Background", false);
+DeclareFloatParam (BgZoom, "Zoom", "Background", kNoFlags, 1.0, 1.0, 10.0);
+DeclareFloatParam (BgXpos, "Position", "Background", "SpecifiesPointX", 0.5, -5.0, 5.0);
+DeclareFloatParam (BgYpos, "Position", "Background", "SpecifiesPointY", 0.5, -5.0, 5.0);
+
 DeclareFloatParam (_OutputAspectRatio);
 
 //-----------------------------------------------------------------------------------------//
@@ -188,9 +209,33 @@ DeclarePass (Fg4)
    return retval;
 }
 
-DeclarePass (Bgd)
-// We now map the background coordinates to the sequence geometry.
+DeclarePass (Bg1)
+// We now map the background coordinates to the sequence geometry
 { return ReadPixel (Bg, uv5); }
+
+DeclarePass (Bgd)
+// - and apply the zoom.
+{
+   float4 retval;
+
+   float2 xy;
+
+   if (ShowBounds) {
+      xy = ((uv6 - 0.5.xx) * max (BgZoom, 1.0)) + float2 (1.0 - BgXpos, BgYpos);
+      retval = ReadPixel (Bg1, uv6);
+
+      if (IsOutOfBounds (xy)) {
+         retval.rgb *= 0.666667;
+         retval.rgb += 0.166667.xxx;
+      }
+   }
+   else {
+      xy = ((uv6 - float2 (1.0 - BgXpos, BgYpos)) / max (BgZoom, 1.0)) + 0.5.xx;
+      retval = ReadPixel (Bg1, xy);
+   }
+
+   return retval;
+}
 
 DeclarePass (Fgd)
 // We now perform the quad split ahead of anything else.  This gives us a composite source
@@ -254,8 +299,10 @@ DeclareEntryPoint (QuadSplitTransform)
    float4 Fgnd = ReadPixel (Fgd, xy1);
    float4 Bgnd = ReadPixel (Bgd, uv6);
 
-   float amount = tex2D (Mask, uv6).x * Fgnd.a * Opacity;
-   float shadow = ShadowOpacity * Opacity;
+   float amount = ShowBounds ? 0.0 : Opacity;
+   float shadow = ShadowOpacity * amount;
+
+   amount *= tex2D (Mask, uv6).x * Fgnd.a;
 
    // Recover the drop shadow and mask it using the mask offset so that the
    // drop shadow will appear to be caused by the masked foreground.
