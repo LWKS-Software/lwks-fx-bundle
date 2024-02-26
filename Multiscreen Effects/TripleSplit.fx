@@ -4,24 +4,24 @@
 // @Created 2024-02-26
 
 /**
- This is an adjunct to the quad split effect that's designed to do three-way splits.
- There are the three split types avilable.  The first, "Left V1, upper R V2, lower
- R V3", produces a main panel from the V1 input, with two smaller panels on the right
- containing V2 and V3.  The second, "Upper L V1, lower L V2, right V3: is the reverse
+ This is an adjunct to the quad split effect but is designed to do three-way splits.
+ There are five split types available.  The first, "Left V1, upper R V2, lower R V3",
+ produces a main panel from the V1 input, with two smaller panels on the right
+ containing V2 and V3.  The second, "Upper L V1, lower L V2, right V3" is the reverse
  of that effect.
 
  "Left V1, middle V2, right V3" has three vertical panels that can be independently
  adjusted in height to mimic the common news interview effect.  "Horizontal bands"
  and "Vertical bands" produce strip views of the three video inputs.
 
- The overall panel size can be horizontally and vertically adjusted on the effects, and
+ The overall panel size can be horizontally and vertically adjusted in the effect, and
  individual panels can be adjusted to a degree.  The size and position of the video in
- the panels automatically tracks the panels, but can be overriden.  A hard edged border
- is provided, which expands and contracts in size around the video edges.
+ the panels automatically tracks the panel size, but can be overriden.  A hard edged
+ border is provided, which expands and contracts in size around the panel edges.
 
  Finally background video is supported, and can be zoomed and positioned as desired.
  Unlike most Lightworks effects, no masking is provided.  It was hard to work out how
- it could be sensibly implemented.
+ it could be done and make any sense at all.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
