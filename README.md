@@ -1,4 +1,4 @@
-# Lightworks user Fx library, February 26, 2024.
+# Lightworks user Fx library, April 3, 2024.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -376,6 +376,7 @@ If you need to use two effects that have the same name, simply open one of them 
 |Barn door transition         |Yes      |Yes      |BarnDoorTrans.fx        |Splits the image in half and separates the halves      |
 |Bar transition               |No       |Yes      |BarTrans.fx             |Splits a foreground image into strips which separate   |
 |Compound push                |Yes      |No       |CompoundPush.fx         |Pushes inner and outer image sections separately       |
+|Contrapush                   |Yes      |Yes      |Contrapush.fx           |Pushes inner and outer sections in opposite directions |
 |Corner split transition      |Yes      |Yes      |CornerTrans.fx          |Splits an image four ways to or from the corners       |
 |Push transition              |No       |Yes      |PushTrans.fx            |Pushes the foreground on or off screen                 |
 |Sliced transition            |Yes      |Yes      |SliceTrans.fx           |Separates and splits the image into strips             |
