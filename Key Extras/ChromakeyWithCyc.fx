@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-09-05
+// @Released 2024-04-07
 // @Author jwrl
 // @Created 2023-09-05
 
@@ -24,7 +24,8 @@
 //
 // Version history:
 //
-// Built 2023-09-05 jwrl.
+// Updated 2024-04-07 jwrl.
+// Corrected key bleed through bug that was carried over from the Lightworks Chromakey.
 //-----------------------------------------------------------------------------------------//
 
 #include "_utils.fx"
@@ -345,10 +346,9 @@ DeclareEntryPoint (ChromakeyAndBg)
       Fgd = lerp (Fgd, FgdLum, ((Key.w - 0.8) * 5.0) * RemoveSpill);    // Remove spill.
    }
 
-   float4 retval = lerp (Fgd, Bgd, mixAmount * Bgd.a);
+   Fgd.a *= 1.0 - mixAmount;
 
-   retval.a = max (Bgd.a, 1.0 - mixAmount);
+   float4 retval = float4 (lerp (Bgd, Fgd, Fgd.a).rgb, max (Bgd.a, Fgd.a));
 
    return lerp (Bgd, retval, maskAmount);
 }
-
