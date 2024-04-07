@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-09-05
+// @Released 2024-04-07
 // @Author jwrl
 // @Created 2018-03-20
 
@@ -15,6 +15,10 @@
 // Lightworks user effect ChromakeyTransform.fx
 //
 // Version history:
+//
+// Updated 2024-04-07 jwrl.
+// Corrected key bleed through bug on transitions that was carried over from the
+// Lightworks Chromakey code.
 //
 // Updated 2023-09-05 jwrl.
 // Optimised the code to resolve a Linux/Mac compatibility issue.
@@ -314,10 +318,10 @@ DeclareEntryPoint (ChromakeyTransform)
       Fgd = lerp (Fgd, FgdLum, ((Key.w - 0.8) * 5.0) * RemoveSpill);    // Remove spill.
    }
 
-   float4 retval = lerp (Bgd, lerp (Fgd, Bgd, mixAmount), Opacity);
+   Fgd.a *= 1.0 - mixAmount;
+   Fgd.a *= Opacity;
 
-   retval.a = max (Bgd.a, 1.0 - mixAmount);
+   float4 retval = float4 (lerp (Bgd, Fgd, Fgd.a).rgb, max (Bgd.a, Fgd.a));
 
    return lerp (Bgd, retval, maskAmount);
 }
-
