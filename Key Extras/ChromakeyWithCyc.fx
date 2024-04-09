@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-04-07
+// @Released 2024-04-09
 // @Author jwrl
 // @Created 2023-09-05
 
@@ -23,6 +23,9 @@
 // Lightworks user effect ChromakeyWithCyc.fx
 //
 // Version history:
+//
+// Updated 2024-04-09 jwrl.
+// Corrected a typo that meant the same operation was executed twice.
 //
 // Updated 2024-04-07 jwrl.
 // Corrected key bleed through bug that was carried over from the Lightworks Chromakey.
@@ -346,7 +349,7 @@ DeclareEntryPoint (ChromakeyAndBg)
       Fgd = lerp (Fgd, FgdLum, ((Key.w - 0.8) * 5.0) * RemoveSpill);    // Remove spill.
    }
 
-   Fgd.a *= 1.0 - mixAmount;
+   Fgd.a = 1.0 - mixAmount;
 
    float4 retval = float4 (lerp (Bgd, Fgd, Fgd.a).rgb, max (Bgd.a, Fgd.a));
 
