@@ -1,4 +1,4 @@
-# Lightworks user Fx library, April 3, 2024.
+# Lightworks user Fx library, April 12, 2024.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -159,6 +159,7 @@ If you need to use two effects that have the same name, simply open one of them 
 |ALE chromakey                 |AleChromakey.fx         |A sophisticated chromakey that is particularly effective on fine detail       |
 |Alpha opaque                  |AlphaOpq.fx             |Makes a transparent image or title completely opaque                          |
 |Analogue lumakey              |AnalogLumakey.fx        |A digital keyer which behaves in a very similar way to a vision mixer keyer   |
+|Chromakey with perspective    |ChromakeyPerspective.fx |A chromakey effect with a simplified perspective simulation                   |
 |Chromakey with transform      |ChromakeyTransform.fx   |A version of the Lightworks Chromakey effect with cropping and transform      |
 |Chromakey with cyclorama      |ChromakeyWithCyc.fx     |A chromakey effect with simple transform and cyclorama background generation  |
 |Delta mask                    |DeltaMask.fx            |This delta mask effect removes the background from the foreground             |
