@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-06-20
+// @Released 2023-04-16
 // @Author jwrl
 // @Created 2017-03-23
 
@@ -21,6 +21,9 @@
 // Lightworks user effect SimpleCrop.fx
 //
 // Version history:
+//
+// Updated 2024-04-16 jwrl.
+// Performed some code cleanup and added full comments.
 //
 // Updated 2023-06-20 jwrl.
 // Added masking.
@@ -68,30 +71,42 @@ DeclareFloatParam (_OutputAspectRatio);
 #define PROFILE ps_3_0
 #endif
 
-#define jSaturate(n)    min(max (n, 0.0), 1.0)
-
-#define BLACK float2(0.0, 1.0).xxxy
-
 //-----------------------------------------------------------------------------------------//
 // Code
 //-----------------------------------------------------------------------------------------//
 
+// Rather than the transparent black outside the Fg frame boundaries that ReadPixel()
+// returns, we want opaque black.  The pass below does that while also mapping Fg to
+// the sequence coordinates.
+
 DeclarePass (Fgd)
-{ return IsOutOfBounds (uv1) ? BLACK : tex2D (Fg, uv1); }
+{ return IsOutOfBounds (uv1) ? float4 (0.0.xxx, 1.0) : tex2D (Fg, uv1); }
 
 DeclareEntryPoint (SimpleCrop)
 {
-   float2 brdrEdge = (Border * 0.05).xx;
+   // The border width is calculated first, allowing for the aspect ratio.
 
-   brdrEdge.y *= _OutputAspectRatio;
+   float2 brdrEdge = float2 (1.0, _OutputAspectRatio) * Border * 0.05;
+
+   // Now the crops are set up as float2 values, with the Y coordinates inverted because
+   // Lightworks effects expect 0 to be at the top, while the shaders put it at the bottom.
+   // Cropping is set up this way so that the user can crop by dragging the diagonally
+   // opposite corner pins of the foreground image.  The border is then added outside the
+   // crop boundaries.
 
    float2 cropTL = float2 (CropLeft, 1.0 - CropTop);
    float2 cropBR = float2 (CropRight, 1.0 - CropBottom);
-   float2 bordTL = jSaturate (cropTL - brdrEdge);
-   float2 bordBR = jSaturate (cropBR + brdrEdge);
+   float2 bordTL = saturate (cropTL - brdrEdge);
+   float2 bordBR = saturate (cropBR + brdrEdge);
+
+   // The foreground and background are now recovered, using sequence coordinates for
+   // the remapped foreground.  If "Overlaid alpha" is chosen the background is blanked.
 
    float4 Fgnd = tex2D (Fgd, uv3);
    float4 Bgnd = AlphaMode == 4 ? kTransparentBlack : ReadPixel (Bg, uv2);
+
+   // The foreground is cropped by first applying the border colour to the area outside
+   // the crop boundaries, then blanking the area outside the border boundaries.
 
    if ((uv3.x < cropTL.x) || (uv3.y < cropTL.y)
     || (uv3.x > cropBR.x) || (uv3.y > cropBR.y)) { Fgnd = Colour; }
@@ -99,12 +114,16 @@ DeclareEntryPoint (SimpleCrop)
    if ((uv3.x < bordTL.x) || (uv3.y < bordTL.y)
     || (uv3.x > bordBR.x) || (uv3.y > bordBR.y)) { Fgnd = kTransparentBlack; }
 
-   float alpha = (AlphaMode == 0) ? 1.0
-               : (AlphaMode == 1) ? Bgnd.a
-               : (AlphaMode == 2) ? Fgnd.a : max (Bgnd.a, Fgnd.a);
+   // The cropped and bordered foreground is composited over the background.  The alpha
+   // value chosen in "Alpha channel output" is then applied.
 
-   float4 retval = float4 (lerp (Bgnd, Fgnd, Fgnd.a).rgb, alpha);
+   float4 retval = lerp (Bgnd, Fgnd, Fgnd.a);
+
+   retval.a = (AlphaMode == 0) ? 1.0
+            : (AlphaMode == 1) ? Bgnd.a
+            : (AlphaMode == 2) ? Fgnd.a : max (Bgnd.a, Fgnd.a);
+
+   // Finally the composited result is masked over the background and returned.
 
    return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
 }
-
