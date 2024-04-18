@@ -80,7 +80,7 @@ If you need to use two effects that have the same name, simply open one of them 
 |:---------------------------- |:---------------------- |:---------------------------------------------------------------------------- |
 |Bilateral blur                |BilateralBlur.fx        |A strong bilateral blur created by baopao with a little help from his friends |
 |Directional sharpen           |DirectionalSharpen.fx   |A directional unsharp mask for when directional blurring must be corrected    |
-|Expanded sharpen              |ExpandedSharpen.fx      |If the Lightworks sharpen effects don't have enough range, try this           |
+|Extended sharpen              |ExtendedSharpen.fx      |If the Lightworks sharpen effects don't have enough range, try this           |
 |Focal blur                    |FocalBlur.fx            |Uses a depth map to create a faux depth of field                              |
 |Ghostly blur                  |GhostlyBlur.fx          |The sort of effect that you get when looking through a fogged window          |
 |Iris bokeh                    |IrisBokeh.fx            |Similar to Bokeh.fx, provides control of the iris (5 to 8 segments or round)  |
