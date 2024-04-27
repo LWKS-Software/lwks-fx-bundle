@@ -35,10 +35,13 @@ DeclareFloatParam (Opacity, "Opacity", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
 
 DeclareIntParam (ShowGrid, "Grid display", kNoGroup, 3, "Add|Subtract|Difference|Opaque");
 
-DeclareFloatParam (GridLines, "Squares across", kNoGroup, kNoFlags, 16.0, 8.0, 32.0);
+DeclareFloatParam (GridLines, "Grid size", kNoGroup, kNoFlags, 16.0, 8.0, 32.0);
 DeclareFloatParam (GridWeight, "Line weight", kNoGroup, kNoFlags, 0.2, 0.0, 1.0);
 
 DeclareBoolParam (DisableVideo, "Disable video", kNoGroup, false);
+
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -57,9 +60,8 @@ DeclareFloatParam (_OutputAspectRatio);
 #define DIFFERENCE  2         // Difference value used by showIt and showSafeArea
 #define OPAQUE      3         // Disabled value used by showIt
 
-#define MAX_LINES   32        // Maximum number of horizontal crosshatch lines
-
-#define LINE_SCALE  0.000926  // Line weight scale factor - arbitrarily chosen
+#define GRID_SCALE  32.0      // Grid size scale factor - arbitrarily chosen
+#define LINE_SCALE  1.0       // Line weight scale factor - arbitrarily chosen
 
 //-----------------------------------------------------------------------------------------//
 // Code
@@ -70,7 +72,7 @@ DeclarePass (Fg)
 
 DeclareEntryPoint (GridGenerator)
 {
-   float GridAmt, pixVal, xGrid, yGrid, Grid = 0.0;
+   float GridAmt, Grid;
 
    float4 retval, Video = tex2D (Fg, uv2);
    float4 Bgnd = DisableVideo ? BLACK : Video;
@@ -84,43 +86,20 @@ DeclareEntryPoint (GridGenerator)
     }
    else GridAmt = Opacity;
 
-   // Now we calculate the grid overlay.  Only do this if opacity isn't zero and grid isn't disabled.
+   // Now we calculate the grid overlay.  Only do this if uv2 is legal.
 
-   if (GridAmt > 0.0) {
+   if (IsOutOfBounds (uv2)) { Grid = 0.0; }
+   else {
+      float2 xy0 = abs (uv2 - 0.5.xx);
+      float2 xy1 = (saturate (GridWeight) + 0.21875) * GridLines / 64.0;
 
-      // Calculate the horizontal and vertical line weights
+      xy0.y /= _OutputAspectRatio;
 
-      float Yval = ((GridWeight * 5.0) + 1.0) * LINE_SCALE;
-      float Xval = Yval / _OutputAspectRatio;
+      if (_OutputWidth < _OutputHeight) xy0 *= 0.5;
 
-      float xLines = ceil (GridLines);                // Get the integer value of the number of lines
-      float xLine_increment = 1.0 / xLines;           // Calculate the percentage increment to achieve that
-      float halfInc = xLine_increment / 2;            // Use this to offset lines so they stay centred
+      float2 xy2 = frac ((xy0 * GridLines) + (xy1 / 2.0));
 
-      bool oddLines = (fmod (xLines, 2.0) > 0.25);    // We set up this boolean here so we don't calculate it inside the loop
-
-      for (int i = 0; i <= MAX_LINES; i++) {          // The loop executes a fixed amount to resolve a Windows compatibility issue.
-         xGrid = xLine_increment * i;                 // The alternative would have been to build a unique Windows-specific version.
-
-         if (oddLines) {                              // If there are an odd number of lines offset them by half the line spacing
-            xGrid = saturate (xGrid - halfInc);
-         }
-
-         pixVal = abs (uv2.x - xGrid);                // This is really the first part of a compare operation
-
-         if (pixVal < Xval) { Grid = 1.0; };          // If we fall inside the line width turn the pixel on
-
-         // To get the y value we must allow for the aspect ratio.  This is a little complex because any scaling must be centred.
-
-         yGrid = (xGrid - 0.5) * _OutputAspectRatio;
-         yGrid = clamp ((yGrid + 0.5), 0.0, 1.0);
-
-         // Repeat our line width boundary calculation from above.
-
-         pixVal = abs (uv2.y - yGrid);
-
-         if (pixVal < Yval) { Grid = 1.0; };
-      }
+      Grid = (xy2.x < xy1.x) || (xy2.y < xy1.y) ? 1.0 : 0.0;
    }
 
    // This overlays the actual grid, whether normal, add, subtract or difference
@@ -137,4 +116,3 @@ DeclareEntryPoint (GridGenerator)
 
    return lerp (Video, retval, tex2D (Mask, uv2).x);;
 }
-
