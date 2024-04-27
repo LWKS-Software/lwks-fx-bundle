@@ -6,7 +6,7 @@
 /**
  This grid generator is probably most useful for aligning artwork and text.  The grid
  pattern can be adjusted from 8 to 32 lines across the image width, and the line weight
- can be adjusted for best visibility.  It kills resolution independence.
+ can be adjusted for best visibility.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -17,7 +17,7 @@
 // Built 2024-04-27 jwrl.
 //-----------------------------------------------------------------------------------------//
 
-DeclareLightworksEffect ("Grid generator", "Key", "Simple tools", "Useful for aligning artwork and text", kNoFlags);
+DeclareLightworksEffect ("Grid generator", "Key", "Simple tools", "Useful for aligning artwork and text", "CanSize|HasMinOutputSize|HasMaxOutputSize");
 
 //-----------------------------------------------------------------------------------------//
 // Inputs
