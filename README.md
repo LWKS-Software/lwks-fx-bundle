@@ -1,4 +1,4 @@
-# Lightworks user Fx library, April 27, 2024.
+# Lightworks user Fx library, April 28, 2024.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -119,6 +119,7 @@ If you need to use two effects that have the same name, simply open one of them 
 |Liquify                       |Liquify.fx              |Distorts the image in a soft liquid manner                                    |
 |Magnifying glass              |Magnify.fx              |Similar in operation to a bulge effect, but performs a flat linear zoom       |
 |Perspective                   |Perspective.fx          |Warps one rectangle to another using a perspective transform                  |
+|Perspective with resize       |PerspectiveResize.fx    |Creates a blended perspective effect with resizing and position adjustment    |
 |Refraction                    |Refraction.fx           |Simulates the distortion effect of an image seen through textured glass       |
 |Regional zoom                 |RegionalZoom.fx         |This allows you to apply localised distortion to any region of the frame      |
 |Ripples (automatic expansion) |RipplesAuto.fx          |Radiating ripples are produced under semi-automatic control                   |
