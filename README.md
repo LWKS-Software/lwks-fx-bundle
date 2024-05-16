@@ -1,4 +1,4 @@
-# Lightworks user Fx library, May 15, 2024.
+# Lightworks user Fx library, May 16, 2024.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -170,7 +170,8 @@ If you need to use two effects that have the same name, simply open one of them 
 |INK                           |Ink.fx                  |INK is a quick, simple and effective proportionate colour difference keyer    |
 |Key despill                   |KeyDespill.fx           |This is a background-based effect that removes key colour spill in chromakeys |
 |Lumakey and matte             |LumakeyAndMatte.fx      |Generates a key from video with border/shadow, fills it with colour or video  |
-|Lumakey with DVE              |LumakeyWithDVE.fx       |A keyer which respects the foreground alpha and passes the composite alpha on |
+|Lumakey with perspective      |LumakeyPerspective.fx   |A Lumakey effect with simplified perspective simulation                       |
+|Lumakey with Transform        |LumakeyTransform.fx     |A keyer which respects the foreground alpha and passes the composite alpha on |
 |Simple chromakey              |SimpleChromakey.fx      |An extremely simple chromakeyer with feathering and spill reduction           |
 
 ## CATEGORY FOLDER: Multiscreen Effects
