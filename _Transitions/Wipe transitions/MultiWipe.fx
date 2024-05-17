@@ -1,28 +1,28 @@
 // @Maintainer jwrl
-// @Released 2024-05-15
+// @Released 2024-05-17
 // @Author jwrl
 // @Created 2024-05-15
 
 /**
  This is a transition that uses a series of zooming and overlapping wipes consisting of
- concentric circular and square shapes.  The term "wipe" is used her for convenience.
+ concentric circular and square shapes.  The term "wipe" is used here for convenience.
  The effect is actually more like a masked transform.
 
- The wipes can be reversed in order and can also be used to wipe the incoming video in
+ The shapes can be reversed in order and can also be used to wipe the incoming video in
  or the outgoing video out.  By default the wipe start times are sequential: as one wipe
- ends the next begins.  However up to a 75% overlap can be dialled in, adding to the
- visual complexity effect.  This is strictly range limited.  There is no point in trying
- to manually increase the overlap by typing in a higher percentage.  It will be clamped
- to 75%.
+ ends the next begins.  However up to a 75% overlap can be applied, adding to the visual
+ complexity of the effect.  This is range limited, so there is no point in trying to
+ override the overlap by typing in a higher (or lower) percentage.
 
  The wipes fade in with a very smooth non-linear profile, reaching full strength at the
  half way point of each individual wipe.  When the wipe direction is reversed they fade
  out with the same profile.
 
- They can be used to wipe blended media with exactly the same range of
- adjustment, with one notable exception.  For consistency with other effects that do
- blend transitions, the main direction setting is made inactive when using blend mode.
- Instead the normal "Transition into blend" setting is used for that purpose.
+ Blended media is also supported.  The effect can be used to wipe blended media with
+ exactly the same range and number of adjustments, with one notable exception.  For
+ consistency with other effects that do blend transitions, the "Transition direction"
+ setting is inactive when using blend mode.  Instead the usual "Transition into blend"
+ setting is used.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
  If the transition duration is shorter in frames than the number of wipes chosen the
@@ -34,7 +34,8 @@
 //
 // Version history:
 //
-// Built 2024-05-15 jwrl.
+// Update 2024-05-17 jwrl.
+// Cleaned up the comments to (hopefully) make them clearer.
 //-----------------------------------------------------------------------------------------//
 
 DeclareLightworksEffect ("MultiWipe", "Mix", "Wipe transitions", "Performs a series of zooming circular or square wipes", "CanSize|HasMinOutputSize|HasMaxOutputSize");
@@ -83,44 +84,53 @@ DeclareFloatParam (_OutputAspectRatio);
 #define PROFILE ps_3_0
 #endif
 
+#define PI      3.1416
 #define HALF_PI 1.5708
+
 #define SQUARE  1
 
-// Wipe scale factors.  These are symmetrical.
+// Below are three control arrays.  You may notice that there are twenty float or float2
+// values assigned in each array instead of the expected fifteen.  This is because for
+// each of the wipe groups a final "clean up" wipe is never counted.  If one wipe is
+// specified a second, outer wipe is also needed, if two are specified a third is also
+// used, and so on.  Hence fifteen plus five "clean up" wipes for the five groups.
 
-float _scale[] = { 1.625, 1.625,                               // Wipe scales       0 - 1
-                   1.5,   1.25,  1.5,                          // Two wipe scales   2 - 4
-                   1.75,  1.625, 1.625, 1.75,                  // Three wipe scales 5 - 8
-                   1.875, 1.25,  1.625, 1.25,  1.875,          // Four wipe scales  9 - 13
-                   1.625, 1.5,   1.25,  1.25,  1.5,   1.625 }; // Five wipe scales 14 - 19
+// Wipe scale factors.  These were made symmetrical for a reason that no longer applies.
+// It does no harm and I'm lazy, so I left them as they were.
+
+float _scale[] = { 1.625, 1.625,                                           // Onw wipe
+                   1.5,   1.25,  1.5,                                      // Two wipes
+                   1.75,  1.625, 1.625, 1.75,                              // Three wipes
+                   1.875, 1.25,  1.625, 1.25,  1.875,                      // Four wipes
+                   1.625, 1.5,   1.25,  1.25,  1.5,   1.625 };             // Five wipes
 
 // Wipe boundary presets.
 
-float2 _range[] = { { 0.0,    0.4    }, { 0.4,    2.0    },                      // One
-                    { 0.3625, 0.4875 }, { 0.0,    0.3625 }, { 0.4875, 2.0    },  // Two
-                    { 0.0,    0.325  }, { 0.45,   0.575  }, { 0.325,  0.45   },  // Three
+float2 _range[] = { { 0.0,    0.4    }, { 0.4,    2.0    },                       // One
+                    { 0.3625, 0.4875 }, { 0.0,    0.3625 }, { 0.4875, 2.0    },   // Two
+                    { 0.0,    0.325  }, { 0.45,   0.575  }, { 0.325,  0.45   },   // Three
                     { 0.575,  2.0    },
-                    { 0.0,    0.2875 }, { 0.5375, 0.6625 }, { 0.2875, 0.4125 },  // Four
+                    { 0.0,    0.2875 }, { 0.5375, 0.6625 }, { 0.2875, 0.4125 },   // Four
                     { 0.6625, 2.0    }, { 0.4125, 0.5375 },
-                    { 0.0,    0.25   }, { 0.5,    0.625  }, { 0.25,   0.375  },  // Five
+                    { 0.0,    0.25   }, { 0.5,    0.625  }, { 0.25,   0.375  },   // Five
                     { 0.625,  0.75   }, { 0.375,  0.5    }, { 0.75,   2.0    } };
 
-// Wipe displacement values - there are 20 float2 values needed in a pseudo random pattern.
+// Wipe displacement values.
 
-float2 _dsplmnt[] = { {  0.25,  0.25  }, { -0.1,   -0.28  },                     // One
-                      {  0.2,   0.3   }, { -0.35,   0.4   }, {  0.25, -0.225 },  // Two
-                      { -0.2,   0.4   }, {  0.1,   -0.3   }, { -0.25, -0.225 },  // Three
-                      {  0.3,   0.225 },
-                      {  0.2,  -0.3   }, { -0.4,   -0.025 }, {  0.4,  -0.25  },  // Four
-                      { -0.125, 0.0   }, { -0.075, -0.25  },
-                      { -0.48,  0.15  }, {  0.5,    0.25  }, { -0.33, -0.245 },  // Five
-                      {  0.42, -0.125 }, { -0.42,   0.45  }, {  0.3,  -0.3   } };
+float2 _displace[] = { {  0.25,  0.25  }, { -0.1,   -0.28  },                     // One
+                       {  0.2,   0.3   }, { -0.35,   0.4   }, {  0.25, -0.225 },  // Two
+                       { -0.2,   0.4   }, {  0.1,   -0.3   }, { -0.25, -0.225 },  // Three
+                       {  0.3,   0.225 },
+                       {  0.2,  -0.3   }, { -0.4,   -0.025 }, {  0.4,  -0.25  },  // Four
+                       { -0.125, 0.0   }, { -0.075, -0.25  },
+                       { -0.48,  0.15  }, {  0.5,    0.25  }, { -0.33, -0.245 },  // Five
+                       {  0.42, -0.125 }, { -0.42,   0.45  }, {  0.3,  -0.3   } };
 
 //-----------------------------------------------------------------------------------------//
 // Functions
 //-----------------------------------------------------------------------------------------//
 
-// These next two functions are designed to take care of the source swapping needs of the effect.
+// These two functions take care of the source swapping needs of the effect.
 
 float4 initFg (sampler Ff, float2 xy1, sampler Bb, float2 xy2)
 {
@@ -159,41 +169,42 @@ float4 initKey (sampler Ff, sampler Bb, float2 xy)
 
 float4 doWipe (float4 Bgd, sampler Ff, float2 xy1, int idx, float amt)
 {
-   // Initially we set up the various progress parameters.  Because in its raw form it
-   // can range in value from -4 to +5 they must be clamped to run from 0 to 1.
+   amt = saturate (amt);   // Ensure that amt is within legal bounds.
 
-   float a = saturate (amt);                       // Range limit the transition amount
-   float b = lerp (_scale [idx], 1.0, a);          // Scale factor for video and wipe
-   float c = sin (saturate (amt * 2.0) * HALF_PI); // A non-linear fade using a sine curve
-   float ref;
+   // Initially we set up the progress parameters.  We need both a non-linear fade in
+   // or out of the wipe and a transition from the scale factor to one, i.e., no scale.
+
+   float amount  = sin (min (PI * amt, HALF_PI));  // Sine curve profile ending halfway
+   float ref, sc = lerp (_scale [idx], 1.0, amt);  // Scaling for video and wipe
 
    // The video x-y coordinates are now displaced to track the mask shape.
 
-    xy1 += _dsplmnt [idx] * (1.0 - a);
+    xy1 += _displace [idx] * (1.0 - amt);
 
    // The mask centre point is scaled by the aspect ratio as is the mask itself.  The
    // mask centre point is then ramped from true centre to the scaled value.
 
-   float2 xy2 = (float2 ((xy1.x - 0.5) * _OutputAspectRatio, xy1.y - 0.5) / b) + 0.5.xx;
+   float2 xy2 = (float2 ((xy1.x - 0.5) * _OutputAspectRatio, xy1.y - 0.5) / sc) + 0.5.xx;
    float2 xy3 = float2 ((CentreX - 0.5) * _OutputAspectRatio, 0.5 - CentreY) + 0.5.xx;
    float2 xy4 = _range [idx];
 
-   xy3 = lerp (0.5.xx, xy3, a);
+   xy3 = lerp (0.5.xx, xy3, amt);
 
    // Now the mask shape is determined by finding whether the x-y coordinates fall
    // within the region defined by inside and outside values.
 
    if (WipeShape == SQUARE) {
-      float2 refXY = abs (xy2 - xy3);  // Obtain the X & Y distance from the centre point
+      float2 refXY = abs (xy2 - xy3);  // Get X & Y distances from the centre point
 
-      ref = max (refXY.x, refXY.y) * 1.32;   // Makes the square area match the circle
+      ref  = max (refXY.x, refXY.y);   // Determines the square area coordinates
+      ref *= 1.32;                     // Adjusts the area to match that of the circle
    }
-   else ref = distance (xy2, xy3);           // Or get the radius of the circle
+   else ref = distance (xy2, xy3);     // Gets the radius of the circle
 
-   // If the reference point is inside the mask bounds the video level is returned.
-   // Otherwise the mask is set to zero.
+   // If the reference point falls inside the shape mask boundaries the fade amount is
+   // returned in shape_mask.  If it's outside the boundaries then shape_mask is zero.
 
-   float shape_mask = (ref >= xy4.x) && (ref <= xy4.y) ? c : 0.0;
+   float shape_mask = (ref >= xy4.x) && (ref <= xy4.y) ? amount : 0.0;
 
    // The video coordinates are corrected for the aspect ratio adjustment done earlier
    // and used to recover the foreground.
@@ -492,4 +503,3 @@ DeclareEntryPoint (Five_wipes)
 
    return retval;
 }
-
