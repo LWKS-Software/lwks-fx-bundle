@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-06-19
+// @Released 2024-05-22
 // @Author jwrl
 // @Created 2023-02-17
 
@@ -32,6 +32,10 @@
 //
 // Version history:
 //
+// Updated 2024-05-22 jwrl.
+// Removed _utils.fx inclusion.
+// Removed references to kTransparentBlack.
+//
 // Updated 2023-06-19 jwrl.
 // Changed DVE references to transform.
 // Changed title from "Flexible 2D DVE" to "Flexible transform"
@@ -40,8 +44,6 @@
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Flexible transform", "DVE", "Transform plus", "A flexible masked transform with Z-axis rotation", CanSize);
 
@@ -85,6 +87,8 @@ DeclareFloatParam (_OutputAspectRatio);
 #define RADIUS 0.0005
 #define ANGLE  0.7853981633
 
+float4 _TransparentBlack = 0.0.xxxx;
+
 //-----------------------------------------------------------------------------------------//
 // Code
 //-----------------------------------------------------------------------------------------//
@@ -96,10 +100,9 @@ DeclarePass (Bgd)
 DeclarePass (Fgd)
 // By performing the masking ahead of anything else we can compensate for image
 // rotation and scaling without impacting the rest of the effect in any way.
+// The downside is that masking is detached from the sequence geometry.
 {
-   float4 Fgnd = lerp (kTransparentBlack, ReadPixel (Fg, uv1), tex2D (Mask, uv3).x);
-
-   return lerp (kTransparentBlack, Fgnd, tex2D (Mask, uv3).x);
+   return lerp (_TransparentBlack, ReadPixel (Fg, uv1), tex2D (Mask, uv1).x);
 }
 
 DeclarePass (Dve)
@@ -143,7 +146,7 @@ DeclarePass (Dve)
    // Recover the background, foreground and raw drop shadow data.
 
    float4 Fgnd = ReadPixel (Fgd, xy1);
-   float4 Bgnd = ReadPixel (Bgd, uv3);
+   float4 Bgnd = tex2D (Bgd, uv3);
 
    float Shdw = ReadPixel (Fgd, xy2).a;
 
@@ -151,7 +154,7 @@ DeclarePass (Dve)
    // process the background RGB data is retained, but the background is
    // transparent.  This improves the look of the antialiassed edges later on.
 
-   Bgnd = lerp (Bgnd, kTransparentBlack, Shdw * ShadowOpacity);
+   Bgnd = lerp (Bgnd, _TransparentBlack, Shdw * ShadowOpacity);
 
    // Now add the cropped foreground and return.
 
@@ -166,7 +169,7 @@ DeclareEntryPoint (FlexiTransform)
    // Recover the transformed foreground and the background
 
    float4 Fgnd = tex2D (Dve, uv3);
-   float4 Bgnd = ReadPixel (Bgd, uv3);
+   float4 Bgnd = tex2D (Bgd, uv3);
 
    // Now antialias the foreground
 
@@ -197,4 +200,3 @@ DeclareEntryPoint (FlexiTransform)
 
    return lerp (Bgnd, Fgnd, Fgnd.a);
 }
-
