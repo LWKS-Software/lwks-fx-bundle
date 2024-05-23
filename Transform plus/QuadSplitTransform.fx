@@ -42,6 +42,12 @@
 //
 // Version history:
 //
+// Updated 2024-05-22 jwrl.
+// Removed _utils.fx inclusion.
+// Removed references to kTransparentBlack.
+// Added crop overlap protection.
+// Replaced IsOutOfBounds with IsIllegal function.
+//
 // Updated 2024-02-08 jwrl.
 // Added zoom capability to the background.
 //
@@ -53,8 +59,6 @@
 // Added mask tracking to the drop shadow.
 //-----------------------------------------------------------------------------------------//
 
-#include "_utils.fx"
-
 DeclareLightworksEffect ("Quad split with transform", "DVE", "Transform plus", "A quad split with master transform and background zoom", CanSize);
 
 //-----------------------------------------------------------------------------------------//
@@ -62,8 +66,7 @@ DeclareLightworksEffect ("Quad split with transform", "DVE", "Transform plus", "
 //-----------------------------------------------------------------------------------------//
 
 DeclareInputs (V1, V2, V3, V4);
-
-DeclareInput (Bg, Linear);
+DeclareInput (Bg);
 
 DeclareMask;
 
@@ -155,6 +158,19 @@ DeclareFloatParam (_OutputAspectRatio);
 #define PROFILE ps_3_0
 #endif
 
+float4 _TransparentBlack = 0.0.xxxx;
+
+//-----------------------------------------------------------------------------------------//
+// Functions
+//-----------------------------------------------------------------------------------------//
+
+bool IsIllegal (float2 uv)
+{
+   float2 xy = abs (saturate (uv) - uv);
+
+   return max (uv.x, uv.y) != 0.0;
+}
+
 //-----------------------------------------------------------------------------------------//
 // Code
 //-----------------------------------------------------------------------------------------//
@@ -165,10 +181,12 @@ DeclarePass (Fg1)
 {
    float4 retval = ReadPixel (V1, uv1);
 
-   if ((uv1.y > 1.0 - Bcrop1) || (uv1.x < Lcrop1) || (uv1.x > Rcrop1) || (uv1.y < 1.0 - Tcrop1))
-      retval = kTransparentBlack;
+   float lC = min (Lcrop1, Rcrop1);
+   float tC = 1.0 - Tcrop1;
+   float bC = max (tC, 1.0 - Bcrop1);
 
-   retval.a *= OpacityV1;
+   if ((uv1.y > bC) || (uv1.x < lC) || (uv1.x > Rcrop1) || (uv1.y < tC)) { retval = _TransparentBlack; }
+   else retval.a *= OpacityV1;
 
    return retval;
 }
@@ -177,10 +195,12 @@ DeclarePass (Fg2)
 {
    float4 retval = ReadPixel (V2, uv2);
 
-   if ((uv2.y > 1.0 - Bcrop2) || (uv2.x < Lcrop2) || (uv2.x > Rcrop2) || (uv2.y < 1.0 - Tcrop2))
-      retval = kTransparentBlack;
+   float lC = min (Lcrop2, Rcrop2);
+   float tC = 1.0 - Tcrop2;
+   float bC = max (tC, 1.0 - Bcrop2);
 
-   retval.a *= OpacityV2;
+   if ((uv2.y > bC) || (uv2.x < lC) || (uv2.x > Rcrop2) || (uv2.y < tC)) { retval = _TransparentBlack; }
+   else retval.a *= OpacityV2;
 
    return retval;
 }
@@ -189,10 +209,12 @@ DeclarePass (Fg3)
 {
    float4 retval = ReadPixel (V3, uv3);
 
-   if ((uv3.y > 1.0 - Bcrop3) || (uv3.x < Lcrop3) || (uv3.x > Rcrop3) || (uv3.y < 1.0 - Tcrop3))
-      retval = kTransparentBlack;
+   float lC = min (Lcrop3, Rcrop3);
+   float tC = 1.0 - Tcrop3;
+   float bC = max (tC, 1.0 - Bcrop3);
 
-   retval.a *= OpacityV3;
+   if ((uv3.y > bC) || (uv3.x < lC) || (uv3.x > Rcrop3) || (uv3.y < tC)) { retval = _TransparentBlack; }
+   else retval.a *= OpacityV3;
 
    return retval;
 }
@@ -201,10 +223,12 @@ DeclarePass (Fg4)
 {
    float4 retval = ReadPixel (V4, uv4);
 
-   if ((uv4.y > 1.0 - Bcrop4) || (uv4.x < Lcrop4) || (uv4.x > Rcrop4) || (uv4.y < 1.0 - Tcrop4))
-      retval = kTransparentBlack;
+   float lC = min (Lcrop4, Rcrop4);
+   float tC = 1.0 - Tcrop4;
+   float bC = max (tC, 1.0 - Bcrop4);
 
-   retval.a *= OpacityV4;
+   if ((uv4.y > bC) || (uv4.x < lC) || (uv4.x > Rcrop4) || (uv4.y < tC)) { retval = _TransparentBlack; }
+   else retval.a *= OpacityV4;
 
    return retval;
 }
@@ -224,7 +248,7 @@ DeclarePass (Bgd)
       xy = ((uv6 - 0.5.xx) * max (BgZoom, 1.0)) + float2 (1.0 - BgXpos, BgYpos);
       retval = ReadPixel (Bg1, uv6);
 
-      if (IsOutOfBounds (xy)) {
+      if (IsIllegal (xy)) {
          retval.rgb *= 0.666667;
          retval.rgb += 0.166667.xxx;
       }
@@ -241,7 +265,7 @@ DeclarePass (Fgd)
 // We now perform the quad split ahead of anything else.  This gives us a composite source
 // for the master transform.
 {
-   // First set up the coordiantes around zero the adjust the position.
+   // First set up the coordinates around zero and adjust the position.
 
    float2 xy1 = uv6 - float2 (Xpos1, 1.0 - Ypos1);
    float2 xy2 = uv6 - float2 (Xpos2, 1.0 - Ypos2);
@@ -250,17 +274,20 @@ DeclarePass (Fgd)
 
    // Now we apply the scale factors -
 
-   xy1 /= max (1.0e-6, FullScale1 * float2 (XScale1, YScale1));
-   xy2 /= max (1.0e-6, FullScale2 * float2 (XScale2, YScale2));
-   xy3 /= max (1.0e-6, FullScale3 * float2 (XScale3, YScale3));
-   xy4 /= max (1.0e-6, FullScale4 * float2 (XScale4, YScale4));
+   xy1 /= max (0.000001, FullScale1 * float2 (XScale1, YScale1));
+   xy2 /= max (0.000001, FullScale2 * float2 (XScale2, YScale2));
+   xy3 /= max (0.000001, FullScale3 * float2 (XScale3, YScale3));
+   xy4 /= max (0.000001, FullScale4 * float2 (XScale4, YScale4));
 
-   // and put the coordinates back where they belong.
+   // and remove the zero offset.
 
    xy1 += 0.5.xx;
    xy2 += 0.5.xx;
    xy3 += 0.5.xx;
    xy4 += 0.5.xx;
+
+   // Now recover the four video overlays.  They are layed up so that V1 has the highest
+   // priority and V4 has the lowest.  We then quit.
 
    float4 retval = ReadPixel (Fg4, xy4);
    float4 topvid = ReadPixel (Fg3, xy3);
@@ -279,7 +306,7 @@ DeclareEntryPoint (QuadSplitTransform)
 {
    // First we recover the raw scale factors.
 
-   float2 xyScale = max (1.0e-6.xx, MasterScale * float2 (XScale, YScale));
+   float2 xyScale = max (0.000001.xx, MasterScale * float2 (XScale, YScale));
 
    // Now we create the drop shadow offset and put that in xy0.  It's the one
    // parameter that must be corrected for the output aspect ratio.  Then we
@@ -310,7 +337,7 @@ DeclareEntryPoint (QuadSplitTransform)
    shadow *= ReadPixel (Fgd, xy2).a;
    shadow *= ReadPixel (Mask, xy3).x;
 
-   float4 retval = lerp (Bgnd, kTransparentBlack, shadow);
+   float4 retval = lerp (Bgnd, _TransparentBlack, shadow);
 
    retval   = lerp (retval, Fgnd, amount);
    retval.a = max (amount, max (Bgnd.a, shadow));
