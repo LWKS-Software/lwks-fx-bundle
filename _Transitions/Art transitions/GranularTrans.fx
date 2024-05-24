@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2016-02-08
 
@@ -16,6 +16,9 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack to fix Linux lerp()/mix() bug.
+//
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
 //
@@ -28,8 +31,6 @@
 //
 // Conversion 2023-03-06 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Granular transition", "Mix", "Art transitions", "Uses a granular noise driven pattern to transition between clips", "CanSize");
 
@@ -76,6 +77,8 @@ DeclareFloatParam (_OutputAspectRatio);
 
 #define B_SCALE 0.000545
 #define SQRT_2  1.4142135624
+
+float4 _TransparentBlack = 0.0.xxxx;
 
 // Pascal's triangle magic numbers for blur
 
@@ -178,8 +181,8 @@ float4 fn_main (sampler F, sampler B, sampler G, sampler S, float2 xy)
 
    if (Blended) {
       if (ShowKey) {
-         retval = lerp (kTransparentBlack, Fgnd, Fgnd.a);
-         maskBg = kTransparentBlack;
+         retval = lerp (_TransparentBlack, Fgnd, Fgnd.a);
+         maskBg = _TransparentBlack;
       }
       else {
          retval = lerp (Fgnd, Bgnd, level);
@@ -386,9 +389,9 @@ DeclareEntryPoint (Granulate_F)
 
    if (Blended) {
       if (ShowKey) {
-         retval = lerp (kTransparentBlack, Fgnd, Fgnd.a);
+         retval = lerp (_TransparentBlack, Fgnd, Fgnd.a);
 
-         return lerp (kTransparentBlack, retval, tex2D (Mask, uv3).x);
+         return lerp (_TransparentBlack, retval, tex2D (Mask, uv3).x);
       }
 
       amount = SwapDir ? 1.0 - Amount : Amount;
@@ -417,4 +420,3 @@ DeclareEntryPoint (Granulate_F)
 
    return lerp (MaskBg, retval, tex2D (Mask, uv3).x);
 }
-
