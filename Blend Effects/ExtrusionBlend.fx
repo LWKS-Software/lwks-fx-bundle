@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2016-04-02
 
@@ -20,6 +20,9 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+//
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
 //
@@ -28,8 +31,6 @@
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Extrusion blend", "Mix", "Blend Effects", "Extrudes a foreground image either linearly or radially towards a centre point", CanSize);
 
@@ -89,6 +90,8 @@ DeclareFloatParam (_OutputWidth);
 #define MONO     2
 
 #define LIN_OFFS 0.667333
+
+float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
 // Functions
@@ -210,7 +213,7 @@ float4 Eshaded (sampler B, sampler C, float2 uv)
 
 DeclarePass (KeyFg)
 {
-   if (IsOutOfBounds (uv1)) return kTransparentBlack;
+   if (IsOutOfBounds (uv1)) return _TransparentBlack;
 
    float4 Fgd = tex2D (Fg, uv1);
 
@@ -236,13 +239,13 @@ DeclarePass (KeyFg)
 DeclarePass (blurPre)
 {
    return (Mode == 1) ? Eradial (KeyFg, uv3, MONO) :
-          (Mode == 4) ? Elinear (KeyFg, uv3, MONO) : kTransparentBlack;
+          (Mode == 4) ? Elinear (KeyFg, uv3, MONO) : _TransparentBlack;
 }
 
 DeclarePass (colourPre)
 {
    return (Mode == 1) ? Eradial (KeyFg, uv3, COLOUR) :
-          (Mode == 4) ? Elinear (KeyFg, uv3, COLOUR) : kTransparentBlack;
+          (Mode == 4) ? Elinear (KeyFg, uv3, COLOUR) : _TransparentBlack;
 }
 
 DeclarePass (blurProc)
@@ -259,7 +262,7 @@ DeclarePass (blurProc)
 DeclareEntryPoint (ExtrusionBlend)
 {
    float4 Fgnd   = tex2D (KeyFg, uv3);
-   float4 retval = kTransparentBlack;
+   float4 retval = _TransparentBlack;
 
    float2 pixsize = float2 (1.0, _OutputAspectRatio) / _OutputWidth;
    float2 offset, scale;
@@ -275,7 +278,7 @@ DeclareEntryPoint (ExtrusionBlend)
    }
 
    retval  /= ALIASFIX;
-   retval   = lerp (kTransparentBlack, retval, retval.a);
+   retval   = lerp (_TransparentBlack, retval, retval.a);
    retval   = lerp (retval, Fgnd, Fgnd.a);
    retval.a = max (Fgnd.a, retval.a * Strength);
 
@@ -289,4 +292,3 @@ DeclareEntryPoint (ExtrusionBlend)
 
    return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
 }
-
