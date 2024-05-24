@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2024-05-24
 // @Author baopao
 // @Created 2014-07-06
 
@@ -18,13 +18,14 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-01-10 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Skin smooth", "Stylize", "Filters", "Smooths flesh tones to reduce visible skin blemishes", kNoFlags);
 
@@ -57,6 +58,16 @@ DeclareFloatParam (ShowMaskAmount, "Ext mask mix", kNoGroup, kNoFlags, 0.5, 0.0,
 DeclareFloatParam (_OutputWidth);
 
 DeclareFloatParam (_OutputAspectRatio);
+
+//-----------------------------------------------------------------------------------------//
+// Definitions and declarations
+//-----------------------------------------------------------------------------------------//
+
+#ifdef WINDOWS
+#define PROFILE ps_3_0
+#endif
+
+float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
 // Code
@@ -174,6 +185,5 @@ DeclareEntryPoint (SkinSmooth)
    if (InputMask) Color = lerp (bgPix, Color, Mask); 
    if (ShowMask) Color = lerp (bgPix, ShowMaskColour, ShowMaskAmount * Mask);
 
-   return lerp (kTransparentBlack, Color, bgPix.a);
+   return lerp (_TransparentBlack, Color, bgPix.a);
 }
-
