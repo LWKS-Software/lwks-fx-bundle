@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2018-06-08
 
@@ -23,13 +23,14 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-05-08 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Lumakey and matte", "Key", "Key Extras", "Generates a key from video, fills it with colour or other video and generates a border and/or drop shadow.", CanSize);
 
@@ -78,14 +79,14 @@ DeclareFloatParam (_OutputAspectRatio);
 #define PROFILE ps_3_0
 #endif
 
-#define BLACK float2(0.0, 1.0).xxxy
-
-#define BrdrPixel(SHADER,XY) (IsOutOfBounds(XY) ? BLACK : tex2D(SHADER, XY))
-
 #define X_SCALE 0.005
 #define OFFSET  0.04
 
 #define INVSQR2 0.7071067812
+
+#define BrdrPixel(SHADER,XY) (IsOutOfBounds(XY) ? float2(0.0, 1.0).xxxy : tex2D(SHADER, XY))
+
+float4 _TransparentBlack = 0.0.xxxx;
 
 float2 _rot_0 [] = { { 0.0, 1.0 }, { 0.2588190451, 0.9659258263 }, { 0.5, 0.8660254038 },
                      { 0.7071067812, 0.7071067812 }, { 0.8660254038, 0.5 },
@@ -119,7 +120,7 @@ DeclarePass (KeyFgd)
    Fgnd += tex2D (Key, uv1 + quad_pix);
    Fgnd += tex2D (Key, uv1 - quad_pix);
 
-   Fgnd = IsOutOfBounds (uv1) ? kTransparentBlack : Fgnd / 9.0;
+   Fgnd = IsOutOfBounds (uv1) ? _TransparentBlack : Fgnd / 9.0;
 
    if (K_alpha) { retval.a = Fgnd.a; }
    else {
@@ -131,7 +132,7 @@ DeclarePass (KeyFgd)
 
    if (K_invert) retval.a = 1.0 - retval.a;
 
-   return IsOutOfBounds (uv1) ? kTransparentBlack : lerp (kTransparentBlack, retval, tex2D (Mask, uv1).x);
+   return IsOutOfBounds (uv1) ? _TransparentBlack : lerp (_TransparentBlack, retval, tex2D (Mask, uv1).x);
 }
 
 DeclarePass (Border_A)
@@ -276,4 +277,3 @@ DeclareEntryPoint (LumakeyAndMatte)
 
    return float4 (retval.rgb, Bgnd.a);
 }
-
