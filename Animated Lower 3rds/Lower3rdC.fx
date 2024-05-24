@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2018-03-15
 
@@ -15,6 +15,9 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+//
 // Updated 2023-08-02 jwrl.
 // Reworded text type selection for 2023.2 settings.
 //
@@ -23,8 +26,6 @@
 //
 // Conversion 2022-12-28 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Lower third C", "Text", "Animated Lower 3rds", "Opens a text ribbon to reveal the lower third text", "ScaleAware|HasMinOutputSize");
 
@@ -70,6 +71,8 @@ DeclareColourParam (LineColourB, "Right colour", "Line setting", kNoFlags, 0.0, 
 #define PROFILE ps_3_0
 #endif
 
+float4 _TransparentBlack = 0.0.xxxx;
+
 //-----------------------------------------------------------------------------------------//
 // Code
 //-----------------------------------------------------------------------------------------//
@@ -102,17 +105,16 @@ DeclareEntryPoint (Lower3rdC)
       artwork.rgb *= artwork.a;
    }
 
-   retval = (uv3.y < xy2.y) || (uv3.y > xy3.y) ? kTransparentBlack : lerp (retval, artwork, artwork.a);
+   retval = (uv3.y < xy2.y) || (uv3.y > xy3.y) ? _TransparentBlack : lerp (retval, artwork, artwork.a);
 
    xy1 = float2 (xy2.y - lWidth, xy3.y + lWidth);
 
    if (((uv3.y >= xy1.x) && (uv3.y <= xy2.y)) || ((uv3.y >= xy3.y) && (uv3.y <= xy1.y)))
       retval = lColour;
 
-   if ((uv3.x < xy2.x) || (uv3.x > xy3.x)) retval = kTransparentBlack;
+   if ((uv3.x < xy2.x) || (uv3.x > xy3.x)) retval = _TransparentBlack;
 
    if (SetupText) retval = lerp (retval, artwork, artwork.a);
 
    return lerp (tex2D (Input_2, uv3), retval, retval.a * Opacity);
 }
-
