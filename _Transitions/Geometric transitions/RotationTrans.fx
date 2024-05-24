@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2018-06-12
 
@@ -16,6 +16,9 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack to fix Linux lerp()/mix() bug.
+//
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
 //
@@ -28,8 +31,6 @@
 //
 // Conversion 2023-03-09 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Rotation transition", "Mix", "Geometric transitions", "Rotates a title, image key or other blended foreground in or out", CanSize);
 
@@ -70,6 +71,8 @@ DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
 #define HALF_PI 1.5707963268
 #define PI      3.1415926536
 #define TWO_PI  6.2831853072
+
+float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
 // Functions
@@ -162,7 +165,7 @@ DeclareEntryPoint (RotationTrans_V)
    float masked = tex2D (Mask, uv3).x;
 
    if (Blended) {
-      if (ShowKey) return lerp (kTransparentBlack, Fgnd, Fgnd.a * masked);
+      if (ShowKey) return lerp (_TransparentBlack, Fgnd, Fgnd.a * masked);
 
       maskBg = Bgnd;
       amount /= 2.0;
@@ -199,10 +202,10 @@ DeclareEntryPoint (RotationTrans_V)
    bool InRange = fn_3Drotate (topLeft, topRight, botLeft, botRight, xy);
 
    if (Blended) {
-      Fgnd = InRange ? tex2D (Fg_V, xy) : kTransparentBlack;
+      Fgnd = InRange ? tex2D (Fg_V, xy) : _TransparentBlack;
       retval = lerp (Bgnd, Fgnd, Fgnd.a);
    }
-   else retval = InRange ? tex2D (Premix_V, xy) : kTransparentBlack;
+   else retval = InRange ? tex2D (Premix_V, xy) : _TransparentBlack;
 
    return lerp (maskBg, retval, masked);
 }
@@ -232,7 +235,7 @@ DeclareEntryPoint (RotationTrans_H)
    float masked = tex2D (Mask, uv3).x;
 
    if (Blended) {
-      if (ShowKey) return lerp (kTransparentBlack, Fgnd, Fgnd.a * masked);
+      if (ShowKey) return lerp (_TransparentBlack, Fgnd, Fgnd.a * masked);
 
       maskBg = Bgnd;
       amount /= 2.0;
@@ -269,11 +272,10 @@ DeclareEntryPoint (RotationTrans_H)
    bool InRange = fn_3Drotate (topLeft, topRight, botLeft, botRight, xy);
 
    if (Blended) {
-      Fgnd = InRange ? tex2D (Fg_H, xy) : kTransparentBlack;
+      Fgnd = InRange ? tex2D (Fg_H, xy) : _TransparentBlack;
       retval = lerp (Bgnd, Fgnd, Fgnd.a);
    }
-   else retval = InRange ? tex2D (Premix_H, xy) : kTransparentBlack;
+   else retval = InRange ? tex2D (Premix_H, xy) : _TransparentBlack;
 
    return lerp (maskBg, retval, masked);
 }
-
