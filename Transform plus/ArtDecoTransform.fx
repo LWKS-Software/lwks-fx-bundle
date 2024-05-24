@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-06-24
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2017-04-27
 
@@ -27,6 +27,9 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+//
 // Updated 2023-06-24 jwrl.
 // Changed foreground autocrop to masking.
 //
@@ -40,8 +43,6 @@
 //
 // Conversion 2023-02-17 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Art Deco transform", "DVE", "Transform plus", "Art Deco flash lines are included in the transform borders", CanSize);
 
@@ -104,6 +105,8 @@ DeclareFloatParam (_OutputAspectRatio);
 #define InRange(XY,TL,BR) (all (XY >= TL) && all (BR >= XY))
 
 #define CENTRE 0.5
+
+float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
 // Functions
@@ -204,14 +207,14 @@ DeclareEntryPoint (ArtDecoTransform)
 
       if (InRange (uv, cropLT, cropRB)) {
          Fgnd = (GapFill == 2) ? float2 (0.0, 1.0).xxxy
-              : (GapFill == 0) ? kTransparentBlack : ReadPixel (Fg, uv);
+              : (GapFill == 0) ? _TransparentBlack : ReadPixel (Fg, uv);
       }
       else {
          spaceHV = BorderHV * linFctr;
          cropLT -= spaceHV;
          cropRB += spaceHV;
 
-         Fgnd = InRange (uv, cropLT, cropRB) ? float4 (Colour.rgb, 1.0) : kTransparentBlack;
+         Fgnd = InRange (uv, cropLT, cropRB) ? float4 (Colour.rgb, 1.0) : _TransparentBlack;
       }
    }
 
@@ -239,9 +242,8 @@ DeclareEntryPoint (ArtDecoTransform)
       }
    }
 
-   float4 Bgnd = lerp (kTransparentBlack, ReadPixel (Bg, uv2), Background);
+   float4 Bgnd = lerp (_TransparentBlack, ReadPixel (Bg, uv2), Background);
    float4 retval = lerp (Bgnd, Fgnd, Fgnd.a * Opacity);
 
    return lerp (Bgnd, retval, tex2D (Mask, uv3).x);
 }
-
