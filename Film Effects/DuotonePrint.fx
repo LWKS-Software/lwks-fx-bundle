@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2016-04-12
 
@@ -14,13 +14,14 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-01-24 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Duotone print", "Colour", "Film Effects", "This simulates the look of the old Duotone colour film process", kNoFlags);
 
@@ -44,6 +45,10 @@ DeclareFloatParam (Curve, "Dye curve", kNoGroup, kNoFlags, 0.4, 0.0, 1.0);
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
 
+#ifdef WINDOWS
+#define PROFILE ps_3_0
+#endif
+
 #define R_LUMA 0.2989
 #define G_LUMA 0.5866
 #define B_LUMA 0.1145
@@ -53,6 +58,8 @@ DeclareFloatParam (Curve, "Dye curve", kNoGroup, kNoFlags, 0.4, 0.0, 1.0);
 
 #define G_BGN  1.7472
 #define B_BGN  0.2528
+
+float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
 // Code
@@ -86,8 +93,7 @@ DeclareEntryPoint (DuotonePrint)
 
    retval = lerp (desat, retval, Saturation * 4.0);
 
-   retval = lerp (kTransparentBlack, retval, alpha);
+   retval = lerp (_TransparentBlack, retval, alpha);
 
    return lerp (source, retval, tex2D (Mask, uv1).x);
 }
-
