@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2018-06-15
 
@@ -17,6 +17,9 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+//
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
 //
@@ -25,8 +28,6 @@
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Enhanced blend", "Mix", "Blend Effects", "This is a customised blend for use in conjunction with other effects.", "CanSize");
 
@@ -72,6 +73,8 @@ DeclareIntParam (SetTechnique, "Blend mode", kNoGroup, 0, "Normal|Export foregro
 #define LUMA  float4(0.2989, 0.5866, 0.1145, 0.0)
 
 #define DELTA_KEY 2
+
+float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
 // Functions
@@ -120,7 +123,7 @@ float4 fn_hsv2rgb (float4 hsv)
 
 float4 initFg (float2 xy1, float2 xy2)
 {
-   if (IsOutOfBounds (xy1)) return kTransparentBlack;
+   if (IsOutOfBounds (xy1)) return _TransparentBlack;
 
    float4 Fgd = tex2D (Fg, xy1);
 
@@ -160,7 +163,7 @@ DeclareEntryPoint (Normal)
 }
 
 DeclareEntryPoint (ExportAlpha)
-{ return lerp (kTransparentBlack, initFg (uv1, uv2), tex2D (Mask, uv1).x); }
+{ return lerp (_TransparentBlack, initFg (uv1, uv2), tex2D (Mask, uv1).x); }
 
 DeclareEntryPoint (Dummy_1)
 { return ReadPixel (Bg, uv2); }
@@ -417,7 +420,7 @@ DeclareEntryPoint (LinearLight)
 {
    float4 Fgnd = initFg (uv1, uv2);
    float4 Bgnd = ReadPixel (Bg, uv2);
-   float4 retMin = max ((2.0 * Fgnd) + Bgnd - 1.0.xxxx, kTransparentBlack);
+   float4 retMin = max ((2.0 * Fgnd) + Bgnd - 1.0.xxxx, _TransparentBlack);
    float4 retMax = min ((2.0 * Fgnd) + Bgnd - 1.0.xxxx, 1.0.xxxx);
 
    float alpha = Fgnd.a * Amount;
@@ -595,4 +598,3 @@ DeclareEntryPoint (Luminosity)
 
    return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
 }
-
