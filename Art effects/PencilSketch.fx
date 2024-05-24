@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-14
+// @Released 2024-05-24
 // @Author khaver
 // @Author Daniel Taylor
 // @Created 2018-05-24
@@ -32,13 +32,14 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack.
+//
 // Updated 2023-05-14 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Pencil Sketch", "Stylize", "Art Effects", "Pencil sketch effect with sat/gamma/cont/bright/gain/overlay/alpha controls", kNoFlags);
 
@@ -85,6 +86,8 @@ DeclareFloatParam (_OutputHeight);
 #define STEP     2.0
 #define ANGLENUM 4.0
 
+float4 _TransparentBlack = 0.0.xxxx;
+
 //-----------------------------------------------------------------------------------------//
 // Functions
 //-----------------------------------------------------------------------------------------//
@@ -120,7 +123,7 @@ float2 pR (float2 p, float a)
 
 DeclareEntryPoint (PencilSketch)
 {
-   if (IsOutOfBounds (uv1)) return kTransparentBlack;
+   if (IsOutOfBounds (uv1)) return _TransparentBlack;
 
    float2 res = float2 (_OutputWidth, _OutputHeight);
    float2 pos = uv1 * res;
@@ -149,7 +152,7 @@ DeclareEntryPoint (PencilSketch)
    float4 result, fg = tex2D (Input, uv1);
    float4 color = Greyscale ? getVal (Input, pos).xxxx : tex2D (Input, pos / float2 (_OutputWidth, _OutputHeight));
 
-   color = lerp (kTransparentBlack, color, weight);
+   color = lerp (_TransparentBlack, color, weight);
    color = ((((pow (color, 1.0 / Gamma) * Gain) + Brightness) - 0.5) * Contrast) + 0.5;
 
    result.r = color.r < 0.5 ? 2.0 * fg.r * color.r : 1.0 - (2.0 * (1.0 - fg.r) * (1.0 - color.r));
@@ -165,4 +168,3 @@ DeclareEntryPoint (PencilSketch)
 
    return lerp (fg, result, tex2D (Mask, uv1).x);
 }
-
