@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2024-05-24
 // @Author khaver
 // @Created 2011-04-20
 
@@ -12,13 +12,14 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-02-17 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Technicolor", "Colour", "Film Effects", "Simulates the look of the classic 2-strip and 3-strip Technicolor film processes", kNoFlags);
 
@@ -37,6 +38,16 @@ DeclareMask;
 DeclareIntParam (SetTechnique, "Emulation", kNoGroup, 0, "Two_Strip|Three_Strip");
 
 //-----------------------------------------------------------------------------------------//
+// Definitions and declarations
+//-----------------------------------------------------------------------------------------//
+
+#ifdef WINDOWS
+#define PROFILE ps_3_0
+#endif
+
+float4 _TransparentBlack = 0.0.xxxx;
+
+//-----------------------------------------------------------------------------------------//
 // Code
 //-----------------------------------------------------------------------------------------//
 
@@ -48,7 +59,7 @@ DeclareEntryPoint (TechnicolorTwoStrip)
    output.g += source.b / 2.0;
    output.b += source.g / 2.0;
 
-   output = lerp (kTransparentBlack, output, source.a);
+   output = lerp (_TransparentBlack, output, source.a);
 
    return lerp (source, output, tex2D (Mask, uv1).x);
 }
@@ -62,9 +73,7 @@ DeclareEntryPoint (TechnicolorThreeStrip)
    output.g += (source.b - source.r) / 2.0;
    output.b += (source.g - source.r) / 2.0;
 
-   output = lerp (kTransparentBlack, output, source.a);
+   output = lerp (_TransparentBlack, output, source.a);
 
    return lerp (source, output, tex2D (Mask, uv1).x);
 }
-
-
