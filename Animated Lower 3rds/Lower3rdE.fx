@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2018-03-15
 
@@ -16,6 +16,9 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+//
 // Updated 2023-08-02 jwrl.
 // Reworded text type selection for 2023.2 settings.
 //
@@ -24,8 +27,6 @@
 //
 // Conversion 2022-12-28 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Lower third E", "Text", "Animated Lower 3rds", "Page turns a text overlay over a ribbon background", "ScaleAware|HasMinOutputSize");
 
@@ -80,6 +81,8 @@ DeclareFloatParam (RibbonOpacity_BR, "Lower right", "Ribbon opacity", kNoFlags, 
 #define SOFTNESS 0.45
 #define OFFSET   0.05
 
+float4 _TransparentBlack = 0.0.xxxx;
+
 //-----------------------------------------------------------------------------------------//
 // Code
 //-----------------------------------------------------------------------------------------//
@@ -119,7 +122,7 @@ DeclareEntryPoint (Lower3rdE_WipeOn)
 
    float2 xy = float2 (uv3.x, RibbonY + (T_Axis / twists) - offset);
 
-   float4 Txt = lerp (tex2D (Text_0, xy), kTransparentBlack, amount);
+   float4 Txt = lerp (tex2D (Text_0, xy), _TransparentBlack, amount);
    float4 Bgd = tex2D (Input_2, uv3);
 
    float2 xy1 = float2 (RibbonL, 1.0 - RibbonY - (width * 0.5));
@@ -181,7 +184,7 @@ DeclareEntryPoint (Lower3rdE_WipeOff)
 
    float2 xy = float2 (uv3.x, RibbonY + (T_Axis / twists) - offset);
 
-   float4 Txt = lerp (kTransparentBlack, tex2D (Text_1, xy), amount);
+   float4 Txt = lerp (_TransparentBlack, tex2D (Text_1, xy), amount);
    float4 Bgd = tex2D (Input_2_1, uv3);
 
    float2 xy1 = float2 (RibbonL, 1.0 - RibbonY - (width * 0.5));
@@ -205,4 +208,3 @@ DeclareEntryPoint (Lower3rdE_WipeOff)
 
    return lerp (Bgd, Txt, Txt.a * Opacity);
 }
-
