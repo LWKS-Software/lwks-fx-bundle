@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2016-07-30
 
@@ -16,6 +16,9 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack to fix Linux lerp()/mix() bug.
+//
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
 //
@@ -28,8 +31,6 @@
 //
 // Conversion 2023-03-07 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Optical transition", "Mix", "Blend transitions", "Simulates the burn effect of the classic film optical", CanSize);
 
@@ -64,6 +65,8 @@ DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
 #endif
 
 #define PI 3.1415926536
+
+float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
 // Code
@@ -110,13 +113,13 @@ DeclareEntryPoint (OpticalDissolve)
    if (Blended) {
       if (ShowKey) {
          retval = Fgnd;
-         maskBg = kTransparentBlack;
+         maskBg = _TransparentBlack;
       }
       else {
          float amount = SwapDir ? 1.0 - Amount : Amount;
 
-         retval = lerp (kTransparentBlack, Bgnd, pow (amount, 2.0));
-         retval += lerp (Fgnd, kTransparentBlack, amount);
+         retval = lerp (_TransparentBlack, Bgnd, pow (amount, 2.0));
+         retval += lerp (Fgnd, _TransparentBlack, amount);
          retval.a = Fgnd.a;
          maskBg = Bgnd;
       }
@@ -124,11 +127,10 @@ DeclareEntryPoint (OpticalDissolve)
       retval = lerp (maskBg, retval, retval.a);
    }
    else {
-      retval = lerp (kTransparentBlack, Bgnd, pow (Amount, 2.0));
-      retval += lerp (Fgnd, kTransparentBlack, pow (Amount, 0.5));
+      retval = lerp (_TransparentBlack, Bgnd, pow (Amount, 2.0));
+      retval += lerp (Fgnd, _TransparentBlack, pow (Amount, 0.5));
       maskBg = Fgnd;
    }
 
    return lerp (maskBg, retval, tex2D (Mask, uv3).x);
 }
-
