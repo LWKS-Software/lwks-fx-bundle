@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2024-05-24
 // @Author khaver
 // @Author jwrl
 // @Created 2016-01-22
@@ -17,6 +17,9 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack to fix Linux lerp()/mix() bug.
+//
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
 //
@@ -29,8 +32,6 @@
 //
 // Conversion 2023-03-09 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Tile transitions", "Mix", "Geometric transitions", "Builds images into larger and larger blocks as they fades in or out", CanSize);
 
@@ -82,6 +83,8 @@ DeclareFloatParam (_LengthFrames);
 
 #define HALF_PI 1.5707963268
 #define PI      3.1415926536
+
+float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
 // Functions
@@ -164,7 +167,7 @@ DeclareEntryPoint (Mosaics)
    if (Blended) {
       if (ShowKey) {
          retval = Fgnd;
-         maskBg = kTransparentBlack;
+         maskBg = _TransparentBlack;
       }
       else {
          if (SwapDir) {
@@ -242,7 +245,7 @@ DeclareEntryPoint (Blocks)
    float alpha, amount;
 
    if (Blended) {
-      if (ShowKey) return lerp (kTransparentBlack, Fgnd, Fgnd.a * tex2D (Mask, uv3).x);
+      if (ShowKey) return lerp (_TransparentBlack, Fgnd, Fgnd.a * tex2D (Mask, uv3).x);
 
       maskBg = Bgnd;
       alpha = Fgnd.a;
@@ -327,7 +330,7 @@ DeclareEntryPoint (BreakTiles)
    if (Blended) {
       if (ShowKey) {
          retval = Fgnd;
-         maskBg = kTransparentBlack;
+         maskBg = _TransparentBlack;
       }
       else {
          offset = SwapDir ? (1.0 - (ceil (frac (offset / 2.0)) * 2.0)) * (1.0 - amount)
@@ -398,7 +401,7 @@ DeclareEntryPoint (JoinTiles)
    if (Blended) {
       if (ShowKey) {
          retval = Fgnd;
-         maskBg = kTransparentBlack;
+         maskBg = _TransparentBlack;
       }
       else {
          offset = SwapDir ? (1.0 - (ceil (frac (offset / 2.0)) * 2.0)) * (1.0 - amount)
@@ -421,4 +424,3 @@ DeclareEntryPoint (JoinTiles)
 
    return lerp (maskBg, retval, tex2D (Mask, uv3).x);
 }
-
