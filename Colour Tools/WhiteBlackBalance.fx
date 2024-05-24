@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-15
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2020-04-23
 
@@ -17,13 +17,14 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+//
 // Updated 2023-05-15 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-05-08 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("White and black balance", "Colour", "Colour Tools", "A simple black and white balance utility", CanSize);
 
@@ -48,6 +49,12 @@ DeclareFloatParam (WhiteLevel, "White", "Target levels", "DisplayAsPercentage", 
 DeclareFloatParam (BlackLevel, "Black", "Target levels", "DisplayAsPercentage", 0.0, -0.5, 0.5);
 
 //-----------------------------------------------------------------------------------------//
+// Definitions and Declarations
+//-----------------------------------------------------------------------------------------//
+
+float4 _TransparentBlack = 0.0.xxxx;
+
+//-----------------------------------------------------------------------------------------//
 // Code
 //-----------------------------------------------------------------------------------------//
 
@@ -56,7 +63,7 @@ DeclarePass (Vid)
 
 DeclareEntryPoint (WhiteBalance)
 {
-   if (IsOutOfBounds (uv2)) return kTransparentBlack;
+   if (IsOutOfBounds (uv2)) return _TransparentBlack;
 
    float4 retval, source = tex2D (Vid, uv2);
 
@@ -73,8 +80,7 @@ DeclareEntryPoint (WhiteBalance)
    }
    else retval = source;
 
-   retval = lerp (kTransparentBlack, saturate (retval), source.a);
+   retval = lerp (_TransparentBlack, saturate (retval), source.a);
 
    return lerp (source, retval, tex2D (Mask, uv2).x);
 }
-
