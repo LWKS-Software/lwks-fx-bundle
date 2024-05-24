@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2024-05-24
 // @Author khaver
 // @Created 2012-01-19
 
@@ -14,13 +14,14 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with 0.0.xxxx for Linux fix.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-01-10 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Rays", "Stylize", "Filters", "Radiates light rays away from the highlights in the image", kNoFlags);
 
@@ -117,6 +118,5 @@ DeclareEntryPoint (Rays)
 
    blend = (base + blend * (1.0.xxxx - base));
 
-   return lerp (kTransparentBlack, blend, base.a);
+   return lerp (0.0.xxxx, blend, base.a);
 }
-
