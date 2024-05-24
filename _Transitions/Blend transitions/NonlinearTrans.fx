@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2017-01-03
 
@@ -26,6 +26,9 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack to fix Linux lerp()/mix() bug.
+//
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
 //
@@ -38,8 +41,6 @@
 //
 // Conversion 2023-03-07 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Non-linear transitions", "Mix", "Blend transitions", "Dissolves using a range of non-linear profiles", CanSize);
 
@@ -78,6 +79,8 @@ DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
 
 #define PI      3.1415926536
 #define HALF_PI 1.5707963268
+
+float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
 // Functions
@@ -138,7 +141,7 @@ DeclareEntryPoint (NonAdd)
    if (Blended) {
       if (ShowKey) {
          retval = Fgnd;
-         maskBg = kTransparentBlack;
+         maskBg = _TransparentBlack;
       }
       else {
          float alpha = Fgnd.a;
@@ -146,9 +149,9 @@ DeclareEntryPoint (NonAdd)
          amount = SwapDir ? Amount : 1.0 - Amount;
 
          Fgnd.a *= (1.0 - abs (Amount - 0.5)) * 2.0;
-         Fgnd = lerp (kTransparentBlack, Fgnd, amount);
+         Fgnd = lerp (_TransparentBlack, Fgnd, amount);
 
-         retval = max (lerp (Bgnd, kTransparentBlack, amount), Fgnd);
+         retval = max (lerp (Bgnd, _TransparentBlack, amount), Fgnd);
          retval.a = alpha;
 
          maskBg = Bgnd;
@@ -161,8 +164,8 @@ DeclareEntryPoint (NonAdd)
 
       amount = (1.0 - abs (Amount - 0.5)) * 2.0;
 
-      Fgnd = lerp (Fgnd, kTransparentBlack, Amount);
-      Bgnd = lerp (kTransparentBlack, Bgnd, Amount);
+      Fgnd = lerp (Fgnd, _TransparentBlack, Amount);
+      Bgnd = lerp (_TransparentBlack, Bgnd, Amount);
       retval = saturate (max (Bgnd, Fgnd) * amount);
    }
 
@@ -190,7 +193,7 @@ DeclareEntryPoint (NonAddUltra)
    if (Blended) {
       if (ShowKey) {
          retval = Fgnd;
-         maskBg = kTransparentBlack;
+         maskBg = _TransparentBlack;
       }
       else {
          float alpha  = Fgnd.a;
@@ -198,7 +201,7 @@ DeclareEntryPoint (NonAddUltra)
          amount = SwapDir ? Amount : 1.0 - Amount;
 
          Fgnd.a *= (1.0 - abs (amount - 0.5)) * 2.0;
-         retval = max (lerp (Bgnd, kTransparentBlack, amount), lerp (kTransparentBlack, Fgnd, amount));
+         retval = max (lerp (Bgnd, _TransparentBlack, amount), lerp (_TransparentBlack, Fgnd, amount));
          retval.a = alpha;
 
          maskBg = Bgnd;
@@ -210,8 +213,8 @@ DeclareEntryPoint (NonAddUltra)
       amount = (1.0 - abs (Amount - 0.5)) * 2.0;
       maskBg = Fgnd;
 
-      Fgnd = lerp (Fgnd, kTransparentBlack, Amount);
-      Bgnd = lerp (kTransparentBlack, Bgnd, Amount);
+      Fgnd = lerp (Fgnd, _TransparentBlack, Amount);
+      Bgnd = lerp (_TransparentBlack, Bgnd, Amount);
       retval = saturate (amount * max (Bgnd, Fgnd));
    }
 
@@ -242,7 +245,7 @@ DeclareEntryPoint (Trig)
    if (Blended) {
       if (ShowKey) {
          retval = Fgnd;
-         maskBg = kTransparentBlack;
+         maskBg = _TransparentBlack;
       }
       else {
          float alpha  = Fgnd.a;
@@ -288,7 +291,7 @@ DeclareEntryPoint (Quad)
    if (Blended) {
       if (ShowKey) {
          retval = Fgnd;
-         maskBg = kTransparentBlack;
+         maskBg = _TransparentBlack;
       }
       else {
          float alpha  = Fgnd.a;
@@ -310,4 +313,3 @@ DeclareEntryPoint (Quad)
 
    return lerp (maskBg, retval, tex2D (Mask, uv3).x);
 }
-
