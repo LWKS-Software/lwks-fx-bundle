@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2020-07-27
 
@@ -46,13 +46,14 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-01-24 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Film lab", "Colour", "Film Effects", "This is a colour film processing lab for video", kNoFlags);
 
@@ -96,13 +97,15 @@ DeclareFloatParam (BlueGamma, "Blue", "Gamma presets", kNoFlags, 1.0, 0.1, 2.5);
 #define PROFILE ps_3_0
 #endif
 
+float4 _TransparentBlack = 0.0.xxxx;
+
 //-----------------------------------------------------------------------------------------//
 // Code
 //-----------------------------------------------------------------------------------------//
 
 DeclareEntryPoint (FilmLab)
 {
-   if (IsOutOfBounds (uv1)) return kTransparentBlack;
+   if (IsOutOfBounds (uv1)) return _TransparentBlack;
 
    float lin = (Linearity * 1.5) + 1.0;
 
@@ -149,8 +152,7 @@ DeclareEntryPoint (FilmLab)
    print = lerp ((lab.r + lab.g + lab.b).xxx / 3.0, lab.rgb, (Saturation - 0.5) * 2.0);
    lab = float4 (pow (print, 1.0 / lin), vid.a);
 
-   vid = lerp (kTransparentBlack, lerp (vid, lab, Amount), src.a);
+   vid = lerp (_TransparentBlack, lerp (vid, lab, Amount), src.a);
 
    return lerp (src, vid, tex2D (Mask, uv1).x);
 }
-
