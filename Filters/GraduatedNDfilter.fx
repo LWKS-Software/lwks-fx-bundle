@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2024-05-24
 // @Author khaver
 // @Created 2014-07-10
 
@@ -16,13 +16,14 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-01-10 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Graduated ND Filter", "Stylize", "Filters", "A tintable neutral density filter which can have its blend modes adjusted", kNoFlags);
 
@@ -51,6 +52,12 @@ DeclareFloatParam (SY, "Start", kNoGroup, "SpecifiesPointY", 0.75, 0.0, 1.0);
 
 DeclareFloatParam (EX, "End", kNoGroup, "SpecifiesPointX", 0.75, 0.0, 1.0);
 DeclareFloatParam (EY, "End", kNoGroup, "SpecifiesPointY", 0.25, 0.0, 1.0);
+
+//-----------------------------------------------------------------------------------------//
+// Definitions and declarations
+//-----------------------------------------------------------------------------------------//
+
+float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
 // Code
@@ -114,8 +121,7 @@ DeclareEntryPoint (GraduatedNDFilter)
    else outc = uv1.x < h1 ? newc
              : uv1.x > h2 ? bg : lerp (newc, bg, (uv1.x - h1) / delth);
 
-   outc = lerp (kTransparentBlack, outc, orig.a);
+   outc = lerp (_TransparentBlack, outc, orig.a);
 
    return lerp (orig, float4 (outc, orig.a), Mixit);
 }
-
