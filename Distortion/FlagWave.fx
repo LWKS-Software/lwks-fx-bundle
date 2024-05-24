@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-06-19
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2018-07-27
 
@@ -20,6 +20,9 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+//
 // Updated 2023-06-19 jwrl.
 // Changed DVE reference to transform.
 //
@@ -28,8 +31,6 @@
 //
 // Conversion 2023-01-24 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Flag wave", "Stylize", "Distortion", "Simulates a waving flag.", kNoFlags);
 
@@ -94,6 +95,8 @@ DeclareFloatParam (_LengthFrames);
 #define OFFS_3  1.9473684211     // 37/19
 #define OFFS_4  1.5714285714     // 11/7
 
+float4 _TransparentBlack = 0.0.xxxx;
+
 //-----------------------------------------------------------------------------------------//
 // Code
 //-----------------------------------------------------------------------------------------//
@@ -101,7 +104,7 @@ DeclareFloatParam (_LengthFrames);
 // These two preamble passes ensure that rotated video is handled correctly.
 
 DeclarePass (Foreground)
-{ return lerp (kTransparentBlack, ReadPixel (Fg, uv1), tex2D (Mask, uv1).x); }
+{ return lerp (_TransparentBlack, ReadPixel (Fg, uv1), tex2D (Mask, uv1).x); }
 
 DeclarePass (Background)
 { return ReadPixel (Bg, uv2); }
@@ -204,4 +207,3 @@ DeclareEntryPoint (FlagWave)
 
    return lerp (ReadPixel (Background, uv3), Fgnd, Fgnd.a * Opacity);
 }
-
