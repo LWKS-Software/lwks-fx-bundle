@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-04-27
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2024-04-27
 
@@ -13,6 +13,9 @@
 // Lightworks user effect GridGenerator.fx
 //
 // Version history:
+//
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
 //
 // Built 2024-04-27 jwrl.
 //-----------------------------------------------------------------------------------------//
@@ -35,13 +38,10 @@ DeclareFloatParam (Opacity, "Opacity", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
 
 DeclareIntParam (ShowGrid, "Grid display", kNoGroup, 3, "Add|Subtract|Difference|Opaque");
 
-DeclareFloatParam (GridLines, "Grid size", kNoGroup, kNoFlags, 16.0, 8.0, 32.0);
+DeclareFloatParam (GridLines, "Squares across", kNoGroup, kNoFlags, 16.0, 8.0, 32.0);
 DeclareFloatParam (GridWeight, "Line weight", kNoGroup, kNoFlags, 0.2, 0.0, 1.0);
 
 DeclareBoolParam (DisableVideo, "Disable video", kNoGroup, false);
-
-DeclareFloatParam (_OutputWidth);
-DeclareFloatParam (_OutputHeight);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -60,8 +60,11 @@ DeclareFloatParam (_OutputAspectRatio);
 #define DIFFERENCE  2         // Difference value used by showIt and showSafeArea
 #define OPAQUE      3         // Disabled value used by showIt
 
-#define GRID_SCALE  32.0      // Grid size scale factor - arbitrarily chosen
-#define LINE_SCALE  1.0       // Line weight scale factor - arbitrarily chosen
+#define MAX_LINES   32        // Maximum number of horizontal crosshatch lines
+
+#define LINE_SCALE  0.000926  // Line weight scale factor - arbitrarily chosen
+
+float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
 // Code
@@ -72,7 +75,7 @@ DeclarePass (Fg)
 
 DeclareEntryPoint (GridGenerator)
 {
-   float GridAmt, Grid;
+   float GridAmt, pixVal, xGrid, yGrid, Grid = 0.0;
 
    float4 retval, Video = tex2D (Fg, uv2);
    float4 Bgnd = DisableVideo ? BLACK : Video;
@@ -81,32 +84,55 @@ DeclareEntryPoint (GridGenerator)
    // Otherwise we get the background video and set the opacity values.
 
    if (DisableVideo) {
-      Bgnd = (ShowGrid == SUBTRACT) ? WHITE : kTransparentBlack;
+      Bgnd = (ShowGrid == SUBTRACT) ? WHITE : _TransparentBlack;
       GridAmt = 1.0;
     }
    else GridAmt = Opacity;
 
-   // Now we calculate the grid overlay.  Only do this if uv2 is legal.
+   // Now we calculate the grid overlay.  Only do this if opacity isn't zero and grid isn't disabled.
 
-   if (IsOutOfBounds (uv2)) { Grid = 0.0; }
-   else {
-      float2 xy0 = abs (uv2 - 0.5.xx);
-      float2 xy1 = (saturate (GridWeight) + 0.21875) * GridLines / 64.0;
+   if (GridAmt > 0.0) {
 
-      xy0.y /= _OutputAspectRatio;
+      // Calculate the horizontal and vertical line weights
 
-      if (_OutputWidth < _OutputHeight) xy0 *= 0.5;
+      float Yval = ((GridWeight * 5.0) + 1.0) * LINE_SCALE;
+      float Xval = Yval / _OutputAspectRatio;
 
-      float2 xy2 = frac ((xy0 * GridLines) + (xy1 / 2.0));
+      float xLines = ceil (GridLines);                // Get the integer value of the number of lines
+      float xLine_increment = 1.0 / xLines;           // Calculate the percentage increment to achieve that
+      float halfInc = xLine_increment / 2;            // Use this to offset lines so they stay centred
 
-      Grid = (xy2.x < xy1.x) || (xy2.y < xy1.y) ? 1.0 : 0.0;
+      bool oddLines = (fmod (xLines, 2.0) > 0.25);    // We set up this boolean here so we don't calculate it inside the loop
+
+      for (int i = 0; i <= MAX_LINES; i++) {          // The loop executes a fixed amount to resolve a Windows compatibility issue.
+         xGrid = xLine_increment * i;                 // The alternative would have been to build a unique Windows-specific version.
+
+         if (oddLines) {                              // If there are an odd number of lines offset them by half the line spacing
+            xGrid = saturate (xGrid - halfInc);
+         }
+
+         pixVal = abs (uv2.x - xGrid);                // This is really the first part of a compare operation
+
+         if (pixVal < Xval) { Grid = 1.0; };          // If we fall inside the line width turn the pixel on
+
+         // To get the y value we must allow for the aspect ratio.  This is a little complex because any scaling must be centred.
+
+         yGrid = (xGrid - 0.5) * _OutputAspectRatio;
+         yGrid = clamp ((yGrid + 0.5), 0.0, 1.0);
+
+         // Repeat our line width boundary calculation from above.
+
+         pixVal = abs (uv2.y - yGrid);
+
+         if (pixVal < Yval) { Grid = 1.0; };
+      }
    }
 
    // This overlays the actual grid, whether normal, add, subtract or difference
 
    if (ShowGrid == OPAQUE) { retval = lerp (Bgnd, Grid.xxxx, Grid * GridAmt); }
    else {
-      float4 overlay = lerp (kTransparentBlack, Grid.xxxx, GridAmt);   // The level setting is applied at this point
+      float4 overlay = lerp (_TransparentBlack, Grid.xxxx, GridAmt);   // The level setting is applied at this point
 
       if (ShowGrid == DIFFERENCE) { retval = abs (Bgnd - overlay); }
       else retval = clamp (((ShowGrid == SUBTRACT) ? Bgnd - overlay : Bgnd + overlay), 0.0, 1.0);
