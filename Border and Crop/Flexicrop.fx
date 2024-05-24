@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-06-19
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2023-02-14
 
@@ -27,6 +27,9 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+//
 // Updated 2023-06-19 jwrl.
 // Changed DVE reference to transform.
 //
@@ -35,8 +38,6 @@
 //
 // Conversion 2023-02-17 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Flexible crop", "DVE", "Border and Crop", "A flexible bordered crop with drop shadow based on LW masking", CanSize);
 
@@ -91,7 +92,8 @@ DeclareFloatParam (_OutputAspectRatio);
 #define PROFILE ps_3_0
 #endif
 
-#define BLACK float2(0.0,1.0).xxxy
+float4 _OpaqueBlack = float2 (0.0,1.0).xxxy;
+float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
 // Code
@@ -167,8 +169,8 @@ DeclarePass (Msk)
 
    // If we're using the drop shadow build it in retval, otherwise use transparent black
 
-   float4 retval = UseShadow ? lerp (kTransparentBlack, BLACK, ShadMask * sStrength)
-                             : kTransparentBlack;
+   float4 retval = UseShadow ? lerp (_TransparentBlack, _OpaqueBlack, ShadMask * sStrength)
+                             : _TransparentBlack;
 
    // Return the masked and bordered foreground over the drop shadow.
 
@@ -199,4 +201,3 @@ DeclareEntryPoint (Flexicrop)
 
    return ((Fgnd - Bgnd) * Fgnd.a * Opacity) + Bgnd;
 }
-
