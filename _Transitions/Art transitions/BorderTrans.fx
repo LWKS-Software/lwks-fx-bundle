@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2018-06-11
 
@@ -18,6 +18,9 @@
 // Lightworks user effect BorderTrans.fx
 //
 // Version history:
+//
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack to fix Linux lerp()/mix() bug.
 //
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
@@ -87,6 +90,8 @@ DeclareFloatParam (_Progress);
 
 #define HALF_PI  1.5707963268
 
+float4 _TransparentBlack = 0.0.xxxx;
+
 //-----------------------------------------------------------------------------------------//
 // Code
 //-----------------------------------------------------------------------------------------//
@@ -119,7 +124,7 @@ DeclarePass (Super)
 {
    float4 retval = ReadPixel (Fgd, uv3);
 
-   if (ShowKey) return lerp (kTransparentBlack, retval, retval.a);
+   if (ShowKey) return lerp (_TransparentBlack, retval, retval.a);
 
    float2 radius = float2 (1.0, _OutputAspectRatio) * 0.00125;
    float2 xy1, xy2;
@@ -144,7 +149,7 @@ DeclarePass (Super)
 
 DeclarePass (Border_1)
 {
-   float4 retval = kTransparentBlack;
+   float4 retval = _TransparentBlack;
 
    if (!ShowKey && (Radius != 0.0)) {
       float radScale = SwapDir ? cos (Amount * HALF_PI) : sin (Amount * HALF_PI);
@@ -185,7 +190,7 @@ DeclarePass (Border_2)
          retval = max (retval, ReadPixel (Border_1, xy2));
       }
 
-      retval = lerp (retval, kTransparentBlack, alpha);
+      retval = lerp (retval, _TransparentBlack, alpha);
    }
 
    return retval;
@@ -193,7 +198,7 @@ DeclarePass (Border_2)
 
 DeclareEntryPoint (BorderTrans)
 {
-   if (ShowKey) return lerp (kTransparentBlack, tex2D (Super, uv3), tex2D (Mask, uv3).x);
+   if (ShowKey) return lerp (_TransparentBlack, tex2D (Super, uv3), tex2D (Mask, uv3).x);
 
    float2 xy1 = (Displace / 2.0).xx;
 
@@ -211,7 +216,7 @@ DeclareEntryPoint (BorderTrans)
    xy2 += uv3;
 
    float4 border = tex2D (Super, xy1);
-   float4 retval = kTransparentBlack;
+   float4 retval = _TransparentBlack;
    float4 Bgnd = tex2D (Bgd, uv3);
 
    if (NotEqual (xy1, xy2)) {
@@ -239,4 +244,3 @@ DeclareEntryPoint (BorderTrans)
 
    return lerp (Bgnd, retval, tex2D (Mask, uv3).x);
 }
-
