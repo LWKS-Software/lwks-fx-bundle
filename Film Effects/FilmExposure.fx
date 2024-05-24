@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2024-05-24
 // @Author abelmilanes
 // @Author jwrl
 // @Created 2017-03-04
@@ -17,13 +17,14 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-01-24 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Film exposure", "Colour", "Film Effects", "Simulates exposure adjustment using a Cineon profile", kNoFlags);
 
@@ -45,6 +46,16 @@ DeclareFloatParam (MagGreen, "Magenta/green", "Exposure", kNoFlags, 0.0, -1.0, 1
 DeclareFloatParam (YelBlue, "Yellow/blue", "Exposure", kNoFlags, 0.0, -1.0, 1.0);
 
 DeclareFloatParam (Amount, "Original", kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
+
+//-----------------------------------------------------------------------------------------//
+// Definitions and declarations
+//-----------------------------------------------------------------------------------------//
+
+#ifdef WINDOWS
+#define PROFILE ps_3_0
+#endif
+
+float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
 // Code
@@ -77,9 +88,8 @@ DeclareEntryPoint (FilmExposure)
    test = max (lin.r, max (lin.g, lin.b));
 
    retval.rgb = (test < 0.0031308) ? lin * 12.92 : (1.055 * pow (lin, 0.4166667)) - 0.055;
-   retval = lerp (kTransparentBlack, float4 (saturate (retval.rgb), 1.0), Src.a);
+   retval = lerp (_TransparentBlack, float4 (saturate (retval.rgb), 1.0), Src.a);
    retval = lerp (retval, Src, Amount);
 
    return lerp (Src, retval, tex2D (Mask, uv1).x);
 }
-
