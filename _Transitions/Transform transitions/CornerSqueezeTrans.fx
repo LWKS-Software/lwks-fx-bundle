@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2017-08-26
 
@@ -15,6 +15,9 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with 0.0.xxxx to fix Linux lerp()/mix() bug.
+//
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
 //
@@ -28,8 +31,6 @@
 //
 // Conversion 2023-03-04 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Corner squeeze transition", "Mix", "Transform transitions", "Squeezes or expands the foreground to or from the corners of the screen", CanSize);
 
@@ -140,7 +141,7 @@ DeclareEntryPoint (CornerSqueezeTrans)
 {
    float4 Fgnd = tex2D (Fgd, uv3);
 
-   if (Blended && ShowKey) { return lerp (kTransparentBlack, Fgnd, Fgnd.a * tex2D (Mask, uv3).x); }
+   if (Blended && ShowKey) { return lerp (0.0.xxxx, Fgnd, Fgnd.a * tex2D (Mask, uv3).x); }
 
    float4 Bgnd = tex2D (Bgd, uv3);
    float4 maskBg = Blended ? Bgnd : Fgnd;
