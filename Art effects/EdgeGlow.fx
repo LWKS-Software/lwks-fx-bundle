@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-14
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2016-06-30
 
@@ -19,13 +19,14 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+//
 // Updated 2023-05-14 jwrl.
 // Header reformatted.
 //
 // Conversion 2022-12-28 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Edge glow", "Stylize", "Art Effects", "Adds a level-based or edge-based glow to an image", CanSize);
 
@@ -84,6 +85,8 @@ DeclareFloatParam (_OutputAspectRatio);
 
 #define HALF_PI  1.5707963268
 
+float4 _TransparentBlack = 0.0.xxxx;
+
 //-----------------------------------------------------------------------------------------//
 // Functions
 //-----------------------------------------------------------------------------------------//
@@ -97,7 +100,7 @@ float fn_get_luma (sampler s, float2 xy)
 
 float4 fn_getEdge (sampler Inp, float2 uv)
 {
-   if (IsOutOfBounds (uv)) return kTransparentBlack;
+   if (IsOutOfBounds (uv)) return _TransparentBlack;
 
    float4 Fgd = tex2D (Inp, uv);
    float edges, pattern;
@@ -132,7 +135,7 @@ float4 fn_getEdge (sampler Inp, float2 uv)
 
    pattern = _Progress * _Length * (1.0 + (cRate * 20.0));
 
-   if (cCycle == 0) return lerp (kTransparentBlack, Fgd, edges);
+   if (cCycle == 0) return lerp (_TransparentBlack, Fgd, edges);
 
    float4 part_1 = edges * Colour_1;
    float4 part_2 = edges * Colour_2;
@@ -144,7 +147,7 @@ float4 fn_getEdge (sampler Inp, float2 uv)
 
 float4 fn_glow (sampler gloSampler, float2 uv, float base)
 {
-   if (IsOutOfBounds (uv)) return kTransparentBlack;
+   if (IsOutOfBounds (uv)) return _TransparentBlack;
 
    float4 retval = tex2D (gloSampler, uv);
 
@@ -167,14 +170,14 @@ float4 fn_glow (sampler gloSampler, float2 uv, float base)
 
 float4 fn_fullGlow (sampler gloSampler, sampler s_Edge, float2 uv)
 {
-   if (IsOutOfBounds (uv)) return kTransparentBlack;
+   if (IsOutOfBounds (uv)) return _TransparentBlack;
 
    float4 retval = tex2D (gloSampler, uv);
 
    float sizeComp = saturate (Size * 4.0);
 
    sizeComp = sin (sizeComp * HALF_PI);
-   retval = lerp (kTransparentBlack, retval, sizeComp);
+   retval = lerp (_TransparentBlack, retval, sizeComp);
 
    if (lCycle != 1) return retval;
 
@@ -210,7 +213,7 @@ DeclarePass (A_Glow)
 
 DeclareEntryPoint (EdgeGlowAdd)
 {
-   if (IsOutOfBounds (uv1)) return kTransparentBlack;
+   if (IsOutOfBounds (uv1)) return _TransparentBlack;
 
    float4 Fgnd = tex2D (Vid_A, uv2);
    float4 Glow = saturate (Fgnd + tex2D (A_Glow, uv2));
@@ -243,7 +246,7 @@ DeclarePass (S_Glow)
 
 DeclareEntryPoint (EdgeGlowScreen)
 {
-   if (IsOutOfBounds (uv1)) return kTransparentBlack;
+   if (IsOutOfBounds (uv1)) return _TransparentBlack;
 
    float4 Fgnd   = tex2D (Vid_S, uv2);
    float4 Glow   = tex2D (S_Glow, uv2);
@@ -277,7 +280,7 @@ DeclarePass (L_Glow)
 
 DeclareEntryPoint (EdgeGlowLighten)
 {
-   if (IsOutOfBounds (uv1)) return kTransparentBlack;
+   if (IsOutOfBounds (uv1)) return _TransparentBlack;
 
    float4 Fgnd = tex2D (Vid_L, uv2);
    float4 Glow = max (Fgnd, tex2D (L_Glow, uv2));
@@ -310,7 +313,7 @@ DeclarePass (SG_Glow)
 
 DeclareEntryPoint (EdgeGlowSoftGlow)
 {
-   if (IsOutOfBounds (uv1)) return kTransparentBlack;
+   if (IsOutOfBounds (uv1)) return _TransparentBlack;
 
    float4 Fgnd   = tex2D (Vid_SG, uv2);
    float4 Glow   = Fgnd * tex2D (SG_Glow, uv2);
@@ -344,7 +347,7 @@ DeclarePass (VL_Glow)
 
 DeclareEntryPoint (EdgeGlowVividLight)
 {
-   if (IsOutOfBounds (uv1)) return kTransparentBlack;
+   if (IsOutOfBounds (uv1)) return _TransparentBlack;
 
    float4 Fgnd = tex2D (Vid_VL, uv2);
    float4 Glow = saturate ((tex2D (VL_Glow, uv2) * 2.0) + Fgnd - 1.0.xxxx);
