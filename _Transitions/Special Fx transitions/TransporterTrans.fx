@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-17
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2018-07-09
 
@@ -24,13 +24,14 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack to fix Linux lerp()/mix() bug.
+//
 // Updated 2023-05-17 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-03-04 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Transporter transition", "Mix", "Special Fx transitions", "A Star Trek-like transporter fade in or out", kNoFlags);
 
@@ -74,6 +75,8 @@ DeclareFloatParam (_OutputAspectRatio);
 #define S_SCALE  0.000868
 #define FADER    0.9333333333
 #define FADE_DEC 0.0666666667
+
+float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
 // Code
@@ -144,7 +147,7 @@ DeclarePass (Sparkles)
       amt = smoothstep (0.975 - (starStrength * 0.375), 1.0, amt);
       retval.z *= (amt <= alpha) ? 0.0 : amt;
    }
-   else retval = kTransparentBlack;
+   else retval = _TransparentBlack;
 
    return retval;
 }
@@ -185,9 +188,9 @@ DeclareEntryPoint (Transporter)
    if (KeySetup > 1) {
       float mix = saturate (2.0 - (key.y * Fgnd.a * 2.0));
 
-      if (KeySetup == 2) return lerp (Fgnd, kTransparentBlack, mix);
+      if (KeySetup == 2) return lerp (Fgnd, _TransparentBlack, mix);
 
-      return lerp (1.0.xxxx, kTransparentBlack, mix);
+      return lerp (1.0.xxxx, _TransparentBlack, mix);
    }
 
    // Create a non-linear transition starting at 0.3 and ending at 0.7.  Using
@@ -204,4 +207,3 @@ DeclareEntryPoint (Transporter)
 
    return lerp (retval, starColour, saturate (key.x));
 }
-
