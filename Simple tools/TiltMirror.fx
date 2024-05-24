@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2023-03-25
 
@@ -16,11 +16,12 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Tilt and mirror", "DVE", "Simple tools", "Rotates a pair of rolls or image keys to scroll to a mid vanishing point", CanSize);
 
@@ -59,6 +60,8 @@ DeclareFloatParam (Z_offs_2, "Z offset", "Lower/right - In_2", kNoFlags, 0.5, 0.
 #define PI      3.1415926536
 #define TWO_PI  6.2831853072
 #define HALF_PI 1.5707963268
+
+float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
 // Functions
@@ -122,7 +125,7 @@ float4 fn_vertical (sampler In, float2 uv, float amt, float offset)
    xy.x += 0.5;
 
    return fn_3Drotate (topLeft, topRight, botLeft, botRight, xy)
-          ? tex2D (In, xy) : kTransparentBlack;
+          ? tex2D (In, xy) : _TransparentBlack;
 }
 
 float4 fn_horizontal (sampler In, float2 uv, float amt, float offset)
@@ -155,7 +158,7 @@ float4 fn_horizontal (sampler In, float2 uv, float amt, float offset)
    xy.y += 0.5;
 
    return fn_3Drotate (topLeft, topRight, botLeft, botRight, xy)
-          ? tex2D (In, xy) : kTransparentBlack;
+          ? tex2D (In, xy) : _TransparentBlack;
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -177,7 +180,7 @@ DeclareEntryPoint (Vertical)
 
    float2 xy = uv3;
 
-   float4 retval = kTransparentBlack;
+   float4 retval = _TransparentBlack;
 
    if (xy.y <= 1.0 - Centre) {
       xy.y -= disp_U;
@@ -188,7 +191,7 @@ DeclareEntryPoint (Vertical)
       retval = ReadPixel (Lower, xy);
    }
 
-   return lerp (kTransparentBlack, retval, tex2D (Mask, uv3).x);
+   return lerp (_TransparentBlack, retval, tex2D (Mask, uv3).x);
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -208,7 +211,7 @@ DeclareEntryPoint (Horizontal)
 
    float2 xy = uv3;
 
-   float4 retval = kTransparentBlack;
+   float4 retval = _TransparentBlack;
 
    if (xy.x <= Centre) {
       xy.x -= disp_L;
@@ -219,6 +222,5 @@ DeclareEntryPoint (Horizontal)
       retval = ReadPixel (Right, xy);
    }
 
-   return lerp (kTransparentBlack, retval, tex2D (Mask, uv3).x);
+   return lerp (_TransparentBlack, retval, tex2D (Mask, uv3).x);
 }
-
