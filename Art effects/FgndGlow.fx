@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2020-10-16
 
@@ -24,8 +24,10 @@
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect FgndGlow.fx
 //
-//
 // Version history:
+//
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack.
 //
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
@@ -35,8 +37,6 @@
 //
 // Conversion 2022-12-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Foreground glow", "Stylize", "Art Effects", "An effect that applies a glow to the foreground of a keyed or blended image", kNoFlags);
 
@@ -85,6 +85,8 @@ DeclareFloatParam (_OutputAspectRatio);
 #define LOOP     12
 #define DIVIDE   49
 
+float4 _TransparentBlack = 0.0.xxxx;
+
 //-----------------------------------------------------------------------------------------//
 // Functions
 //-----------------------------------------------------------------------------------------//
@@ -107,7 +109,7 @@ float4 fn_comp (sampler F, float2 xy1, sampler B, float2 xy2)
 
 float4 fn_keygen (sampler F, float2 xy1, sampler B, float2 xy2)
 {
-   if (IsOutOfBounds (xy1)) return kTransparentBlack;
+   if (IsOutOfBounds (xy1)) return _TransparentBlack;
 
    float4 Fgnd = tex2D (F, xy1);
 
@@ -125,7 +127,7 @@ float4 fn_keygen (sampler F, float2 xy1, sampler B, float2 xy2)
 
 float4 fn_glow (sampler G, float2 uv, float R)
 {
-   if (IsOutOfBounds (uv)) return kTransparentBlack;
+   if (IsOutOfBounds (uv)) return _TransparentBlack;
 
    float4 retval = tex2D (G, uv);
 
@@ -194,11 +196,11 @@ DeclarePass (GlowLx)
    float feather = Feather * 0.5;
    float srcLum = ((retval.r * 0.3) + (retval.g * 0.59) + (retval.b * 0.11)) * retval.a;
 
-   if (srcLum < Tolerance) return kTransparentBlack;
+   if (srcLum < Tolerance) return _TransparentBlack;
 
    if (srcLum >= (Tolerance + feather)) return surround;
 
-   return lerp (kTransparentBlack, surround, (srcLum - Tolerance) / feather);
+   return lerp (_TransparentBlack, surround, (srcLum - Tolerance) / feather);
 }
 
 DeclarePass (GlowLy)
@@ -224,7 +226,7 @@ DeclarePass (GlowRx)
 {
    float4 retval = tex2D (KeyR, uv3);
 
-   return ((retval.r * retval.a) < Tolerance) ? kTransparentBlack : retval;
+   return ((retval.r * retval.a) < Tolerance) ? _TransparentBlack : retval;
 }
 
 DeclarePass (GlowRy)
@@ -250,7 +252,7 @@ DeclarePass (GlowGx)
 {
    float4 retval = tex2D (KeyG, uv3);
 
-   return ((retval.g * retval.a) < Tolerance) ? kTransparentBlack : retval;
+   return ((retval.g * retval.a) < Tolerance) ? _TransparentBlack : retval;
 }
 
 DeclarePass (GlowGy)
@@ -276,7 +278,7 @@ DeclarePass (GlowBx)
 {
    float4 retval = tex2D (KeyB, uv3);
 
-   return ((retval.b * retval.a) < Tolerance) ? kTransparentBlack : retval;
+   return ((retval.b * retval.a) < Tolerance) ? _TransparentBlack : retval;
 }
 
 DeclarePass (GlowBy)
@@ -299,6 +301,5 @@ DeclareEntryPoint (FgndGlowKeySetup)
 {
    float4 retval = fn_keygen (Fg, uv1, Bg, uv2);
 
-   return lerp (kTransparentBlack, retval, tex2D (Mask, uv1).x);
+   return lerp (_TransparentBlack, retval, tex2D (Mask, uv1).x);
 }
-
