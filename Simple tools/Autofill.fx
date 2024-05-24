@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2021-09-01
 
@@ -29,13 +29,14 @@
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect Autofill.fx
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with 0.0.xxxx for Linux fix.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-01-10 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Auto fill", "Stylize", "Simple tools", "Provides a fill for clips which don't have the same aspect ratio as the sequence", CanSize);
 
@@ -145,7 +146,7 @@ DeclarePass (Fill_0)
 
    Fgnd = lerp (ReadPixel (FgdScl, xy2), Fgnd, Fgnd.a);
 
-   return lerp (kTransparentBlack, lerp (Bgnd, Fgnd, FillMix), Amount);
+   return lerp (0.0.xxxx, lerp (Bgnd, Fgnd, FillMix), Amount);
 }
 
 DeclarePass (Fill_1)
@@ -166,4 +167,3 @@ DeclareEntryPoint (Autofill)
 
    return lerp (fn_blur (Fill_3, uv3, 3), Fgnd, Fgnd.a);
 }
-
