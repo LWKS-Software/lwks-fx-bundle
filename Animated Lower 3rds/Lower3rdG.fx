@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2018-03-19
 
@@ -16,6 +16,9 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+//
 // Updated 2023-08-02 jwrl.
 // Reworded text type selection for 2023.2 settings.
 //
@@ -24,8 +27,6 @@
 //
 // Conversion 2022-12-28 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Lower third G", "Text", "Animated Lower 3rds", "This uses a clock wipe to wipe on a box which then reveals the text", "ScaleAware|HasMinOutputSize");
 
@@ -76,6 +77,8 @@ DeclareFloatParam (_OutputAspectRatio);
 #define TWO_PI  6.2831853072
 #define HALF_PI 1.5707963268
 
+float4 _TransparentBlack = 0.0.xxxx;
+
 //-----------------------------------------------------------------------------------------//
 // Code
 //-----------------------------------------------------------------------------------------//
@@ -94,12 +97,12 @@ DeclarePass (Wipe)
 
    float trans = max ((Transition - 0.75) * 4.0, 0.0);
 
-   float4 out_ln = (cz.x < az.x) || (cz.y < az.y) ? LineColour : kTransparentBlack;
-   float4 retval = (az.x < cz.x) && (az.y < cz.y) ? lerp (kTransparentBlack, FillColour, trans) : kTransparentBlack;
+   float4 out_ln = (cz.x < az.x) || (cz.y < az.y) ? LineColour : _TransparentBlack;
+   float4 retval = (az.x < cz.x) && (az.y < cz.y) ? lerp (_TransparentBlack, FillColour, trans) : _TransparentBlack;
 
    cz += float2 (1.0, _OutputAspectRatio) * LineWidth * 0.025;
 
-   if ((az.x > cz.x) || (az.y > cz.y)) out_ln = kTransparentBlack;
+   if ((az.x > cz.x) || (az.y > cz.y)) out_ln = _TransparentBlack;
 
    float x, y;
    float scale = distance (xy, 0.0);
@@ -111,16 +114,16 @@ DeclarePass (Wipe)
    xy += 0.5.xx;
 
    if (trans < 0.25) {
-      if ((uv0.x > 0.5) && (uv0.x < xy.x) && (uv0.y < xy.y)) out_ln = kTransparentBlack;
+      if ((uv0.x > 0.5) && (uv0.x < xy.x) && (uv0.y < xy.y)) out_ln = _TransparentBlack;
    }
    else if (trans < 0.5) {
-      if ((uv0.x > 0.5) && (uv0.y < 0.5)) out_ln = kTransparentBlack;
-      if ((uv0.x > xy.x) && (uv0.y > xy.y)) out_ln = kTransparentBlack;
+      if ((uv0.x > 0.5) && (uv0.y < 0.5)) out_ln = _TransparentBlack;
+      if ((uv0.x > xy.x) && (uv0.y > xy.y)) out_ln = _TransparentBlack;
    }
    else if (trans < 0.75) {
-      if ((uv0.x > 0.5) || ((uv0.x > xy.x) && (uv0.y > xy.y))) out_ln = kTransparentBlack;
+      if ((uv0.x > 0.5) || ((uv0.x > xy.x) && (uv0.y > xy.y))) out_ln = _TransparentBlack;
    }
-   else if ((uv0.x > 0.5) || (uv0.y > 0.5) || ((uv0.x < xy.x) && (uv0.y < xy.y))) out_ln = kTransparentBlack;
+   else if ((uv0.x > 0.5) || (uv0.y > 0.5) || ((uv0.x < xy.x) && (uv0.y < xy.y))) out_ln = _TransparentBlack;
 
    return lerp (retval, out_ln, out_ln.a);
 }
@@ -160,4 +163,3 @@ DeclareEntryPoint (Lower3rdG)
 
    return lerp (Bgnd, Mask, Mask.a * Opacity);
 }
-
