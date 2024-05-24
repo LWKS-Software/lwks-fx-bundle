@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2024-05-24
 // @Author khaver
 // @Created 2011-05-24
 
@@ -16,13 +16,14 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with 0.0.xxxx for Linux fix.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-01-24 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Flare", "Stylize", "Filters", "Creates an adjustable lens flare effect", kNoFlags);
 
@@ -86,8 +87,7 @@ DeclareEntryPoint (Flare)
    ret /= 15.0;
    ret.a = 0.0;
 
-   ret = lerp (kTransparentBlack, saturate (ret + source), source.a);
+   ret = lerp (0.0.xxxx, saturate (ret + source), source.a);
 
    return lerp (source, ret, tex2D (Mask, uv1).x);
 }
-
