@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2024-05-24
 // @Author khaver
 // @Created 2011-05-25
 
@@ -18,13 +18,14 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-01-24 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Anamorphic lens flare", "Stylize", "Filters", "Simulates the horizontal non-linear flare that an anamorphic lens produces", CanSize);
 
@@ -58,6 +59,8 @@ DeclareFloatParam (_OutputHeight);
 #define PROFILE ps_3_0
 #endif
 
+float4 _TransparentBlack = 0.0.xxxx;
+
 //-----------------------------------------------------------------------------------------//
 // Code
 //-----------------------------------------------------------------------------------------//
@@ -83,7 +86,7 @@ DeclarePass (Adjust)
 
 DeclarePass (Blur1)
 {
-   float4 ret = kTransparentBlack;
+   float4 ret = _TransparentBlack;
 
    float2 offset = 0.0.xx;
    float2 displacement = float2 (1.0 / _OutputWidth, 0.0);
@@ -101,7 +104,7 @@ DeclarePass (Blur1)
 
 DeclarePass (Blur2)
 {
-   float4 ret = kTransparentBlack;
+   float4 ret = _TransparentBlack;
 
    float2 offset = 0.0.xx;
    float2 displacement = float2 (BlurAmount / _OutputWidth, 0.0);
@@ -119,7 +122,7 @@ DeclarePass (Blur2)
 
 DeclareEntryPoint (AnamorphicLensFlare)
 {
-   if (IsOutOfBounds (uv1)) return kTransparentBlack;
+   if (IsOutOfBounds (uv1)) return _TransparentBlack;
 
    float4 blr = tex2D (Blur2, uv2);
    float4 source = tex2D (Inp, uv2);
@@ -127,8 +130,7 @@ DeclareEntryPoint (AnamorphicLensFlare)
 
    blr = flare ? float4 (blr.rgb * Strength * 2.0, source.a) : lerp (source, comb, Strength);
 
-   blr = lerp (kTransparentBlack, blr, source.a);
+   blr = lerp (_TransparentBlack, blr, source.a);
 
    return lerp (source, blr, tex2D (Mask, uv2).x);
 }
-
