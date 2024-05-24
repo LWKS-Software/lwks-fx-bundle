@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2024-05-24
 // @Author khaver
 // @Created 2011-06-27
 
@@ -17,13 +17,15 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+// Replaced WHITE with float4 _OpaqueWhite.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-05-08 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Skew", "DVE", "Distortion", "A neat, simple effect for adding a perspective illusion to a flat plane", CanSize);
 
@@ -66,7 +68,8 @@ DeclareFloatParam (Zoom, "Zoom", kNoGroup, kNoFlags, 1.0, 0.0, 2.0);
 #define PROFILE ps_3_0
 #endif
 
-#define WHITE 1.0.xxxx
+float4 _OpaqueWhite = 1.0.xxxx;
+float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
 // Code
@@ -97,9 +100,8 @@ DeclareEntryPoint (Perspective)
       xy = frac (uv2 * 10.0);
 
       if (any (xy <= 0.02) || any (xy >= 0.98))
-         color = WHITE - color;
+         color = _OpaqueWhite - color;
    }
 
-   return lerp (kTransparentBlack, color, tex2D (Mask, uv2).x);
+   return lerp (_TransparentBlack, color, tex2D (Mask, uv2).x);
 }
-
