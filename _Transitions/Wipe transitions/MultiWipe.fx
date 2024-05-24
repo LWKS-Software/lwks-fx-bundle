@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-17
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2024-05-15
 
@@ -33,6 +33,9 @@
 // Lightworks user effect MultiWipe.fx
 //
 // Version history:
+//
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _kTransparentBlack to fix Linux lerp()/mix() bug.
 //
 // Update 2024-05-17 jwrl.
 // Cleaned up the comments to (hopefully) make them clearer.
@@ -88,6 +91,8 @@ DeclareFloatParam (_OutputAspectRatio);
 #define HALF_PI 1.5708
 
 #define SQUARE  1
+
+float4 _TransparentBlack = 0.0.xxxx;
 
 // Below are three control arrays.  You may notice that there are twenty float or float2
 // values assigned in each array instead of the expected fifteen.  This is because for
@@ -157,7 +162,7 @@ float4 initKey (sampler Ff, sampler Bb, float2 xy)
       if (Source == 1) { retval.a = pow (retval.a, 0.375 + (KeyGain / 2.0)); }
       else retval.a = smoothstep (0.0, KeyGain, distance (tex2D (Bb, xy).rgb, retval.rgb));
 
-      if (retval.a == 0.0) retval = kTransparentBlack;
+      if (retval.a == 0.0) retval = _TransparentBlack;
    }
 
    return retval;
@@ -261,7 +266,7 @@ DeclareEntryPoint (One_wipe)
       if (ShowKey) {
          float4 Fgnd = tex2D (Fg0, uv3);
 
-         return lerp (kTransparentBlack, Fgnd, Fgnd.a);
+         return lerp (_TransparentBlack, Fgnd, Fgnd.a);
       }
       else progress = SwapDir ? amount : 1.0 - amount;
    }
@@ -307,7 +312,7 @@ DeclareEntryPoint (Two_wipes)
       if (ShowKey) {
          float4 Fgnd = tex2D (Fg1, uv3);
 
-         return lerp (kTransparentBlack, Fgnd, Fgnd.a);
+         return lerp (_TransparentBlack, Fgnd, Fgnd.a);
       }
       else progress = SwapDir ? amount : 1.0 - amount;
    }
@@ -356,7 +361,7 @@ DeclareEntryPoint (Three_wipes)
       if (ShowKey) {
          float4 Fgnd = tex2D (Fg2, uv3);
 
-         return lerp (kTransparentBlack, Fgnd, Fgnd.a);
+         return lerp (_TransparentBlack, Fgnd, Fgnd.a);
       }
       else progress = SwapDir ? amount : 1.0 - amount;
    }
@@ -409,7 +414,7 @@ DeclareEntryPoint (Four_wipes)
       if (ShowKey) {
          float4 Fgnd = tex2D (Fg3, uv3);
 
-         return lerp (kTransparentBlack, Fgnd, Fgnd.a);
+         return lerp (_TransparentBlack, Fgnd, Fgnd.a);
       }
       else progress = SwapDir ? amount : 1.0 - amount;
    }
@@ -466,7 +471,7 @@ DeclareEntryPoint (Five_wipes)
       if (ShowKey) {
          float4 Fgnd = tex2D (Fg4, uv3);
 
-         return lerp (kTransparentBlack, Fgnd, Fgnd.a);
+         return lerp (_TransparentBlack, Fgnd, Fgnd.a);
       }
       else progress = SwapDir ? amount : 1.0 - amount;
    }
