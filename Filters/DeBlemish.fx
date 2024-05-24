@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2019-01-30
 
@@ -21,13 +21,14 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with 0.0.xxxx for Linux fix.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-01-24 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("De-blemish", "Stylize", "Filters", "Smooths skin tones to reduce visible skin blemishes using a radial blur", kNoFlags);
 
@@ -190,8 +191,7 @@ DeclareEntryPoint (DeBlemish)
       Fgnd.rgb = lerp (Fgnd.rgb, retval.rgb, retval.a * Amount);
    }
 
-   Fgnd = lerp (kTransparentBlack, Fgnd, source.a);
+   Fgnd = lerp (0.0.xxxx, Fgnd, source.a);
 
    return lerp (source, Fgnd, tex2D (Mask, uv1).x);
 }
-
