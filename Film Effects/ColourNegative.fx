@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2016-05-14
 
@@ -14,13 +14,14 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 0.0.xxxx for Linux fix.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-01-24 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Colour negative", "Colour", "Film Effects", "Simulates the look of 35 mm colour film dye-masked negative", kNoFlags);
 
@@ -43,8 +44,7 @@ DeclareEntryPoint (ColourNegative)
 
    retval.rgb = (float3 (2.0, 1.33, 1.0) - retval.rgb) / 2.0;
 
-   retval = lerp (kTransparentBlack, retval, retval.a);
+   retval = lerp (0.0.xxxx, retval, retval.a);
 
    return lerp (source, retval, tex2D (Mask, uv1).x);
 }
-
