@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2016-03-04
 
@@ -26,6 +26,9 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+//
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
 //
@@ -34,8 +37,6 @@
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Light ray blend", "Mix", "Blend Effects", "Adds directional blurs to a key or any image with an alpha channel", CanSize);
 
@@ -97,13 +98,15 @@ DeclareFloatParam (_OutputAspectRatio);
 #define SUBTRACT 3
 #define SOLID    4
 
+float4 _TransparentBlack = 0.0.xxxx;
+
 //-----------------------------------------------------------------------------------------//
 // Functions
 //-----------------------------------------------------------------------------------------//
 
 float4 fn_keygen (sampler F, float2 xy1, sampler B, float2 xy2)
 {
-   if (IsOutOfBounds (xy1)) return kTransparentBlack;
+   if (IsOutOfBounds (xy1)) return _TransparentBlack;
 
    float4 Fgd = tex2D (F, xy1);
 
@@ -177,7 +180,7 @@ DeclareEntryPoint (LightRayBlendFromCentre)
       float2 zoomCentre = float2 ((Xcentre * 3) - 1.0, 2.0 - (Ycentre * 3));
       float2 xy = uv3 - zoomCentre;
 
-      retval = kTransparentBlack;
+      retval = _TransparentBlack;
 
       for (int i = SAMPLE; i >= 0; i--) {
          scale = 1.0 - z_Amount * ((float)i / SAMPLE);
@@ -205,7 +208,7 @@ DeclareEntryPoint (LightRayBlendToCentre)
       float2 zoomCentre = float2 (Xcentre, 1.0 - Ycentre);
       float2 xy = uv3 - zoomCentre;
 
-      retval = kTransparentBlack;
+      retval = _TransparentBlack;
 
       for (int i = 0; i <= SAMPLE; i++) {
          scale = 1.0 + zoomAmount * ((float)i / SAMPLE);
@@ -253,4 +256,3 @@ DeclareEntryPoint (LightRayBlendLinear)
 
    return main (Fg, uv1, Bg, uv2, retval);
 }
-
