@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2018-09-09
 
@@ -18,13 +18,14 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-01-11 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Double vision", "Stylize", "Special Effects", "Gives a blurry double vision effect suitable for impaired vision POVs", kNoFlags);
 
@@ -50,6 +51,8 @@ DeclareFloatParam (_OutputHeight);
 
 #define LOOP   12
 #define DIVIDE 49
+
+float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
 // Code
@@ -97,6 +100,5 @@ DeclareEntryPoint (DoubleVision)
    float2 xy1 = float2 (uv.x / split, uv.y);
    float2 xy2 = float2 (1.0 - ((1.0 - uv.x) / split), uv.y);
 
-   return lerp (kTransparentBlack, lerp (tex2D (Blur, xy1), tex2D (Blur, xy2), 0.5), retval.a);
+   return lerp (_TransparentBlack, lerp (tex2D (Blur, xy1), tex2D (Blur, xy2), 0.5), retval.a);
 }
-
