@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2024-05-24
 // @Author windsturm
 // @Author jwrl
 // @Created 2012-05-23
@@ -16,13 +16,14 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-01-24 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Manga pattern", "Stylize", "Print Effects", "This simulates the star pattern and hard contours used to create tonal values in a Manga half-tone image", kNoFlags);
 
@@ -49,6 +50,16 @@ DeclareFloatParam (td4, "White threshold", "Sample threshold", kNoFlags, 0.8, 0.
 
 DeclareFloatParam (_OutputAspectRatio);
 DeclareFloatParam (_OutputWidth);
+
+//-----------------------------------------------------------------------------------------//
+// Definitions and declarations
+//-----------------------------------------------------------------------------------------//
+
+#ifdef WINDOWS
+#define PROFILE ps_3_0
+#endif
+
+float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
 // Code
@@ -85,10 +96,9 @@ DeclareEntryPoint (MangaPattern)
    }
    else dots = 1.0.xxxx;
 
-   dots = lerp (kTransparentBlack, dots, color.a);
+   dots = lerp (_TransparentBlack, dots, color.a);
 
-   if (IsOutOfBounds (uv2)) dots = kTransparentBlack;
+   if (IsOutOfBounds (uv2)) dots = _TransparentBlack;
 
    return lerp (color, dots, tex2D (Mask, uv2).x);
 }
-
