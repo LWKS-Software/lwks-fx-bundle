@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2020-08-03
 
@@ -33,13 +33,14 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-01-24 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Multiple toner", "Colour", "Film Effects", "Select from sepia, selenium, gold, copper and ferro toners to simulate darkroom processes", kNoFlags);
 
@@ -75,6 +76,8 @@ DeclareFloatParam (Exposure, "Exposure", "Toner settings", "DisplayAsLiteral", 0
 #define COPPER     float3(0.604, 0.968, 1.0)
 #define FERRO      float3(1.0, 0.776, 0.486)
 
+float4 _TransparentBlack = 0.0.xxxx;
+
 //-----------------------------------------------------------------------------------------//
 // Code
 //-----------------------------------------------------------------------------------------//
@@ -98,7 +101,7 @@ DeclareEntryPoint (MultiTonerSepia)
 
    retval.rgb = lerp (retval.rgb, toner, Amount);
 
-   retval = lerp (kTransparentBlack, retval, alpha);
+   retval = lerp (_TransparentBlack, retval, alpha);
 
    return lerp (source, retval, tex2D (Mask, uv1).x);
 }
@@ -122,7 +125,7 @@ DeclareEntryPoint (MultiTonerSelenium_1)
 
    retval.rgb = lerp (retval.rgb, toner, Amount);
 
-   retval = lerp (kTransparentBlack, retval, alpha);
+   retval = lerp (_TransparentBlack, retval, alpha);
 
    return lerp (source, retval, tex2D (Mask, uv1).x);
 }
@@ -146,7 +149,7 @@ DeclareEntryPoint (MultiTonerSelenium_2)
 
    retval.rgb = lerp (retval.rgb, toner, Amount);
 
-   retval = lerp (kTransparentBlack, retval, alpha);
+   retval = lerp (_TransparentBlack, retval, alpha);
 
    return lerp (source, retval, tex2D (Mask, uv1).x);
 }
@@ -170,7 +173,7 @@ DeclareEntryPoint (MultiTonerGold)
 
    retval.rgb = lerp (retval.rgb, toner, Amount);
 
-   retval = lerp (kTransparentBlack, retval, alpha);
+   retval = lerp (_TransparentBlack, retval, alpha);
 
    return lerp (source, retval, tex2D (Mask, uv1).x);
 }
@@ -194,7 +197,7 @@ DeclareEntryPoint (MultiTonerCopper)
 
    retval.rgb = lerp (retval.rgb, toner, Amount);
 
-   retval = lerp (kTransparentBlack, retval, alpha);
+   retval = lerp (_TransparentBlack, retval, alpha);
 
    return lerp (source, retval, tex2D (Mask, uv1).x);
 }
@@ -218,8 +221,7 @@ DeclareEntryPoint (MultiTonerIron)
 
    retval.rgb = lerp (retval.rgb, toner, Amount);
 
-   retval = lerp (kTransparentBlack, retval, alpha);
+   retval = lerp (_TransparentBlack, retval, alpha);
 
    return lerp (source, retval, tex2D (Mask, uv1).x);
 }
-
