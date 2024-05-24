@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2024-05-24
 // @Author khaver
 // @Author jwrl
 // @Created 2023-03-07
@@ -32,6 +32,9 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack to fix Linux lerp()/mix() bug.
+//
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
 //
@@ -44,8 +47,6 @@
 //
 // Conversion 2023-03-07 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Dissolve X transitions", "Mix", "Blend transitions", "Transitions using layer blending profiles", kNoFlags);
 
@@ -99,6 +100,8 @@ DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
 #define WHITE   (1.0).xxxx
 
 #define LUMA    float4(0.2989, 0.5866, 0.1145, 0.0)
+
+float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
 // Functions
@@ -172,10 +175,10 @@ float2 fn_init (sampler F, float2 xy1, out float4 Fgnd, sampler B, float2 xy2, o
       if (Source == 0) { Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb)); }
       else if (Source == 1) { Fgnd.a = pow (Fgnd.a, 0.375 + (KeyGain / 2.0)); }
 
-      if (Fgnd.a == 0.0) Fgnd = kTransparentBlack;
+      if (Fgnd.a == 0.0) Fgnd = _TransparentBlack;
 
       if (ShowKey) {
-         Bgnd = kTransparentBlack;
+         Bgnd = _TransparentBlack;
          Fgnd = lerp (Bgnd, Fgnd, Fgnd.a);
          retval = -1.0.xx;
       }
@@ -262,7 +265,7 @@ DeclareEntryPoint (LinearBurn)
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
    if (amount.x >= 0.0) {
-      float4 blnd = lerp (Bgnd, max (Fgnd + Bgnd - WHITE, kTransparentBlack), amount.x);
+      float4 blnd = lerp (Bgnd, max (Fgnd + Bgnd - WHITE, _TransparentBlack), amount.x);
 
       blnd = lerp (blnd, Fgnd, amount.y);
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
@@ -500,7 +503,7 @@ DeclareEntryPoint (LinearLight)
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
    if (amount.x >= 0.0) {
-      float4 retMin = max ((2.0 * Fgnd) + Bgnd - WHITE, kTransparentBlack);
+      float4 retMin = max ((2.0 * Fgnd) + Bgnd - WHITE, _TransparentBlack);
       float4 retMax = min ((2.0 * Fgnd) + Bgnd - WHITE, WHITE);
       float4 blnd = Fgnd;
 
@@ -604,7 +607,7 @@ DeclareEntryPoint (Subtract)
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
    if (amount.x >= 0.0) {
-      float4 blnd = lerp (Bgnd, max (Bgnd - Fgnd, kTransparentBlack), amount.x);
+      float4 blnd = lerp (Bgnd, max (Bgnd - Fgnd, _TransparentBlack), amount.x);
 
       blnd = lerp (blnd, Fgnd, amount.y);
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
@@ -711,4 +714,3 @@ DeclareEntryPoint (Luminosity)
 
    return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
 }
-
