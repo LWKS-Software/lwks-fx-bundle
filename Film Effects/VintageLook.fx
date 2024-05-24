@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2024-05-24
 // @Author msi
 // @OriginalAuthor "Wojciech Toman (http://wtomandev.blogspot.com/2011/04/vintage-look.html)"
 // @Created 2011-05-27
@@ -19,13 +19,14 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-02-17 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Vintage look", "Colour", "Film Effects", "Simulates what happens when the dye layers of old colour film stock start to fade.", kNoFlags);
 
@@ -50,6 +51,16 @@ DeclareFloatParam (MagentaLevel, "Magenta", "Overlay", kNoFlags, 0.2, 0.0, 1.0);
 DeclareFloatParam (CyanLevel, "Cyan", "Overlay", kNoFlags, 0.17, 0.0, 1.0);
 
 //-----------------------------------------------------------------------------------------//
+// Definitions and declarations
+//-----------------------------------------------------------------------------------------//
+
+#ifdef WINDOWS
+#define PROFILE ps_3_0
+#endif
+
+float4 _TransparentBlack = 0.0.xxxx;
+
+//-----------------------------------------------------------------------------------------//
 // Code
 //-----------------------------------------------------------------------------------------//
 
@@ -67,8 +78,7 @@ DeclareEntryPoint (VintageLook)
 
    // END Vintage Look routine by Wojciech Toman
 
-   corrected = lerp (kTransparentBlack, corrected, source.a);	
+   corrected = lerp (_TransparentBlack, corrected, source.a);	
 
    return lerp (source, corrected, tex2D (Mask, uv1).x);	
 }
-
