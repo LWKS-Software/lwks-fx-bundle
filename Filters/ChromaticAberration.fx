@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2024-05-24
 // @Author josely
 // @Created 2012-06-29
 
@@ -15,6 +15,9 @@
 // Chromatic Abberation Copyright (c) Johannes Bausch (josely). All rights reserved.
 //
 // Version history:
+//
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with 0.0.xxxx for Linux fix.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -101,8 +104,7 @@ DeclareEntryPoint (ChromaticAberration)
    }
    else { fragColor.rb *= STEP_RB; }   // Half cycle correction
 
-   fragColor = lerp (kTransparentBlack, fragColor, ReadPixel (Input, uv1).a);
+   fragColor = lerp (0.0.xxxx, fragColor, ReadPixel (Input, uv1).a);
 
    return lerp (source, fragColor, tex2D (Mask, uv2).x);
 }
-
