@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2024-05-24
 // @Author jwrl
 // @Created 2020-08-24
 
@@ -17,13 +17,14 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Minor mask generation change.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-01-25 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Binocular mask", "Stylize", "Special Effects", "Creates the classic binocular effect", kNoFlags);
 
@@ -55,8 +56,6 @@ DeclareFloatParam (_OutputHeight);
 #define PROFILE ps_3_0
 #endif
 
-#define WHITE   1.0.xxxx
-
 #define FEATHER 0.05
 #define CIRCLE  0.25
 #define RADIUS  1.6666666667
@@ -82,7 +81,7 @@ DeclarePass (PovMask)
 
    soft += soft;
 
-   return lerp (WHITE, kTransparentBlack, saturate ((radius - edge) / soft));
+   return lerp (1.0, 0.0, saturate ((radius - edge) / soft));
 }
 
 DeclareEntryPoint (BinocularMask)
@@ -112,4 +111,3 @@ DeclareEntryPoint (BinocularMask)
 
    return retval;
 }
-
