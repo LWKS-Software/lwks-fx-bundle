@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2024-05-24
 // @Author khaver
 // @Author toninoni
 // @Created 2018-06-12
@@ -25,13 +25,14 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-01-24 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Lens Flare", "Stylize", "Filters", "Basic lens flare", kNoFlags);
 
@@ -72,6 +73,8 @@ DeclareFloatParam (_OutputAspectRatio);
 #ifdef WINDOWS
 #define PROFILE ps_3_0
 #endif
+
+float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
 // Functions
@@ -176,8 +179,7 @@ DeclareEntryPoint (LensFlare2)
    float3 color = float3 (1.5, 1.2, 1.2) * lensflare (Inp, uv, mouse);
 
    color = saturate (cc (color, 0.5, 0.1));
-   color = lerp (kTransparentBlack, color, orig.a);
+   color = lerp (_TransparentBlack, color, orig.a);
 
    return float4 (saturate (orig.rgb + color), orig.a);
 }
-
