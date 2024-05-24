@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2024-05-04
 // @Author jwrl
 // @Created 2018-06-13
 
@@ -16,6 +16,9 @@
 //
 // Version history:
 //
+// Updated 2024-05-24 jwrl.
+// Replaced kTransparentBlack with 0.0.xxxx to fix Linux lerp()/mix() bug.
+//
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
 //
@@ -28,8 +31,6 @@
 //
 // Conversion 2023-03-04 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Strips transition", "Mix", "Wipe transitions", "Splits the foreground into strips and compresses it to zero height", CanSize);
 
@@ -105,7 +106,7 @@ DeclareEntryPoint (StripsTrans)
 {
    float4 Fgnd = tex2D (Fgd, uv3);
 
-   if (ShowKey) { return lerp (kTransparentBlack, Fgnd, Fgnd.a * tex2D (Mask, uv3).x); }
+   if (ShowKey) { return lerp (0.0.xxxx, Fgnd, Fgnd.a * tex2D (Mask, uv3).x); }
 
    float4 Bgnd = tex2D (Bgd, uv3);
    float4 retval, maskBg = Bgnd;
@@ -132,4 +133,3 @@ DeclareEntryPoint (StripsTrans)
 
    return lerp (maskBg, retval, tex2D (Mask, uv3).x);
 }
-
