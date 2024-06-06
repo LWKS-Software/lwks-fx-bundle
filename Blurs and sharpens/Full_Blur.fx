@@ -50,7 +50,7 @@
 // Built 2024-06-07 by schrauber.
 //-----------------------------------------------------------------------------------------//
 
-DeclareLightworksEffect ("Full Blur", "Stylize", "Prototypes", "Blur until all pixels are almost identical.", kNoFlags);
+DeclareLightworksEffect ("Full Blur", "Stylize", "Blurs and sharpens", "Blur until all pixels are almost identical.", kNoFlags);
 
 //-----------------------------------------------------------------------------------------//
 // Inputs & Samplers
@@ -84,8 +84,8 @@ DeclareFloatParam (_OutputAspectRatio);
 // ------ 5 x 6 Blur with Pre-Dithering --------
 
 // Definitions specific to the 5 x 6 blur passes:
-// Angle offset per pass in case of 5 passes & 6 samples in the blur circle (60� rotation per sample within each pass):
-// 60� / 5 = 12� steps per pass + 9.3� (Offset determined experimentally) 
+// Angle offset per pass in case of 5 passes & 6 samples in the blur circle (60° rotation per sample within each pass):
+// 60° / 5 = 12° steps per pass + 9.3° (Offset determined experimentally) 
 
 #define ANGLE_60           1.0472  // 60 degrees in radians 
 #define ANGLE_OFFSET_A1    0.1647  // about 9.4 degrees in radians  
@@ -137,14 +137,14 @@ float2 fn_noise (float2 progress, float2 xy)     // float2 texture noise (two di
 
 float2 fn_ditherCoord (float2 uv, float radius, float randomAngle, float randomRadius )
 {
-   // Random angles from 0 to 360� (circle) & radii with adjustable random range.
+   // Random angles from 0 to 360° (circle) & radii with adjustable random range.
    // The generated dither coordinates require a sampler that supports multiple edge reflections.                    
 
    float2 coord;    
 
    float halfAspectRatio = ((_OutputAspectRatio - 1.0) / 2.0) +1.0;
    float2 radius2 = float2 (1.0 / halfAspectRatio, halfAspectRatio) * 5.0.xx * radius.xx; 
-   radius2 = min( radius2, 1.225.xx); // Limits the radius, as values ​​above this can lead to a deterioration in the blur quality of the effect.
+   radius2 = min( radius2, 1.225.xx); // Limits the radius, as values â€‹â€‹above this can lead to a deterioration in the blur quality of the effect.
 
    sincos (randomAngle * PI_TWO, coord.y, coord.x);
 
