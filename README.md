@@ -1,4 +1,4 @@
-# Lightworks user Fx library, June 1, 2024.
+# Lightworks user Fx library, June 7, 2024.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -81,6 +81,7 @@ If you need to use two effects that have the same name, simply open one of them 
 |Bilateral blur                |BilateralBlur.fx        |A strong bilateral blur created by baopao with a little help from his friends |
 |Directional sharpen           |DirectionalSharpen.fx   |A directional unsharp mask for when directional blurring must be corrected    |
 |Extended sharpen              |ExtendedSharpen.fx      |If the Lightworks sharpen effects don't have enough range, try this           |
+|Full Blur                     |Full_Blur.fx            |Blurs until all pixels are almost identical                                   |
 |Focal blur                    |FocalBlur.fx            |Uses a depth map to create a faux depth of field                              |
 |Ghostly blur                  |GhostlyBlur.fx          |The sort of effect that you get when looking through a fogged window          |
 |Iris bokeh                    |IrisBokeh.fx            |Similar to Bokeh.fx, provides control of the iris (5 to 8 segments or round)  |
