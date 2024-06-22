@@ -1,4 +1,4 @@
-# Lightworks user Fx library, June 7, 2024.
+# Lightworks user Fx library, June 22, 2024.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -386,6 +386,7 @@ If you need to use two effects that have the same name, simply open one of them 
 |Corner split transition      |Yes      |Yes      |CornerTrans.fx          |Splits an image four ways to or from the corners       |
 |MultiWipe                    |Yes      |Yes      |MultiWipe.fx            |Performs a series of zooming circular or square wipes  |
 |Push transition              |No       |Yes      |PushTrans.fx            |Pushes the foreground on or off screen                 |
+|Semicircles                  |Yes      |No       |Semicircles.fx          |A series of semicircular wipes reveal incoming video   |
 |Sliced transition            |Yes      |Yes      |SliceTrans.fx           |Separates and splits the image into strips             |
 |Smear wipe                   |Yes      |No       |SmearWipe.fx            |A push wipe with a trailing smeared edge               |
 |Strips transition            |No       |Yes      |StripsTrans.fx          |Splits the foreground into compressed strips           |
