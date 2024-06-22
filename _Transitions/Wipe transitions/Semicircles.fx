@@ -17,7 +17,7 @@
 // Built 2024-06-22 jwrl.
 //-----------------------------------------------------------------------------------------//
 
-DeclareLightworksEffect ("Semicircles", "Mix", "Wipe transitions", "Uses a series of semicircular wipes to revel the incoming video", CanSize);
+DeclareLightworksEffect ("Semicircles", "Mix", "Wipe transitions", "Uses a series of semicircular wipes to reveal the incoming video", CanSize);
 
 //-----------------------------------------------------------------------------------------//
 // Inputs
