@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-07-05
+// @Released 2024-07-06
 // @Author schrauber
 // @Author jwrl
 // @Created 2024-07-05
@@ -8,8 +8,8 @@
  So what does Text pop actually do?  It changes the softness, transparency and edge
  sharpness of text connected to the Fg input.  That in turn makes it possible to
  change fonts in the standard text effect in very interesting ways.  It can alter
- its contouring, modify the edge sharpness, increase the outline thickness and
- add internal glow effects.  To get the most out of it you will need to experiment,
+ its contouring, modify the edge sharpness, increase and erode the outline thickness
+ and add internal glow effects.  To get the most out of it you'll need to experiment,
  but it will definitely repay the effort.
 
  It will work with both title and image key effects.  When key mode is set to normal
@@ -35,6 +35,12 @@
 // Lightworks user effect TextPop.fx
 //
 // Version history:
+//
+// Modified 2024-07-06 jwrl.
+// Corrected the range of the edge harden so that the nearly useless upper 75% of the
+// range is no longer so dominant.
+// Modified the gamma adjustment so that it doesn't burn out.
+// Changed "Feathering" parameter to "Edge erode".
 //
 // Built 2024-07-05 by jwrl from schrauber's design.
 //-----------------------------------------------------------------------------------------//
@@ -64,7 +70,7 @@ DeclareFloatParam (Extract, "Extraction", "Text source", kNoFlags, 0.25, 0.0, 1.
 DeclareFloatParam (TextSpread, "Text spread", "Text processing", kNoFlags, 0.1,  0.0, 1.0);
 DeclareFloatParam (TextGamma,  "Text gamma",  "Text processing", kNoFlags, 0.0, -1.0, 1.0);
 DeclareFloatParam (EdgeHarden, "Edge harden", "Text processing", kNoFlags, 0.5,  0.0, 1.0);
-DeclareFloatParam (Feathering, "Feathering",  "Text processing", kNoFlags, 0.0,  0.0, 1.0);
+DeclareFloatParam (EdgeErode,  "Edge erode",  "Text processing", kNoFlags, 0.0,  0.0, 1.0);
 
 DeclareFloatParam (Sharpen,      "Sharpen",       "Text sharpness", kNoFlags, 0.5,   0.0, 1.0);
 DeclareFloatParam (SampleOffset, "Sample offset", "Text sharpness", kNoFlags, 2.0,   0.0, 6.0);
@@ -130,13 +136,6 @@ float4 fn_Blur (sampler2D S, float2 uv, float offset)
    return cOut / 13.0;
 }
 
-float4 fixVideo (float4 video)
-{
-   float gamma = 1.0 / pow ((TextGamma * 0.9) + 1.0, 3.5875);
-
-   return float4 (pow (video.rgb, clamp (gamma, 0.1, 10.0)), video.a);
-}
-
 //-----------------------------------------------------------------------------------------//
 // Code
 //-----------------------------------------------------------------------------------------//
@@ -149,6 +148,20 @@ DeclarePass (Fgd)
       float4 Bgnd = ReadPixel (Bg, uv2);
 
       Fgnd.a = smoothstep (0.0, Extract, distance (Bgnd.rgb, Fgnd.rgb));
+   }
+
+   if (Display > 1) {
+      float gammaLim = clamp (TextGamma, -1.0, 1.0);
+      float posGamma = max (0.0, gammaLim);
+      float gammaPow = lerp (0.25, 2.5, (1.0 + gammaLim) * 0.5);
+      float gamma    = 1.0 / pow ((gammaLim * 0.9) + 1.0, gammaPow);
+
+      float maxval = max (Fgnd.r, max (Fgnd.g, Fgnd.b));
+      float vibval = posGamma * (((Fgnd.r + Fgnd.g + Fgnd.b) / 3.0) - maxval);
+
+      float3 video = saturate (lerp (Fgnd.rgb, maxval.xxx, vibval));
+
+      Fgnd.rgb = pow (video, gamma);
    }
 
    return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
@@ -201,15 +214,12 @@ DeclareEntryPoint (TextPop)
 
       Fgnd.rgb += ((saturate (dot (edges, luma_val)) * clamp * 2.0) - clamp).xxx;
 
-      float clipMin = saturate (EdgeHarden) * 0.9;
-      float clipRng = lerp (clipMin + 1e-6, 1.0, saturate (Feathering)) - clipMin;
-      float alpha   = saturate ((Fgnd.a - clipMin) / clipRng);
+      float clipMin = saturate (pow (EdgeHarden, 3.0)) * 0.9;
+      float clipRng = lerp (clipMin + 1e-6, 1.0, saturate (EdgeErode)) - clipMin;
 
-      Fgnd   = fixVideo (Fgnd);
-      Fgnd.a = alpha;
+      Fgnd.a = saturate ((Fgnd.a - clipMin) / clipRng);
       Fgnd   = lerp (tex2D (Fgd, uv3), Fgnd, Mixture);
    }
 
    return lerp (Bgnd, Fgnd, Fgnd.a * mask * Opacity);
 }
-
