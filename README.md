@@ -1,4 +1,4 @@
-# Lightworks user Fx library, July 5, 2024.
+# Lightworks user Fx library, July 17, 2024.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -73,6 +73,7 @@ If you need to use two effects that have the same name, simply open one of them 
 |Glittery edges                |GlitteryEdges.fx        |Sparkly edges, best over darker backgrounds                                   |
 |Light ray blend               |LightRayBlend.fx        |Adds directional blurs to a key or any image with an alpha channel            |
 |Magical edges                 |MagicalEdges.fx         |Fractal edges with star-shaped radiating blurs                                |
+|Soft masked blend             |SoftMaskedBlend.fx      |External mask foreground over background with edge softness and border        |
 |Text pop                      |TextPop.fx              |Applies a range of effects to text to make it pop                             |
 |Unpremultiply                 |Unpremultiply.fx        |Removes the hard outline you can get with some blend effects                  |
 
