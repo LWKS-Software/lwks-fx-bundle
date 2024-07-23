@@ -1,7 +1,7 @@
 // @Maintainer jwrl
-// @Released 2024-02-08
+// @Released 2024-07-23
 // @Author jwrl
-// @Created 2024-01-28
+// @Created 2024-07-23
 
 /**
  Quad split with transform is designed as a single effect replacement for Lightworks'
@@ -21,7 +21,8 @@
  priority of the video layers in the quad is V1 is on top of everything else and
  defaults to the top left of screen.  Next is V2 at top right, then V3 at bottom
  left, and finally V4 at bottom right.  There is enough adjustment range to move
- any to whatever quadrant you need.
+ any to whatever quadrant you need.  Edge softness can then be applied to the V
+ images.
 
  Finally, the background can be zoomed.  Unfortunately it is not possible to match
  the on-screen zoom scaling and positioning of the Lightworks effect, so a switch
@@ -42,21 +43,9 @@
 //
 // Version history:
 //
-// Updated 2024-05-22 jwrl.
-// Removed _utils.fx inclusion.
-// Removed references to kTransparentBlack.
-// Added crop overlap protection.
-// Replaced IsOutOfBounds with IsIllegal function.
-//
-// Updated 2024-02-08 jwrl.
-// Added zoom capability to the background.
-//
-// Updated 2024-02-02 jwrl.
-// Removed pointless aspect ratio scaling adjustments and simplified the maths.
-//
-// Updated 2024-01-29 jwrl.
-// Added individual opacity settings to V1 - V4.
-// Added mask tracking to the drop shadow.
+// Updated 2024-07-23 jwrl.
+// Complete rewrite of the effect to add border softness and so that all scaling and
+// positioning is calculated before importing the individual images.
 //-----------------------------------------------------------------------------------------//
 
 DeclareLightworksEffect ("Quad split with transform", "DVE", "Transform plus", "A quad split with master transform and background zoom", CanSize);
@@ -65,8 +54,11 @@ DeclareLightworksEffect ("Quad split with transform", "DVE", "Transform plus", "
 // Inputs
 //-----------------------------------------------------------------------------------------//
 
-DeclareInputs (V1, V2, V3, V4);
-DeclareInput (Bg);
+DeclareInput (V1, Linear, Mirror);
+DeclareInput (V2, Linear, Mirror);
+DeclareInput (V3, Linear, Mirror);
+DeclareInput (V4, Linear, Mirror);
+DeclareInput (Bg, Linear);
 
 DeclareMask;
 
@@ -148,6 +140,8 @@ DeclareFloatParam (BgZoom, "Zoom", "Background", kNoFlags, 1.0, 1.0, 10.0);
 DeclareFloatParam (BgXpos, "Position", "Background", "SpecifiesPointX", 0.5, -5.0, 5.0);
 DeclareFloatParam (BgYpos, "Position", "Background", "SpecifiesPointY", 0.5, -5.0, 5.0);
 
+DeclareFloatParam (Soften, "Soften borders", kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
+
 DeclareFloatParam (_OutputAspectRatio);
 
 //-----------------------------------------------------------------------------------------//
@@ -164,166 +158,179 @@ float4 _TransparentBlack = 0.0.xxxx;
 // Functions
 //-----------------------------------------------------------------------------------------//
 
-bool IsIllegal (float2 uv)
+float4 posScale (float pX, float pY, float Sm, float Sx, float Sy, float2 sc, float2 xy)
 {
-   float2 xy = abs (saturate (uv) - uv);
+   // This returns the master and individual scales as a composite value and calculates the
+   // compound position of the video.  Position is returned in posScale.xy, individual scale
+   // is in xy and full scale in posScale.zw.
 
-   return max (uv.x, uv.y) != 0.0;
+   float2 xy1 = float2 (0.5 - pX, pY - 0.5);       // Individual position
+   float2 xy2 = float2 (Sx, Sy) * Sm;              // Individual scale
+
+   // Apply the individual X and Y scale factors
+
+   xy2  = max (1.0e-6, xy2);
+   xy1 /= xy2;
+   xy1 += xy;
+   xy2 *= sc;
+
+   return float4 (xy1, xy2);
+}
+
+float4 getCrop (float Tcrop, float Lcrop, float Rcrop, float Bcrop)
+{
+   // This recovers the corrected and limited crop.  The order of the returned
+   // values are wxyz = left, top, right, bottom.
+
+   float l = saturate (Lcrop) - 0.5;               // Limit crop from -0.5 to 0.5
+   float t = saturate (1.0 - Tcrop) - 0.5;         // Invert Y position direction
+   float r = saturate (max (l, Rcrop)) - 0.5;
+   float b = saturate (max (t, 1.0 - Bcrop)) - 0.5;
+
+   // Correct for -0.5 offset and return
+
+   return float4 (t, r, b, l) + 0.5.xxxx;
+}
+
+float4 ReadScaled (sampler Fg, float2 uv, float4 PosScale, float4 crop, out float amount)
+{
+   // We first map the foreground coordinates for each input to the sequence geometry,
+   // adjusting the scaling, position and cropping if necessary.
+
+   float4 retval;
+
+   float2 soft  = float2 (1.0, _OutputAspectRatio) * Soften * 0.1;
+   float2 minTL = crop.wx - soft;
+   float2 maxTL = crop.wx + soft;
+   float2 minBR = crop.yz - soft;
+   float2 maxBR = crop.yz + soft;
+
+   uv -= 0.5.xx;
+   uv /= PosScale.zw;
+   uv += PosScale.xy;
+   uv += 0.5.xx;
+
+   // Now we calculate the softness of the cropping
+
+   if ((uv.x < minTL.x) || (uv.y < minTL.y) || (uv.x > maxBR.x) || (uv.y > maxBR.y)) {
+      retval = _TransparentBlack;
+      amount = 0.0;
+   }
+   else {
+      retval = tex2D (Fg, uv);
+
+      if ((uv.x < maxTL.x) || (uv.y < maxTL.y) || (uv.x > minBR.x) || (uv.y > minBR.y)) {
+         float amtX_1 = smoothstep (minTL.x, maxTL.x, uv.x);
+         float amtY_1 = smoothstep (minTL.y, maxTL.y, uv.y);
+         float amtX_2 = smoothstep (maxBR.x, minBR.x, uv.x);
+         float amtY_2 = smoothstep (maxBR.y, minBR.y, uv.y);
+
+         amount = sqrt (min (min (amtX_1, amtY_1), min (amtX_2, amtY_2)));
+      }
+      else amount = 1.0;
+   }
+
+   return retval;
 }
 
 //-----------------------------------------------------------------------------------------//
 // Code
 //-----------------------------------------------------------------------------------------//
 
-DeclarePass (Fg1)
-// We first map the foreground coordinates for each input to the sequence geometry and
-// apply the crop if necessary.
-{
-   float4 retval = ReadPixel (V1, uv1);
-
-   float lC = min (Lcrop1, Rcrop1);
-   float tC = 1.0 - Tcrop1;
-   float bC = max (tC, 1.0 - Bcrop1);
-
-   if ((uv1.y > bC) || (uv1.x < lC) || (uv1.x > Rcrop1) || (uv1.y < tC)) { retval = _TransparentBlack; }
-   else retval.a *= OpacityV1;
-
-   return retval;
-}
-
-DeclarePass (Fg2)
-{
-   float4 retval = ReadPixel (V2, uv2);
-
-   float lC = min (Lcrop2, Rcrop2);
-   float tC = 1.0 - Tcrop2;
-   float bC = max (tC, 1.0 - Bcrop2);
-
-   if ((uv2.y > bC) || (uv2.x < lC) || (uv2.x > Rcrop2) || (uv2.y < tC)) { retval = _TransparentBlack; }
-   else retval.a *= OpacityV2;
-
-   return retval;
-}
-
-DeclarePass (Fg3)
-{
-   float4 retval = ReadPixel (V3, uv3);
-
-   float lC = min (Lcrop3, Rcrop3);
-   float tC = 1.0 - Tcrop3;
-   float bC = max (tC, 1.0 - Bcrop3);
-
-   if ((uv3.y > bC) || (uv3.x < lC) || (uv3.x > Rcrop3) || (uv3.y < tC)) { retval = _TransparentBlack; }
-   else retval.a *= OpacityV3;
-
-   return retval;
-}
-
-DeclarePass (Fg4)
-{
-   float4 retval = ReadPixel (V4, uv4);
-
-   float lC = min (Lcrop4, Rcrop4);
-   float tC = 1.0 - Tcrop4;
-   float bC = max (tC, 1.0 - Bcrop4);
-
-   if ((uv4.y > bC) || (uv4.x < lC) || (uv4.x > Rcrop4) || (uv4.y < tC)) { retval = _TransparentBlack; }
-   else retval.a *= OpacityV4;
-
-   return retval;
-}
-
-DeclarePass (Bg1)
-// We now map the background coordinates to the sequence geometry
-{ return ReadPixel (Bg, uv5); }
-
 DeclarePass (Bgd)
-// - and apply the zoom.
 {
+   // First map the background coordinates to the sequence geometry and apply the zoom.
+
    float4 retval;
 
    float2 xy;
 
    if (ShowBounds) {
-      xy = ((uv6 - 0.5.xx) * max (BgZoom, 1.0)) + float2 (1.0 - BgXpos, BgYpos);
-      retval = ReadPixel (Bg1, uv6);
+      xy = ((uv5 - 0.5.xx) * max (BgZoom, 1.0)) + float2 (1.0 - BgXpos, BgYpos);
+      retval = ReadPixel (Bg, uv5);
 
-      if (IsIllegal (xy)) {
+      if (IsOutOfBounds (xy)) {
          retval.rgb *= 0.666667;
          retval.rgb += 0.166667.xxx;
       }
    }
    else {
-      xy = ((uv6 - float2 (1.0 - BgXpos, BgYpos)) / max (BgZoom, 1.0)) + 0.5.xx;
-      retval = ReadPixel (Bg1, xy);
+      xy = ((uv5 - float2 (1.0 - BgXpos, BgYpos)) / max (BgZoom, 1.0)) + 0.5.xx;
+      retval = ReadPixel (Bg, xy);
    }
 
    return retval;
 }
 
 DeclarePass (Fgd)
-// We now perform the quad split ahead of anything else.  This gives us a composite source
-// for the master transform.
 {
-   // First set up the coordinates around zero and adjust the position.
+   // We now produce the foreground coordinates for each input and scale, crop and
+   // position the xy coordinates to recover the composite of the four foregrounds.
 
-   float2 xy1 = uv6 - float2 (Xpos1, 1.0 - Ypos1);
-   float2 xy2 = uv6 - float2 (Xpos2, 1.0 - Ypos2);
-   float2 xy3 = uv6 - float2 (Xpos3, 1.0 - Ypos3);
-   float2 xy4 = uv6 - float2 (Xpos4, 1.0 - Ypos4);
+   float2 xy    = float2 (0.5 - Xpos, Ypos - 0.5);          // Master position
+   float2 scale = MasterScale * float2 (XScale, YScale);    // Master scale
 
-   // Now we apply the scale factors -
+   // Limit scale to prevent divide by zero errors when applying it.
 
-   xy1 /= max (0.000001, FullScale1 * float2 (XScale1, YScale1));
-   xy2 /= max (0.000001, FullScale2 * float2 (XScale2, YScale2));
-   xy3 /= max (0.000001, FullScale3 * float2 (XScale3, YScale3));
-   xy4 /= max (0.000001, FullScale4 * float2 (XScale4, YScale4));
+   scale = max (1.0e-6, scale);
 
-   // and remove the zero offset.
+   float amt_1, amt_2, amt_3, amt_4;
 
-   xy1 += 0.5.xx;
-   xy2 += 0.5.xx;
-   xy3 += 0.5.xx;
-   xy4 += 0.5.xx;
+   float4 pScale = posScale (Xpos1, Ypos1, FullScale1, XScale1, YScale1, scale, xy);
+   float4 cropXY = getCrop (Tcrop1, Lcrop1, Rcrop1, Bcrop1);
+   float4 Fgnd_1 = ReadScaled (V1, uv1, pScale, cropXY, amt_1);
 
-   // Now recover the four video overlays.  They are layed up so that V1 has the highest
-   // priority and V4 has the lowest.  We then quit.
+   pScale = posScale (Xpos2, Ypos2, FullScale2, XScale2, YScale2, scale, xy);
+   cropXY = getCrop (Tcrop2, Lcrop2, Rcrop2, Bcrop2);
 
-   float4 retval = ReadPixel (Fg4, xy4);
-   float4 topvid = ReadPixel (Fg3, xy3);
+   float4 Fgnd_2 = ReadScaled (V2, uv2, pScale, cropXY, amt_2);
 
-   retval = lerp (retval, topvid, topvid.a);
-   topvid = ReadPixel (Fg2, xy2);
-   retval = lerp (retval, topvid, topvid.a);
-   topvid = ReadPixel (Fg1, xy1);
+   pScale = posScale (Xpos3, Ypos3, FullScale3, XScale3, YScale3, scale, xy);
+   cropXY = getCrop (Tcrop3, Lcrop3, Rcrop3, Bcrop3);
 
-   return lerp (retval, topvid, topvid.a);
+   float4 Fgnd_3 = ReadScaled (V3, uv3, pScale, cropXY, amt_3);
+
+   pScale = posScale (Xpos4, Ypos4, FullScale4, XScale4, YScale4, scale, xy);
+   cropXY = getCrop (Tcrop4, Lcrop4, Rcrop4, Bcrop4);
+
+   float4 Fgnd_4 = ReadScaled (V4, uv4, pScale, cropXY, amt_4);
+
+   amt_1 *= OpacityV1;
+   amt_2 *= OpacityV2;
+   amt_3 *= OpacityV3;
+   amt_4 *= OpacityV4;
+
+   // Now combine the four video overlays.  V1 has highest priority and V4, lowest.
+
+   float4 retval = lerp (_TransparentBlack, Fgnd_4, amt_4);
+
+   retval = lerp (retval, Fgnd_3, amt_3);
+   retval = lerp (retval, Fgnd_2, amt_2);
+
+   return lerp (retval, Fgnd_1, amt_1);
 }
 
 DeclareEntryPoint (QuadSplitTransform)
-// Because we have mapped the foreground onto the sequence coordinates we no
-// longer need to correct for resolution and aspect ratio differences.
 {
-   // First we recover the raw scale factors.
+   // Because we have mapped the foreground onto the sequence coordinates we no
+   // longer need to correct for resolution and aspect ratio differences.  We
+   // first recover the raw scale factors.
 
-   float2 xyScale = max (0.000001.xx, MasterScale * float2 (XScale, YScale));
+   float2 xyScale = float2 (XScale, YScale) * MasterScale;
 
-   // Now we create the drop shadow offset and put that in xy0.  It's the one
-   // parameter that must be corrected for the output aspect ratio.  Then we
-   // adjust the foreground position, scale it and from that calculate the
-   // drop shadow coordinates using the xy0 offset and put that in xy2.
-   // Finally xy0 is corrected for scaling then used to make the drop shadow
-   // mask offset in xy3.
+   // Now we create the drop shadow offset and put that in xy1, correcting it
+   // for the output aspect ratio.  The drop shadow coordinates are then found
+   // using the xy1 offset and put in xy2.  Finally xy1 is scaled and used to
+   // make the drop shadow mask offset in xy3.
 
-   float2 xy0 = float2 (ShadeX / _OutputAspectRatio, -ShadeY);
-   float2 xy1 = ((uv6 - float2 (Xpos, 1.0 - Ypos)) / xyScale) + 0.5.xx;
-   float2 xy2 = xy1 - xy0;
-   float2 xy3 = uv6 - (xy0 * xyScale);
+   float2 xy1 = float2 (ShadeX / _OutputAspectRatio, -ShadeY);
+   float2 xy2 = uv6 - xy1;
+   float2 xy3 = uv6 - float2 (xy1.x * xyScale.x, xy1.y * xyScale.y);
 
    // Recover the background and foreground and calculate the drop shadow
    // amount.  Apply the mask and opacity to the foreground.
 
-   float4 Fgnd = ReadPixel (Fgd, xy1);
+   float4 Fgnd = ReadPixel (Fgd, uv6);
    float4 Bgnd = ReadPixel (Bgd, uv6);
 
    float amount = ShowBounds ? 0.0 : Opacity;
