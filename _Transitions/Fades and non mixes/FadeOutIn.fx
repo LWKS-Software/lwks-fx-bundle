@@ -21,7 +21,7 @@
 // Created 2024-08-16 jwrl.
 //-----------------------------------------------------------------------------------------//
 
-DeclareLightworksEffect ("Fade out / fade in", "Mix", "Fades and non mixes", "Fades the first video out to from black and the next in", CanSize);
+DeclareLightworksEffect ("Fade out / fade in", "Mix", "Fades and non mixes", "Fades the first video out then the next in", CanSize);
 
 //-----------------------------------------------------------------------------------------//
 // Inputs
