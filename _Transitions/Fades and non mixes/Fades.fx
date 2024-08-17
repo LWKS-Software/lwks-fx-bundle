@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-22
+// @Released 2024-08-17
 // @Author jwrl
 // @Created 2018-12-31
 
@@ -17,17 +17,16 @@
 //
 // Version history:
 //
-// Updated 2024-05-22 jwrl.
-// Removed _utils.fx inclusion.
-// Linux fixes:
-// Added _OpaqueBlack declaration
-// Changed kTransparentBlack to _TransparentBlack declaration.
+// Updated 2024-08-17 jwrl.
+// Replaced kTransparentBlack with 0.0.xxxx to fix Linux lerp()/mix() bug.
 //
 // Updated 2023-05-17 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-03-04 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
+
+#include "_utils.fx"
 
 DeclareLightworksEffect ("Fades", "Mix", "Fades and non mixes", "Fades video to or from black", CanSize);
 
@@ -55,19 +54,21 @@ DeclareIntParam (Type, "Fade type", kNoGroup, 0, "Fade up|Fade down");
 #define PROFILE ps_3_0
 #endif
 
-float4 _OpaqueBlack = float2 (0.0, 1.0).xxxy;
-float4 _TransparentBlack = 0.0.xxxx;
+#define BLACK float2(0.0,1.0).xxxy
 
 //-----------------------------------------------------------------------------------------//
 // Code
 //-----------------------------------------------------------------------------------------//
 
+DeclarePass (Fgd)
+{ return ReadPixel (Inp, uv1); }
+
 DeclareEntryPoint (Fades)
 {
-   float level = Type ? 1.0 - Amount : Amount;
+   float level = Type ? Amount : 1.0 - Amount;
 
-   float4 Input  = ReadPixel (Inp, uv1);
-   float4 retval = lerp (_OpaqueBlack, Input, level);
+   float4 Input  = ReadPixel (Fgd, uv2);
+   float4 retval = lerp (Input, BLACK, level);
 
-   return lerp (_TransparentBlack, retval, tex2D (Mask, uv1).x);
+   return lerp (0.0.xxxx, retval, tex2D (Mask, uv2).x);
 }
