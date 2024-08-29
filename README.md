@@ -2,6 +2,8 @@
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
+First of all, the legal stuff: unless otherwise stated, all code here is licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International.  For more information see https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en.
+
 You may notice that there have been several effects and even whole categories removed from this library.  This has in part been because with the addition of LW masking several user effects that added a mask to an existing effect are no longer necessary.  There is no checking in this library for effects with duplicate functionality, although with the reduction of the number of effects that should not be an issue.  It's up to you to check that any given effect does what you want, and does it better/faster/simpler than any alternative.
 
 If you don't have an internet connection on your edit system you can download and install these effects manually:
