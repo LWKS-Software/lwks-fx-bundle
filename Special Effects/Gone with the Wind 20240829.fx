@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-08-30
+// @Released 2024-09-03
 // @Author schrauber
 // @Created 2024-05-02
 
@@ -8,6 +8,7 @@
  away.  It's a very nice effect.  The parameters and what they do are:
 
    Amount: What it says.  Ramps the effect off over the keyframed section.
+   Grain size:  Self explanatory.
    Decay Rate: At 100%, the largest amount is blown away at the beginning.
    Revolutions: Wind direction (has an adjustment range of 3 rotations).
    Spread angle: This parameter could also be called range.  See below.
@@ -26,9 +27,9 @@
      Classic masking:  As for "Fg decays over Bg" except that the grains do not
        overflow the mask boundaries as they blow away.
 
- With the spread angle set to 0� all grains are blown in the same direction giving
- a streaky effect.  At 360� the grains spread evenly in all directions.  With the
- default 40� there is a spread of +- 20� from the direction set with "Rotation".
+ With the spread angle set to 0° all grains are blown in the same direction giving
+ a streaky effect.  At 360° the grains spread evenly in all directions.  With the
+ default 40° there is a spread of +- 20° from the direction set with "Rotation".
 
  Adjusting the amount curve in the VFX graph display can do some really interesting
  things too.  Definitely worth playing with.
@@ -39,8 +40,8 @@
 //
 // Version history:
 //
-// Modified 2024-08-30 jwrl.
-// Cosmetic changes mainly to text used in the settings.
+// Modified 2024-09-03 jwrl.
+// Added grain size adjuastment.
 //
 // Built 2024-05-02 by schrauber.
 //-----------------------------------------------------------------------------------------//
@@ -62,6 +63,7 @@ DeclareMask;
 
 DeclareFloatParam(Amount, "Amount", kNoGroup, kNoFlags, 0.2, 0.0, 1.0);
 
+DeclareFloatParam (GrainSize, "Grain size", kNoGroup, kNoFlags, 1.0, 1.0, 5.0);
 DeclareFloatParam (DecayRate,"Decay rate", kNoGroup, kNoFlags, 0.7, 0.0, 1.0);
 
 DeclareFloatParam (Revolutions, "Revolutions",  "Wind direction", kNoFlags,  0.4, 0.0,   3.0);
@@ -85,10 +87,24 @@ DeclareFloatParam (_OutputAspectRatio);
 // Functions
 //-----------------------------------------------------------------------------------------//
 
-float2 fn_noise (float2 progress, float2 xy)     // float2 texture noise (two different values per pixel)
+float2 fn_noise_sub (float2 progress, float2 xy)     // float2 texture noise (two different values per pixel)
 {
    float2 noise1 = frac (sin (1.0 + progress + (xy.x * 82.3)) * (xy.x + 854.5421));
    return frac (sin ((1.0 + noise1 + xy.y) * 92.7) * (noise1 + xy.y + 928.4837));
+}
+
+float2 fn_noise (float2 progress, float2 xy)     // float2 texture noise (two different values per pixel)
+{
+   float gScale = pow (max (1.0, GrainSize), 2.0);
+
+  // Grain edge roughness:
+
+   float2 GrainRoughness = (fn_noise_sub (progress, xy) - 0.5) * gScale * 0.0005;
+   float2 xyScale = round (float2 (1280 , 1280 / _OutputAspectRatio) / max (GrainSize, 0.01));  // 1280 is used to calculate the standard grain size corresponding to 1 pixel in 720p format.
+
+   xy = round ( (xy + GrainRoughness) * xyScale) / xyScale;
+
+   return fn_noise_sub (progress, xy);
 }
 
 float2 fn_ditherCoord (float2 uv, float radius, float randomAngle, float randomRadius )
@@ -136,7 +152,7 @@ DeclareEntryPoint (Main)
    if (Mask_Mode == 1) fg = kTransparentBlack;
 
   // Fade out the dithered foreground ...
-   float fade = saturate ((Amount - 0.95) * 20.0); // ´fade´ range 0 ... 1 if the ´Amount´ range <= 0.95 ...1
+   float fade = saturate ((Amount - 0.95) * 20.0); // Â´fadeÂ´ range 0 ... 1 if the Â´AmountÂ´ range <= 0.95 ...1
    fgDith.a *= 1.0 - fade;                         // Fade out pixels remaining in the texture (in the amount range of 0.95 ...1)
 
   // Mask-dependent foreground transparencies ...
@@ -175,4 +191,3 @@ DeclareEntryPoint (Main)
 
    return ret;
 }
-
