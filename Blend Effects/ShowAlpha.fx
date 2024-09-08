@@ -7,10 +7,10 @@
  Show alpha is a utility designed to show the presence of the alpha channel in a graphic
  or animated sequence.  The modes and what they do are:
 
-   • Normal blend:  Identical to the Lightworks blend effect.
-   • Foreground only:  Shows the foreground, but with black wherever there is transparency.
-   • Show alpha as checkerboard:  Shows the foreground over a checkerboard pattern.
-   • Show alpha:  The alpha (transparency) channel is shown as white over black.
+   â€¢ Normal blend:  Identical to the Lightworks blend effect.
+   â€¢ Foreground only:  Shows the foreground, but with black wherever there is transparency.
+   â€¢ Show alpha as checkerboard:  Shows the foreground over a checkerboard pattern.
+   â€¢ Show alpha:  The alpha (transparency) channel is shown as white over black.
 
  The amount control in normal blend mode works as the opacity does in the blend effect.
  In the next two display modes it fades between foreground over background at 0% to the
@@ -25,7 +25,7 @@
 // Built 2024-09-08 by jwrl.
 //-----------------------------------------------------------------------------------------//
 
-DeclareLightworksEffect ("Show alpha", "Mix", "Blend Effects", "Performa a simple blend or just shows the alpha channel", "CanSize");
+DeclareLightworksEffect ("Show alpha", "Mix", "Blend Effects", "Performs a simple blend or just shows the alpha channel", "CanSize");
 
 //-----------------------------------------------------------------------------------------//
 // Inputs
