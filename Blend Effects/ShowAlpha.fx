@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-09-08
+// @Released 2024-09-10
 // @Author jwrl
 // @Created 2024-09-08
 
@@ -22,6 +22,11 @@
 //
 // Version history:
 //
+// Modified 2024-09-10 by jwrl.
+// Changed mask behaviour so that it registers as part of alpha in every display mode.
+// Now uses conditional tests instead of SetTechnique to select display mode.
+// Changed default setting to checkerboard display.
+//
 // Built 2024-09-08 by jwrl.
 //-----------------------------------------------------------------------------------------//
 
@@ -42,7 +47,7 @@ DeclareMask;
 
 DeclareFloatParam (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareIntParam   (SetTechnique, "Display", kNoGroup, 0, "Normal blend|Foreground only|Show alpha as checkerboard|Show alpha");
+DeclareIntParam   (Display, "Display", kNoGroup, 2, "Normal blend|Foreground only|Show alpha as checkerboard|Show alpha");
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
@@ -55,89 +60,59 @@ DeclareFloatParam (_OutputHeight);
 #define PROFILE ps_3_0
 #endif
 
-//-----------------------------------------------------------------------------------------//
-// Functions
-//-----------------------------------------------------------------------------------------//
-
-float4 checkerboard (float2 uv)
-{
-   float x = round (frac (uv.x * _OutputWidth  / 64.0));
-   float y = round (frac (uv.y * _OutputHeight / 64.0));
-
-   return float4 ((0.45 - clamp (abs (x - y), 0.2, 0.25)).xxx, 0.0);
-}
+#define BLEND   0
+#define FG_ONLY 1
+#define ALPHA   3
 
 //-----------------------------------------------------------------------------------------//
 // Code
 //-----------------------------------------------------------------------------------------//
 
-DeclarePass (Fg0)
+DeclarePass (Fgd)
 { return ReadPixel (Fg, uv1); }
 
-DeclarePass (Bg0)
+DeclarePass (Bgd)
 { return ReadPixel (Bg, uv2); }
 
-DeclareEntryPoint (ShowAlpha_0)
+DeclareEntryPoint (ShowAlpha)
 {
-   float4 Fgnd = tex2D (Fg0, uv3);
-   float4 Bgnd = tex2D (Bg0, uv3);
+   float msk = tex2D (Mask, uv3).x;
 
-   float mask = tex2D (Mask, uv3).x;
+   // Masking happens AS WE LOAD THE FOREGROUND, because we need the composite alpha
+   // to be available so that true alpha values can be shown.
 
-   return lerp (Bgnd, Fgnd, Fgnd.a * mask * Amount);
+   float4 Fgnd = lerp (kTransparentBlack, tex2D (Fgd, uv3), msk);
+   float4 Bgnd = tex2D (Bgd, uv3);
+   float4 Foreground, Background;
+
+   // After the next conditionals are executed Foreground contains the chosen composite.
+   // Background can be simple Bg, blended Fg over Bg, or opaque back.
+
+   if (Display == BLEND) {
+      Foreground = lerp (Bgnd, Fgnd, Fgnd.a);
+      Background = Bgnd;
+   }
+   else if (Display == FG_ONLY) {               // This blacks Fg out wherever alpha is zero
+      Foreground = float4 (Fgnd.rgb, 1.0) * Fgnd.a;
+      Background = lerp (Bgnd, Fgnd, Fgnd.a);   // The background is the blended Fg/Bg composite
+   }
+   else if (Display == ALPHA) {                 // Alpha is shown as opaque white on black.
+      Foreground = float4 (Fgnd.aaa, 1.0);
+      Background = float4 (0.0.xxx, 1.0);
+   }
+   else {               // This is the default setting and shows alpha as a checkerboard pattern
+
+      // The checkerboard routine scales the xy cooordinates by a fraction of width and height then
+      // rounds the fractional result to make alternating zeros and ones.  The difference between
+      // those is the checkerboard pattern, used to give luminance of 0.25 (zero) or 0.2 (one).
+
+      float x = round (frac (uv3.x * _OutputWidth  / 64.0));
+      float y = round (frac (uv3.y * _OutputHeight / 64.0));
+      float z = 0.25 - min (abs (x - y), 0.05);
+
+      Foreground = lerp (float4 (z, z, z, 0.0), Fgnd, Fgnd.a);
+      Background = lerp (Bgnd, Fgnd, Fgnd.a);   // The background is the blended Fg/Bg composite
+   }
+
+   return lerp (Background, Foreground, Amount);
 }
-
-//-----------------------------------------------------------------------------------------//
-
-DeclarePass (Fg1)
-{ return ReadPixel (Fg, uv1); }
-
-DeclarePass (Bg1)
-{ return ReadPixel (Bg, uv2); }
-
-DeclareEntryPoint (ShowAlpha_1)
-{
-   float4 Fgnd = tex2D (Fg1, uv3);
-   float4 Bgnd = lerp (tex2D (Bg1, uv3), Fgnd, Fgnd.a);
-
-   Fgnd.rgb *= Fgnd.a;
-
-   float mask = tex2D (Mask, uv3).x;
-
-   return lerp (Bgnd, Fgnd, mask * Amount);
-}
-
-//-----------------------------------------------------------------------------------------//
-
-DeclarePass (Fg2)
-{ return ReadPixel (Fg, uv1); }
-
-DeclarePass (Bg2)
-{ return ReadPixel (Bg, uv2); }
-
-DeclareEntryPoint (ShowAlpha_2)
-{
-   float4 Fgnd = tex2D (Fg2, uv3);
-   float4 Bgnd = lerp (tex2D (Bg2, uv3), Fgnd, Fgnd.a);
-
-   float mask = tex2D (Mask, uv3).x;
-
-   Fgnd = lerp (checkerboard (uv3), Fgnd, Fgnd.a);
-
-   return lerp (Bgnd, Fgnd, mask * Amount);
-}
-
-//-----------------------------------------------------------------------------------------//
-
-DeclarePass (Fg3)
-{ return ReadPixel (Fg, uv1); }
-
-DeclareEntryPoint (ShowAlpha_3)
-{
-   float4 Fgnd = float4 (tex2D (Fg3, uv3).aaa, 1.0);
-
-   float mask = tex2D (Mask, uv3).x;
-
-   return lerp (float4 (0.0.xxx, 1.0), Fgnd, mask * Amount);
-}
-
