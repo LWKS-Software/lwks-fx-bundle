@@ -1,4 +1,4 @@
-# Lightworks user Fx library, September 9, 2024.
+# Lightworks user Fx library, October 7, 2024.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -77,7 +77,6 @@ If you need to use two effects that have the same name, simply open one of them 
 |Magical edges                 |MagicalEdges.fx         |Fractal edges with star-shaped radiating blurs                                |
 |Show alpha                    |ShowAlpha.fx            |Performs a simple blend or just shows the alpha channel                       |
 |Soft masked blend             |SoftMaskedBlend.fx      |External mask foreground over background with edge softness and border        |
-|Text pop                      |TextPop.fx              |Applies a range of effects to text to make it pop                             |
 |Unpremultiply                 |Unpremultiply.fx        |Removes the hard outline you can get with some blend effects                  |
 
 ## CATEGORY FOLDER: Blurs and Sharpens
@@ -261,6 +260,14 @@ If you need to use two effects that have the same name, simply open one of them 
 |Tenderizer                    |Tenderizer.fx           |Converts 8 bit video to 10 bit video using intermediate spline interpolation  |
 |Test greyscale                |TestGreyscale.fx        |Ten unique greyscale test patterns, either full gamut or broadcast limited    |
 |Zebra stripes                 |ZebraStripes.fx         |Displays zebra patterning in over white and under black areas of the frame    |
+
+## CATEGORY FOLDER: Text Effects
+|EFFECT                        |FILE NAME               |DESCRIPTION                                                                   |
+|:---------------------------- |:---------------------- |:---------------------------------------------------------------------------- |
+|Edge colour                   |EdgeColour.fx           |Colours the inside edges of text and other blends                             |
+|Extruded edges                |ExtrudedEdges.fx        |Extrudes the edges of text either linearly or radially                        |
+|Satin sheen                   |SatinSheen.fx           |Adds a satin-like sheen to text                                               |
+|Text pop                      |TextPop.fx              |Applies a range of effects to text to make it pop                             |
 
 ## CATEGORY FOLDER: Textures
 |EFFECT                        |FILE NAME               |DESCRIPTION                                                                   |
