@@ -45,6 +45,7 @@
 // Version history:
 //
 // Updated 2024-10-10 jwrl.
+// Doubled edge softness range.
 // Fixed drop shadow transparency.  Fading it up previously caused increased opacity.
 // Corrected foreground opacity seeming to fade through black when a drop shadow is used.
 //
@@ -304,7 +305,7 @@ DeclarePass (Fgd)
    // we need to produce are the global values of position, softness and scale.
 
    float2 Mpos = float2 (Xpos, 1.0 - Ypos);
-   float2 soft = float2 (1.0, _OutputAspectRatio) * Soften * 0.125;
+   float2 soft = float2 (1.0, _OutputAspectRatio) * Soften * 0.25;
    float2 Mscl = setScale (MasterScale, XScale, YScale);
 
    // The individual crop settings plus position and scale factors are obtained for
