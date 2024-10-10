@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-07-31
+// @Released 2024-10-10
 // @Author jwrl
 // @Created 2024-07-31
 
@@ -15,7 +15,7 @@
  While very similar to the Lightworks transform, this part of the effect does not
  include cropping.  It would be simplicity itself to add it to the master transform,
  but it was felt that the settings were complex enough without it and that masking
- provided enough.  Masking is applied before the drop shadow is generated, so that
+ also provided it.  Masking is applied before the drop shadow is generated, so that
  the masked area of the foregound is tracked by the shadow.
 
  The individual quad split settings default to give a standard quad split when first
@@ -33,16 +33,20 @@
  Instead a switch has been provided to help set zoom up.
 
  Zoom setup mode greys the background outside the zoom and position bounds.  It also
- hides any quad split, and the Lightworks masks if any are bypassed.  You cannot drag
+ hides any quad split, and the Lightworks masks (if any) are bypassed.  You can't drag
  the framing on screen as you can with the Lightworks zoom.  In setup mode the sense
  of any position adjustments are as you would expect, but that means that in working
- mode their movement is inverted.
+ mode their movement is inverted vertically.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect QuadSplitTransform.fx
 //
 // Version history:
+//
+// Updated 2024-10-10 jwrl.
+// Fixed drop shadow transparency.  Fading it up previously caused increased opacity.
+// Corrected foreground opacity seeming to fade through black when a drop shadow is used.
 //
 // Updated 2024-07-31 jwrl.
 // Second rewrite to FINALLY fix edge softness properly.
@@ -78,7 +82,7 @@ DeclareFloatParam (MasterScale, "Master", "Scale", "DisplayAsPercentage", 1.0, 0
 DeclareFloatParam (XScale, "X Scale", "Scale", "DisplayAsPercentage", 1.0, 0.0, 10.0);
 DeclareFloatParam (YScale, "Y Scale", "Scale", "DisplayAsPercentage", 1.0, 0.0, 10.0);
 
-DeclareFloatParam (ShadowOpacity, "Transparency", "Shadow", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Transparency, "Transparency", "Shadow", kNoFlags, 0.5, 0.0, 1.0);
 DeclareFloatParam (ShadeX, "X offset", "Shadow", kNoFlags, 0.0, -1.0, 1.0);
 DeclareFloatParam (ShadeY, "Y offset", "Shadow", kNoFlags, 0.0, -1.0, 1.0);
 
@@ -163,8 +167,8 @@ float4 _TransparentBlack = 0.0.xxxx;
 // Functions
 //-----------------------------------------------------------------------------------------//
 
-// getCrop inverts the sense of Y axis cropping to match sampler addressing.  The
-// X and Y parameters are returned as float2 values.
+// getCrop inverts the sense of Y axis cropping to match sampler addressing.  Any
+// crop overlap is limited and the X and Y parameters are returned as float2 values.
 
 float2 getCrop (float L, float T, float R, float B, out float2 xy)
 {
@@ -178,11 +182,10 @@ float2 getCrop (float L, float T, float R, float B, out float2 xy)
 
 float2 setScale (float Sm, float Sx, float Sy)
 {
-   Sm = max (Sm, 1.0e-6);
-   Sx = max (Sx, 1.0e-6);
-   Sy = max (Sy, 1.0e-6);
+   float X_scale = max (Sx * Sm, 1.0e-6);
+   float Y_scale = max (Sy * Sm, 1.0e-6);
 
-   return float2 (Sx, Sy) * Sm;
+   return float2 (X_scale, Y_scale);
 }
 
 // This function combines global and local scale factors and global and local
@@ -310,13 +313,11 @@ DeclarePass (Fgd)
    float2 cBR, cTL = getCrop (Lcrop4, Tcrop4, Rcrop4, Bcrop4, cBR);
    float2 pos, scl = init (FullScale4, XScale4, YScale4, Mscl, Mpos, Xpos4, Ypos4, pos);
 
-   float amount = Opacity * OpacityV4;
-
    // It's now just a matter of using ReadVideo() to recover V4, scaled, cropped
    // and positioned as needed, and applied to a transparent black background.
    // We also get the foreground video mask for later use.
 
-   float4 Vn    = ReadVideo (V4, uv4, amount, 0.0.xxxx, cTL, cBR, soft, pos, scl);
+   float4 Vn    = ReadVideo (V4, uv4, OpacityV4, _TransparentBlack, cTL, cBR, soft, pos, scl);
    float4 Vmask = ReadPixel (Mask, uv6);
 
    // Repeat the process for the remaining video layers, using Vn instead of black.
@@ -324,26 +325,20 @@ DeclarePass (Fgd)
    cTL = getCrop (Lcrop3, Tcrop3, Rcrop3, Bcrop3, cBR);
    scl = init (FullScale3, XScale3, YScale3, Mscl, Mpos, Xpos3, Ypos3, pos);
 
-   amount = Opacity * OpacityV3;
-
-   Vn = ReadVideo (V3, uv3, amount, Vn, cTL, cBR, soft, pos, scl);
+   Vn = ReadVideo (V3, uv3, OpacityV3, Vn, cTL, cBR, soft, pos, scl);
 
    cTL = getCrop (Lcrop2, Tcrop2, Rcrop2, Bcrop2, cBR);
    scl = init (FullScale2, XScale2, YScale2, Mscl, Mpos, Xpos2, Ypos2, pos);
 
-   amount = Opacity * OpacityV2;
-
-   Vn = ReadVideo (V2, uv2, amount, Vn, cTL, cBR, soft, pos, scl);
+   Vn = ReadVideo (V2, uv2, OpacityV2, Vn, cTL, cBR, soft, pos, scl);
 
    cTL = getCrop (Lcrop1, Tcrop1, Rcrop1, Bcrop1, cBR);
    scl = init (FullScale1, XScale1, YScale1, Mscl, Mpos, Xpos1, Ypos1, pos);
 
-   amount = Opacity * OpacityV1;
-
    // Because we're getting the last layer we also apply any masking that we need.
    // Doing it here means that the drop shadow will include the mask.
 
-   return ReadVideo (V1, uv1, amount, Vn, cTL, cBR, soft, pos, scl) * Vmask.x;
+   return ReadVideo (V1, uv1, OpacityV1, Vn, cTL, cBR, soft, pos, scl) * Vmask.x;
 }
 
 DeclareEntryPoint (QuadSplitTransform)
@@ -360,21 +355,13 @@ DeclareEntryPoint (QuadSplitTransform)
 
    float2 xy = uv6 - float2 (ShadeX / _OutputAspectRatio, -ShadeY);
 
-   // Now recover the foreground and the drop shadow and combine their alpha values
-   // with that of the background alpha.
+   // Now recover the foreground and the drop shadow and combine their alpha values.
 
-   float4 Fgnd   = ReadPixel (Fgd, uv6);
-   float4 shadow = ReadPixel (Fgd, xy) * ShadowOpacity;
+   float4 Fgnd = ReadPixel (Fgd, uv6);
 
-   float alpha  = max (max (Fgnd.a, Bgnd.a), shadow.a);
+   Fgnd.a = max (Fgnd.a, lerp (ReadPixel (Fgd, xy).a, 0.0, Transparency));
 
-   // The drop shadow is now combined with the background then the foreground is
-   // overlayed.  Once the combination alpha is added we're done.
+   // The foreground and drop shadow is now combined with the background and we quit.
 
-   float4 retval = lerp (Bgnd, _TransparentBlack, shadow.a);
-
-   retval   = lerp (retval, Fgnd, Fgnd.a);
-   retval.a = alpha;
-
-   return retval;
+   return lerp (Bgnd, Fgnd, Fgnd.a * Opacity);
 }
