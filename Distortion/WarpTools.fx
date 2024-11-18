@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-11-17
+// @Released 2024-11-18
 // @Author jwrl
 // @Created 2024-11-17
 
@@ -32,7 +32,11 @@
 //
 // Version history:
 //
-// Built 2024-11-17 by jwrl.
+// Updated 2024-11-18 jwrl.
+// Rolled the original warp and skew functions into the main shader code.
+// Mirrored the foreground sampler to correct the warp factor edge jitter.
+// Corrected scaling and position tracking.
+// Replaced the original unnecessary 3D skew code with simpler 2D skewing.
 //-----------------------------------------------------------------------------------------//
 
 DeclareLightworksEffect ("Warp tools", "DVE", "Distortion", "Warps, skews and scales video", CanSize);
@@ -41,7 +45,7 @@ DeclareLightworksEffect ("Warp tools", "DVE", "Distortion", "Warps, skews and sc
 // Inputs
 //-----------------------------------------------------------------------------------------//
 
-DeclareInput (Fg, Linear);
+DeclareInput (Fg, Linear, Mirror);
 DeclareInput (Bg);
 
 DeclareMask;
@@ -77,107 +81,66 @@ DeclareFloatParam (Pos_Y,   "Position", "Geometry", "SpecifiesPointY", 0.5, 0.0,
 
 #define PI 3.1415927
 
-#define _TransparentBlack 0.0.xxxx
-
-#define Scale    (float2 (ScaleX, ScaleY) * ScaleXY)
-#define ScaleMin min(1.0.xx, Scale)
-#define ScaleMax max(1.0.xx, Scale)
-
-//-----------------------------------------------------------------------------------------//
-// Functions
-//-----------------------------------------------------------------------------------------//
-
-void skewXY (out float2 xy1, out float2 xy2, out float2 xy3, out float2 xy4)
-{
-   xy1 = float2 (Horizontal, 1.0 + Vertical);
-   xy2 = float2 (Horizontal, -Vertical) + 1.0.xx;
-   xy3 = float2 (-Horizontal, Vertical);
-   xy4 = float2 (1.0 - Horizontal, -Vertical);
-
-   return;
-}
-
-float2 warpXY (float2 uv)
-{
-   float x0 = sin (uv.y * PI);
-   float y0 = sin (uv.x * PI);
-   float x1 = x0 * Left_Warp * (uv.x - 1.0);
-   float x2 = x0 * -RightWarp * uv.x;
-   float y1 = y0 * UpperWarp * (1.0 - uv.y);
-   float y2 = y0 * LowerWarp * uv.y;
-
-   float2 xy;
-
-   if (Warp_Comp) {
-      xy.x  = Left_Warp < 0.0 ? x1 + (Left_Warp * (1.0 - uv.x)) : x1;
-      xy.x += RightWarp > 0.0 ? x2 + (RightWarp * uv.x) : x2;
-      xy.y  = UpperWarp > 0.0 ? y1 - (UpperWarp * (1.0 - uv.y)) : y1;
-      xy.y += LowerWarp < 0.0 ? y2 - (LowerWarp * uv.y) : y2;
-   }
-   else xy = float2 (x1, y1) + float2 (x2, y2);
-
-   xy /= 2.0;
-   xy += uv - 0.5.xx;
-   xy /= ScaleMin;
-   xy += 0.5.xx;
-
-   return xy;
-}
-
 //-----------------------------------------------------------------------------------------//
 // Shaders
 //-----------------------------------------------------------------------------------------//
 
 DeclarePass (Fgd)
-{ return ReadPixel (Fg, warpXY (uv1)); }
+{ return ReadPixel (Fg, uv1); }
 
 DeclarePass (Bgd)
 { return ReadPixel (Bg, uv2); }
 
 DeclareEntryPoint (WarpTools)
 {
-   float2 TL, TR, BL, BR;
+   // First scale and position the foreground coordinates.  Then produce a sine curve
+   // based on YX position.  X and Y are reversed because the horizontal edges need to
+   // be moved vertically, and the vertical edges horizontally.
 
-   skewXY (TL, TR, BL, BR);
+   float2 uv = ((uv3 - float2 (Pos_X, 1.0 - Pos_Y)) / max (1.0e-6, float2 (ScaleX, ScaleY) * ScaleXY)) + 0.5.xx;
+   float2 xy = sin (uv.yx * PI);
 
-   float2 xy1 = float2 (TR.x - BL.x, BL.y - TR.y);
-   float2 xy2 = float2 (BR.x - BL.x, BL.y - BR.y);
-   float2 xy3 = float2 (TL.x - TR.x, TR.y - TL.y);
-   float2 xy  = xy3 - xy2;
+   // Now the warp factors are calculated for the left, right, upper and lower edges.
 
-   float den = (xy1.x * xy2.y) - (xy2.x * xy1.y);
-   float top = ((xy.x * xy2.y) - (xy2.x * xy.y)) / den;
-   float bot = ((xy1.x * xy.y) - (xy.x * xy1.y)) / den;
-   float bt1 = bot + 1.0;
+   float x1 = xy.x * Left_Warp * (uv.x - 1.0);
+   float x2 = xy.x * RightWarp * -uv.x;
+   float y1 = xy.y * UpperWarp * (1.0 - uv.y);
+   float y2 = xy.y * LowerWarp * uv.y;
 
-   float a = (top * TR.x) - xy3.x;
-   float b = (top * (1.0 - TR.y)) - xy3.y;
-   float c = top;
-   float d = (BR.x * bt1) - TL.x;
-   float e = TL.y + bot - (BR.y * bt1);
-   float f = bot;
-   float g = TL.x;
-   float h = 1.0 - TL.y;
-   float i = 1.0;
+   // Now the distortion is summed and stored in xy.  If warp compensation is turned on
+   // the linear warp factor is subtracted from each of the X and Y coordinates when the
+   // warp could possibly go out of bounds.
 
-   float x = e - (f * h);
-   float y = (f * g) - d;
-   float z = (d * h) - (e * g);
+   xy = float2 (x1, y1) + float2 (x2, y2);
 
-   float3x3 v = float3x3 (x, (c * h) - b, (b * f) - (c * e),
-                          y, a - (c * g), (c * d) - (a * f),
-                          z, (b * g) - (a * h), (a * e) - (b * d)) / ((a * x) + (b * y) + (c * z));
-   float3x3 w = float3x3 (v [0].x - v [0].y, -v [0].y, v [0].z - (v [0].y * 2.0),
-                          v [1].x - v [1].y, -v [1].y, v [1].z - (v [1].y * 2.0),
-                          v [2].x - v [2].y, -v [2].y, v [2].z - (v [2].y * 2.0));
+   if (Warp_Comp) {
+      if (Left_Warp < 0.0) xy.x += Left_Warp * (1.0 - uv.x);
+      if (RightWarp > 0.0) xy.x += RightWarp * uv.x;
+      if (UpperWarp > 0.0) xy.y -= UpperWarp * (1.0 - uv.y);
+      if (LowerWarp < 0.0) xy.y -= LowerWarp * uv.y;
+   }
 
-   float3 xyz = mul (float3 (uv3, 1.0), w);
+   // Now the summed warp coordinates are divided by two to keep distortion within
+   // bounds.  They are then added to the foreground video pixel address.
 
-   xy = (((xyz.xy / xyz.z) - 0.5.xx) / ScaleMax) + float2 (1.0 - Pos_X, Pos_Y);
+   xy /= 2.0;
+   xy += uv;
 
-   float4 Fgnd   = any (xy - frac (xy)) ? _TransparentBlack : tex2D (Fgd, xy);
-   float4 Bgnd   = tex2D (Bgd, uv3);
-   float4 retval = lerp (Bgnd, Fgnd, Fgnd.a);
+   // The skew factor is now calculated and applied.  This is just a simple XY offset.
 
-   return lerp (Bgnd, retval, Opacity * tex2D (Mask, uv3).x);
+   x1 = lerp (-Horizontal, 1.0 - Horizontal, xy.x);
+   x2 = lerp ( Horizontal, 1.0 + Horizontal, xy.x);
+   y1 = lerp ( Vertical,   1.0 + Vertical,   xy.y);
+   y2 = lerp (-Vertical,   1.0 - Vertical,   xy.y);
+
+   uv.x = lerp (x1, x2, xy.y);
+   uv.y = lerp (y1, y2, xy.x);
+
+   // Foreground and background are blended into Warp and the masked result is returned.
+
+   float4 Fgnd = ReadPixel (Fgd, uv);
+   float4 Bgnd = tex2D (Bgd, uv3);
+   float4 Warp = lerp (Bgnd, Fgnd, Fgnd.a * Opacity);
+
+   return lerp (Bgnd, Warp, tex2D (Mask, uv3).x);
 }
