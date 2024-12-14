@@ -1,4 +1,4 @@
-# Lightworks user Fx library, November 17, 2024.
+# Lightworks user Fx library, December 14, 2024.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -379,6 +379,7 @@ If you need to use two effects that have the same name, simply open one of them 
 |Transporter transition       |Yes      |Yes      |TransporterTrans.fx     |A Star Trek-like transporter fade in or out            |
 |Twist transition             |Yes      |No       |TwistTrans.fx           |Twists one image to another vertically/horizontally    |
 |Wave fall transition         |Yes      |Yes      |WaveFallTrans.fx        |Compresses the foreground to sinue strips or waves     |
+|Zip transition               |Yes      |No       |ZipTransition.fx        |Unzip the outgoing or zip the incoming video           |
 
 ## CATEGORY FOLDER: Transform transitions
 |EFFECT                       |DIRECT   |KEYED    |FILE NAME               |DESCRIPTION                                            |
