@@ -11,7 +11,7 @@
  zip moves in either the horizontal or vertical direction.  The settings are:
 
    * Amount:  Self explanatory.
-   * Curl
+   * Zip settings
       * Direction:  Sets the zip to top to bottom, bottom to top, left to right or
         right to left.
       * Curl width:  Adjusts the width of the zip curl.
@@ -22,7 +22,7 @@
  Shading in the page roll effect was fixed and could not be adjusted.  In this effect it's
  variable, and the value that is used as the default matches the original fixed setting.
  Since a small amount of shading is needed to give a realistic curvature effect the minimum
- setting does not turm the shading completely off.
+ setting does not turn the shading completely off.
 
  Another difference between the page roll effect and this one is in the way that the fold
  translucency (Image on backside) is handled.  In the original it could only be turned on
