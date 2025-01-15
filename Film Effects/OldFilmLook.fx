@@ -1,8 +1,8 @@
 // @Maintainer jwrl
-// @Released 2023-08-24
+// @Released 2025-01-15
 // @Author khaver
 // @Author saabi
-// @Created 2018-06-20
+// @Created 2018-03-31
 
 /**
  This effect simulates a black and white film with scratches, sprocket holes, weave and
@@ -27,21 +27,23 @@
 // This adaptation retains the same Creative Commons license shown above.  It cannot be
 // used for commercial purposes.
 //
-// note: code comments are from the original author(s).
+// NOTE:  Code comments are from the original author(s) except where identified as
+// otherwise.
+//
+// NOTE 2: The creation date (above) is the shadertoy release date, with khaver's
+// conversion to the Windows-only LW version shown in the history (below).  Since
+// that version was the absolute original Lightworks effect, khaver is credited
+// along with saabi as the effect's creators, while my input is purely maintenance.
+// It's just a conversion to the format used by LW 2023.1 and higher - jwrl.
+//-----------------------------------------------------------------------------------------//
 //
 // Version history:
 //
-// Debugged 2023-08-24 jwrl.
-// Reorganised code to correct a Linux/Mac variable mismatch.
+// Adapted jwrl 2025-01-15.
+// Converted khaver's original Windows version to the shader code format required by
+// current Lightworks effects.
 //
-// Updated 2023-08-09 jwrl.
-// Corrected the category.  Changed it from "Colour" to "Stylize", which is what it
-// was originally and should never have been changed.
-//
-// Updated 2023-05-16 jwrl.
-// Header reformatted.
-//
-// Conversion 2023-01-24 for LW 2023 jwrl.
+// Converted from the shadertoy code by khaver 2018-06-20.
 //-----------------------------------------------------------------------------------------//
 
 #include "_utils.fx"
@@ -60,17 +62,17 @@ DeclareInput (Input);
 
 DeclareFloatParam (scale, "Frame Zoom", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareFloatParam (sprockets, "Size", "Sprockets", kNoFlags, 6.72, 0.0, 20.0);
-DeclareFloatParam (sprocket2, "Alignment", "Sprockets", kNoFlags, 3.19, 0.0, 10.0);
-DeclareBoolParam (sprocket3, "Double Quantity", "Sprockets", false);
+DeclareFloatParam (sprockets, "Size",            "Sprockets", kNoFlags, 6.72, 0.0, 20.0);
+DeclareFloatParam (sprocket2, "Alignment",       "Sprockets", kNoFlags, 3.19, 0.0, 10.0);
+DeclareBoolParam  (sprocket3, "Double Quantity", "Sprockets", false);
 
-DeclareFloatParam (gstrength, "Grain Strength", "Flaws", kNoFlags, 1.0, 0.0, 2.0);
+DeclareFloatParam (gstrength,     "Grain Strength", "Flaws", kNoFlags, 1.0, 0.0, 2.0);
 DeclareFloatParam (ScratchAmount, "Scratch Amount", "Flaws", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (NoiseAmount, "Dirt Amount", "Flaws", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (NoiseAmount,   "Dirt Amount",    "Flaws", kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareFloatParam (smallJitterProbability, "Minor", "Jitter", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (largeJitterProbability, "Major", "Jitter", kNoFlags, 0.05, 0.0, 1.0);
-DeclareFloatParam (angleProbability, "Rotational", "Jitter", kNoFlags, 0.15, 0.0, 1.0);
+DeclareFloatParam (smallJitterProbability, "Minor",      "Jitter", kNoFlags, 0.5,  0.0, 1.0);
+DeclareFloatParam (largeJitterProbability, "Major",      "Jitter", kNoFlags, 0.05, 0.0, 1.0);
+DeclareFloatParam (angleProbability,       "Rotational", "Jitter", kNoFlags, 0.15, 0.0, 1.0);
 
 DeclareFloatParam (flicker, "Flicker Strength", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
 
@@ -82,8 +84,6 @@ DeclareFloatParam (_OutputAspectRatio);
 DeclareFloatParam (_Progress);
 DeclareFloatParam (_Length);
 
-DeclareFloatParam (_Frame);
-
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
@@ -92,46 +92,41 @@ DeclareFloatParam (_Frame);
 #define PROFILE ps_3_0
 #endif
 
-#define CTIME  (_Length * _Progress)
-#define RTIME  (_Length * _Progress * 0.0101)
-
 //-----------------------------------------------------------------------------------------//
 // Functions
 //-----------------------------------------------------------------------------------------//
 
-float hash (float n) { return frac (cos (n * 89.42) * 343.42); }
+float hash (float n)
+{ return frac (cos (n * 89.42) * 343.42); }
 
 float2 hash2 (float2 n)
-{
-   return float2 (hash ((n.x * 23.62) + (n.y * 34.35) - 300.0),
-                  hash ((n.x * 45.13) + (n.y * 38.89) + 256.0));
-}
+{ return float2 (hash (n.x * 23.62 - 300.0 + n.y * 34.35), hash (n.x * 45.13 + 256.0 + n.y * 38.89)); }
 
 float worley (float2 c, float time)
 {
    float dis = 1.0;
 
-   for (int x = -1; x <= 1; x++) {
-
+   for (int x = -1; x <= 1; x++)
       for (int y = -1; y <= 1; y++) {
          float2 p = floor (c) + float2 (x, y);
          float2 a = hash2 (p) * time;
-         float2 rnd = 0.5 + (sin (a) * 0.5);
+         float2 rnd = (sin (a) * 0.5) + 0.5;
 
-         float d = length (rnd + float2 (x,y) - frac (c));
+         float d = length (rnd + float2 (x, y) - frac (c));
 
          dis = min (dis, d);
       }
-   }
 
    return dis;
 }
 
 float worley2 (float2 c, float time)
+// This was originally implemented as a 2 pass loop.  It has been changed to be
+// two lines of code, making it much simpler and improving execution time - jwrl.
 {
-   float w = worley (c, time) / 2.0;
+   float w = worley (c, time) * 0.5;
 
-   return w + (worley (c + c, time + time) / 4.0);
+   return w + (worley (c + c, time + time) * 0.25);
 }
 
 float worley5 (float2 c, float time)
@@ -150,76 +145,67 @@ float worley5 (float2 c, float time)
 }
 
 float rand (float2 co)
-{
-   return frac (sin (dot (co.xy, float2 (12.9898, 78.233))) * 43758.5453);
-}
+{ return frac (sin (dot (co.xy, float2 (12.9898, 78.233))) * 43758.5453); }
 
-float2 jitter (float2 uv, float2 s, float seed)
+// This function was only ever passed a seed value of 0.01,  That has now been removed
+// and hard-wired into the code - jwrl;
+
+float2 jitter (float2 uv, float2 s)
+// Some slight code cleanup was done here to improve readability - jwrl.
 {
-   return float2 (rand (float2 (RTIME, seed)) - 0.5, rand (float2 (RTIME, seed + 0.11)) - 0.5) * s;
+   float t = _Length * _Progress * 0.0101;
+
+   // Although rand() is passed a float2 it only returns a float.  For that reason
+   // two calls of rand() are required to obtain the float2 result - jwrl.
+
+   float2 r = float2 (rand (float2 (t, 0.01)), rand (float2 (t, 0.12)));
+
+   return (r - 0.5.xx) * s;
 }
 
 float2 rot (float2 coord, float a)
+// sin_factor and cos_factor were originally separately calculated.  They are now obtained
+// using sincos().  The aspect scaling is also precalculated instead of being multiplied
+// each time that it's required - jwrl.
 {
+   float aspect = _OutputAspectRatio * 2.0;
    float sin_factor, cos_factor;
 
    sincos (a, sin_factor, cos_factor);
 
-   coord.x *= _OutputAspectRatio * 2.0;
-   coord = mul (coord, float2x2 (cos_factor, -sin_factor, sin_factor, cos_factor));
-   coord.x /= _OutputAspectRatio * 2.0;
+   coord.x *= aspect;
+   coord    = mul (coord, float2x2 (cos_factor, -sin_factor, sin_factor, cos_factor));
+   coord.x /= aspect;
 
    return coord;
 }
 
 float4 vignette (float2 uv, float strength)
+{ return float4 ((1.0 - (pow (length (uv), 2.25) * strength)).xxx, 0.0); }
+
+float4 frame (sampler Inp, float2 uv, float fn)
+// Substantially restructured to improve efficency - jwrl.
 {
-   float l = length (uv);
+   if (abs (uv.x) > 0.5 || abs (uv.y) > 0.5) return float4 (0.006, 0.0054, 0.0, 1.0);
 
-   l = pow (l, 2.25);
+   float time     = _Length * _Progress;
+   float strength = gstrength * 64.0;
+   float x        = (uv.x + 4.0) * (uv.y + 4.0) * (time + 10.0);
+   float grain    = (fmod ((fmod(x, 13.0) + 1.0) * (fmod (x, 123.0) + 1.0), 0.01) - 0.005) * strength;
+   float fnn      = fmod ((floor ((fn + 0.5) / 1.2) + time) / 20.0, 1.0);
+   float fj       = rand (float2 (fnn, 5.34)) * 2.0;
 
-   return 1.0.xxxx - float4 (l.xxx * strength, 1.0);
-}
+   float4 i  = tex2D (Inp, uv + 0.5.xx);
+   float4 ic = float4 (i.rgb * lerp (1.0, fj, flicker), 1.0) * vignette (uv * 2.5, 0.25);
 
-float4 sepia (float4 c, float s)
-{
-   float or = (c.r * 0.393) + (c.g * 0.769) + (c.b * 0.189);
-   float og = (c.r * 0.349) + (c.g * 0.686) + (c.b * 0.168);
-   float ob = (c.r * 0.272) + (c.g * 0.534) + (c.b * 0.131);
+   uv *= float2 ((time * 0.10) + 100.0, 100.0);
 
-   return float4 (float3 (or, og, ob) * s, 1.0);
-}
+   float bw           = dot (ic.rgb, float3 (0.15, 0.8, 0.05));
+   float dis          = worley5 (uv / 64.0, time * 50.0);
+   float noiseTrigger = rand (float2 (time * 8.543, 2.658));
+   float spots        = noiseTrigger < NoiseAmount ? saturate (lerp (-1.0, 10.0, dis)) : 1.0;
 
-float4 frame (float2 uv, float fn)
-{
-   if (max (abs (uv.x), abs (uv.y)) > 0.5) return sepia (float4 (0.03, 0.02, 0.0, 0.02), 1.0);
-
-   float strength = 64.0 * gstrength;
-   float x = (uv.x + 4.0 ) * (uv.y + 4.0 ) * (CTIME + 10.0);
-
-   float4 grain = float (fmod ((fmod (x, 13.0) + 1.0) * (fmod (x, 123.0) + 1.0), 0.01) - 0.005).xxxx * strength;
-   float4 i = ReadPixel (Input, (uv + 0.5.xx));
-
-   float fnn = frac ((floor ((fn + 0.5) / 1.2) + CTIME) / 20.0);
-   float fj = rand (float2 (fnn, 5.34)) * 2.0;
-
-   float4 ic = float4 (lerp (i.rgb, i.rgb * fj, flicker), 1.0) * vignette (uv * 2.5, 0.25);
-   float4 bwc = float4 ((ic.r * 0.15 + ic.g * 0.8 + ic.b * 0.05).xxx, ic.a);
-
-   uv.x *= 100.0 + (CTIME * 0.1);
-   uv.y *= 100.0;
-
-   float dis = worley5 (uv / 64.0, CTIME * 50.0);
-
-   float3 c = lerp (-1.0.xxx, 10.0.xxx, dis);
-
-   float4 spots = float4 (saturate (c), 1.0);
-
-   float noiseTrigger = rand (float2 (CTIME * 0.0862843, 2.658));
-
-   spots = (noiseTrigger < NoiseAmount) ? spots : 1.0.xxxx;
-
-   return sepia (bwc, 1.0) * (1.0 - grain) * spots;
+   return float4 ((float3 (1.345, 1.2, 0.934) * bw * spots * (1.0 - grain)), 1.0);
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -230,86 +216,71 @@ DeclarePass (Film)
 {
    // Normalized pixel coordinates (from 0 to 1)
 
-   float scl = (scale * 1.05) + 0.75;
-
    float2 uv = uv1 - 0.5.xx;
 
-   uv.y *= _OutputAspectRatio;
-   uv /= scl;
-   uv.y += 0.695;
-   uv += 0.5.xx;
+   uv *= float2 (1.0, _OutputAspectRatio);
+   uv /= (scale * 1.05) + 0.75;
+   uv += float2 (0.5, 1.195);
 
-   // Output to screen
+   // Output to screen.  Originally this exited through the function final() here.  What
+   // follows is a restructured version of the function, implemented as inline code - jwrl.
 
-   float smallJitterTrigger = rand (float2 (RTIME, 0.125));
-   float largeJitterTrigger = rand (float2 (RTIME, 0.122));
+   float time  = _Length * _Progress;
+   float time1 = time * 0.0101;
+
+   float smallJitterTrigger = rand (float2 (time1, 0.125));
+   float largeJitterTrigger = rand (float2 (time1, 0.122));
 
    float2 juv = float2 (uv.x - 0.5, uv.y);
 
-   juv += smallJitterTrigger > smallJitterProbability ? 0.0.xx : jitter (uv, 0.003.xx, 0.01);
-   juv += largeJitterTrigger > largeJitterProbability ? 0.0.xx : jitter (uv, 0.03.xx, 0.01);
+   if (smallJitterTrigger <= smallJitterProbability) juv += jitter (uv, float2 (0.003, 0.003));
+   if (largeJitterTrigger <= largeJitterProbability) juv += jitter (uv, float2 (0.03,  0.03));
 
-   float rotationTrigger = rand (float2 (RTIME, 0.123));
-
-   if (rotationTrigger <= angleProbability) juv = rot (juv, (rand (float2 (RTIME, 0.14)) - 0.5) * 0.0349);
+   if (angleProbability > rand (float2 (time1, 0.123)))
+      juv = rot (juv, (rand (float2 (time1, 0.14)) - 0.5) * 0.0349);
 
    float2 fuv = float2 (juv.x * _OutputAspectRatio, (fmod (juv.y + 1.705, 1.2) - 0.5));
+
+   float4 flm, frm = frame (Input, fuv, juv.y);
+
+   // Here final() exited through the function film().  This is now the inline code below - jwrl.
+
    float2 suv = float2 (fuv.x, juv.y + 100.0);
 
-   // Add frame edges and sprocket holes
-
-   float wm = 0.6;
-   float ww = 0.04;
-   float ax = abs (suv.x);
+   float ax   = abs (fuv.x);
+   float ay   = juv.y + 100.0;
    float sprc = sprocket3 ? 2.0 : 4.0;
 
-   // Add scratches
-
-   float4 flm;
-
-   if (ax > 0.7 || (ax > wm - ww && ax < wm + ww && fmod (floor ((suv.y + sprocket2) * sprockets), sprc) == 1.0))
-      { flm = 1.0.xxxx; }
+   if (ax > 0.7 || (ax > 0.56 && ax < 0.64 && fmod (floor ((ay + sprocket2) * sprockets), sprc) == 1.0)) {
+      flm = 1.0.xxxx;
+   }
    else {
-      suv.x *= 2000.1;
-      suv.y *= 5.0;
+      float disw = worley2 (float2 (fuv.x * 12.1957, ay * 0.0305), floor (time * 10.389) * 50.124);
+      float cw   = lerp (1.0, -30.6, disw);
+      float scratchTrigger = rand (float2 (time * 2.543, 0.823));
 
-      float disw = worley2 (suv / 164.0, floor (CTIME * 10.389) * 50.124);
+      cw = scratchTrigger < ScratchAmount ? saturate (1.0 - (cw * cw)) * 2.0 : 0.0;
 
-      float3 cw = lerp (1.0.xxx, -30.6.xxx, disw);
-
-      cw = saturate (1.0.xxx - (cw * cw));
-
-      float scratchTrigger = rand (float2 (CTIME * 0.0256843, 0.823));
-
-      cw = scratchTrigger < ScratchAmount ? cw : 0.0.xxx;
-
-      flm = float4 (cw * 2.0, (cw.x < 0.5) ? 0.0 : 1.0);
+      flm = float4 (cw.xxx, cw < 1.0 ? 0.0 : 1.0);
    }
 
-   if (flm.a == 1.0) return frame (fuv, juv.y) + flm;
-
-   return float4 (frame (fuv, juv.y).rgb - (flm.rgb * 2.0), 1.0);
+   return flm.a == 1.0 ? frm + flm : float4 (frm.rgb - (flm.rgb * 2.0), 1.0);
 }
 
-DeclareEntryPoint (OldFilmTest)
+DeclareEntryPoint (OldFilmLook)
 {
-   float4 c = tex2D (Film, uv2);
+   float4 c = ReadPixel (Film, uv2);
 
-    float2 offsX = float2 (1.0 / (4.0 * _OutputWidth), 0.0);
-    float2 offsY = float2 (0.0, 1.0 / (4.0 * _OutputHeight));
-    float2 x0 = 0.0.xx, y0 = 0.0.xx;
+   float i;
 
-   for (int i = 0; i < 7; i++) {
-      x0 += offsX;
-      y0 += offsY;
-      c += tex2D (Film, uv2 + y0);
-      c += tex2D (Film, uv2 - y0);
-      c += tex2D (Film, uv2 + x0);
-      c += tex2D (Film, uv2 - x0);
+   for (i = 0.25; i < 2.0; i += 0.25) {
+      c += tex2D (Film, uv2 + float2 (0.0, i / _OutputHeight));
+      c += tex2D (Film, uv2 - float2 (0.0, i / _OutputHeight));
+      c += tex2D (Film, uv2 + float2 (i / _OutputWidth, 0.0));
+      c += tex2D (Film, uv2 - float2 (i / _OutputWidth, 0.0));
    }
 
    float4 fragColor = (c / 29.0) * vignette (uv2 - 0.5, 2.0);
 
-   return IsOutOfBounds (uv1) ? 0.0.xxxx : float4 (fragColor.rgb, 1.0);
+   return IsOutOfBounds (uv2) ? 0.0.xxxx : float4 (fragColor.rgb, 1.0);
 }
-
