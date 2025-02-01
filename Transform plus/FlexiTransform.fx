@@ -16,24 +16,25 @@
  derived from the scaled and masked foreground alpha channel.  The drop shadow
  will only appear around the masked foreground and not just at the edge of frame.
  There is a downside to this.  If you mask the foreground then scale it the
- shadow offset will scale with the foreground and not the mask.  Here are the
- settings.
+ shadow offset will scale with the foreground and not the mask.
+
+ Here are the settings.
 
    [*] Position
-      [*] Pos X:  Horizontal position.
-      [*] Pos Y:  Vertical position.
+      [*] Pos X:  Adjusts the horizontal position.
+      [*] Pos Y:  Adjusts the vertical position.
    [*] Rotation
-      [*] Degrees:
-      [*] Revolutions:
+      [*] Degrees:  Adjusts the rotation over two full revolutions.
+      [*] Revolutions:  Adjusts the number of revolutions from -40 to +40.
    [*] Scaling
-      [*] Master:
-      [*] Scale X:
-      [*] Scale Y:
-      [*] Antialiasing:
+      [*] Master:  Adjusts the master size.
+      [*] Scale X:  Adjusts the horizontal size.
+      [*] Scale Y:  Adjusts the vertical size.
+      [*] Antialiasing:  Corrects the foreground image aliasing.
    [*] Shadow
-      [*] Opacity:
-      [*] X Offset:
-      [*] Y Offset:
+      [*] Opacity:  Self explanatory.
+      [*] X Offset:  Sets the horizontal width of the drop shadow.
+      [*] Y Offset:  Sets the vertical width of the drop shadow.
 
  The rotation provided is Z-axis only.  Because I don't have access to the rotation
  widgets that Lightworks has used, faders set the angle and number of rotations.
