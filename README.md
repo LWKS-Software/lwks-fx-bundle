@@ -1,4 +1,4 @@
-# Lightworks user Fx library, December 14, 2024.
+# Lightworks user Fx library, February 3, 2025.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -285,6 +285,7 @@ If you need to use two effects that have the same name, simply open one of them 
 |:---------------------------- |:---------------------- |:---------------------------------------------------------------------------- |
 |Art Deco transform            |ArtDecoTransform.fx     |Art Deco flash lines are included in the transform borders                    |
 |Flexible transform            |FlexiTransform.fx       |A flexible masked transform with Z-axis rotation                              |
+|Framed blend                  |FramedBlend.fx          |Blending with framing adjustment and masking                                  |
 |Framed DVE                    |FramedDVE.fx            |Creates a textured frame around the foreground and resizes and positions it   |
 |Quad split with transform     |QuadSplitTransform.fx   |A quad split with master transform                                            |
 |Repeated transform            |RepeatTransform.fx      |A transform that can duplicate the foreground image as you zoom out           |
