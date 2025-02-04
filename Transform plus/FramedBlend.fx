@@ -1,12 +1,12 @@
 // @Maintainer jwrl
-// @Released 2025-02-03
+// @Released 2025-02-04
 // @Author jwrl
 // @Created 2025-02-03
 
 /**
  Framed blend is very similar to the Lightworks framing effect in operation.
  However unlike framing, this effect is designed with blending in mind.  The
- blend mode provided is the standard normal blend. Cropping has been enxpanded
+ blend mode provided is the standard normal blend. Cropping has been expanded
  and can also be performed using masking.  This allows the exact shape needed
  for the blend to be built.
 
@@ -27,6 +27,7 @@
       [*] Lower right X:  Soften the right side of the crop.
       [*] Lower right Y:  Soften the bottom of the crop.
    [*] Tilt:  Rotates the foreground.  The range matches the framing effect.
+   [*] Opacity:  Fades foreground in and out.
 
  Master soften will soften all crop edges, but master and individual softness
  settings are not additive.  The highest master and individual value set is
@@ -40,6 +41,9 @@
 // Lightworks user effect FramedBlend.fx
 //
 // Version history:
+//
+// Modified 2025-02-04 by jwrl.
+// Added opacity adjustment.
 //
 // Built 2025-02-03 by jwrl.
 //-----------------------------------------------------------------------------------------//
@@ -75,7 +79,8 @@ DeclareFloatParam (YsoftTL, "Upper left Y",  "Softness", kNoFlags, 0.0, 0.0, 1.0
 DeclareFloatParam (XsoftBR, "Lower right X", "Softness", kNoFlags, 0.0, 0.0, 1.0);
 DeclareFloatParam (YsoftBR, "Lower right Y", "Softness", kNoFlags, 0.0, 0.0, 1.0);
 
-DeclareFloatParam (Tilt, "Tilt", kNoGroup, "SpecifiesAngle",  0.0, -10.0, 10.0);
+DeclareFloatParam (Tilt,    "Tilt",    kNoGroup, "SpecifiesAngle",  0.0, -10.0, 10.0);
+DeclareFloatParam (Opacity, "Opacity", kNoGroup, kNoFlags,          1.0,   0.0,  1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -138,40 +143,31 @@ DeclareEntryPoint (FramedOverlay)
 { 
    // Scale the softness parameters, correcting for aspect ratio.
 
-   float aspect = 0.1 * _OutputAspectRatio;
-   float softL  = max (Master, XsoftTL) * 0.1;
-   float softT  = max (Master, YsoftTL) * aspect;
-   float softR  = max (Master, XsoftBR) * 0.1;
-   float softB  = max (Master, YsoftBR) * aspect;
+   float softB = 0.1 * _OutputAspectRatio;
+   float softL = max (Master, XsoftTL) * 0.1;
+   float softT = max (Master, YsoftTL) * softB;
+   float softR = max (Master, XsoftBR) * 0.1;
+
+   softB *= max (Master, YsoftBR);
 
    // Calculate the horizontal left and right crop values including softness range.
 
-   float minL = XcropTL - softL;
-   float maxL = XcropTL + softL;
-   float minR = XcropBR - softR;
-   float maxR = XcropBR + softR;
+   float2 mn = uv4 - float2 (XcropTL - softL, 1.0 - YcropTL - softT);
+   float2 mx = uv4 - float2 (XcropBR - softR, 1.0 - YcropBR - softB);
 
-   // Calculate the vertical top and bottom crop values including the softness.
-
-   float maxT = 1.0 - YcropTL;
-   float maxB = 1.0 - YcropBR;
-   float minT = maxT - softT; maxT += softT;
-   float minB = maxB - softB; maxB += softB;
+   softL += softL; softR += softR; softT += softT; softB += softB;
 
    // Now produce the crop mask, first horizontally then vertically.
 
-   float crop = smoothstep (minL, maxL, uv4.x) * (1.0 - smoothstep (minR, maxR, uv4.x));
-
-   crop *= smoothstep (minT, maxT, uv4.y);
-   crop *= 1.0 - smoothstep (minB, maxB, uv4.y);
+   float crop = smoothstep (0.0, softL, mn.x) * smoothstep (softR, 0.0, mx.x)
+              * smoothstep (0.0, softT, mn.y) * smoothstep (softB, 0.0, mx.y);
 
    float4 Fgnd = tex2D (Ovl, uv4);
    float4 Bgnd = tex2D (Bgd, uv4);
 
    Fgnd.a *= crop;
 
-   float4 retval = lerp (Bgnd, Fgnd, Fgnd.a);
+   float4 retval = lerp (Bgnd, Fgnd, Fgnd.a * Opacity);
 
    return lerp (Bgnd, retval, tex2D (Msk, uv4).x);
 }
-
