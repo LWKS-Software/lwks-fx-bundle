@@ -1,4 +1,4 @@
-# Lightworks user Fx library, February 3, 2025.
+# Lightworks user Fx library, February 12, 2025.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -59,6 +59,9 @@ If you need to use two effects that have the same name, simply open one of them 
 |Multicolour gradient          |MultiGradient.fx        |Creates a colour field with a wide range of possible gradients                |
 |Plasma matte                  |PlasmaMatte.fx          |Generates moving soft plasma-like cloud patterns                              |
 |Sinusoidal lights             |SinusoidalLights.fx     |A pattern generator that creates stars in Lissajou curves over a flat colour  |
+|Starfield                     |Starfield.fx            |Cascading stars over a deep blue gradient                                     |
+|Textured gradients            |TexturedGradients.fx    |Colour gradients with an optional textured overlay                            |
+|Underwater                    |Underwater.fx           |Generates underwater-style god rays                                           |
 
 ## CATEGORY FOLDER: Blend Effects
 |EFFECT                        |FILE NAME               |DESCRIPTION                                                                   |
