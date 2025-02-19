@@ -1,4 +1,4 @@
-# Lightworks user Fx library, February 12, 2025.
+# Lightworks user Fx library, February 19, 2025.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -253,6 +253,7 @@ If you need to use two effects that have the same name, simply open one of them 
 |Channel diagnostics           |ChannelDiags.fx         |Can display individual RGB, luminance, summed RGB, U, V and alpha channels    |
 |Clamp to 16-235               |Clamp_16_235.fx         |Clamps full swing RGB signal to legal video gamut                             |
 |Colour smoother               |ColourSmooth.fx         |Interpolates colours to correct contouring and banding                        |
+|Enhanced progress bar         |EnhancedProgressBar.fx  |A flexible progress bar generator                                             |
 |Enhancement                   |Enhancement.fx          |A video enhancer that sharpens the video while reducing colour banding        |
 |Expand 16-235 to 0-255        |Expand_16_235.fx        |Expands legal video levels to full gamut RGB                                  |
 |Exposure leveller             |ExposeLevel.fx          |This corrects the levels of shots where the exposure varies over time         |
