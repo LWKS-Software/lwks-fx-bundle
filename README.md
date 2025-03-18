@@ -1,4 +1,4 @@
-# Lightworks user Fx library, February 19, 2025.
+# Lightworks user Fx library, March 18, 2025.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -148,6 +148,7 @@ If you need to use two effects that have the same name, simply open one of them 
 |Filmic look                   |FilmLook.fx             |Simulates a filmic curve with exposure adjustment, halation and vibrance      |
 |Multi toner                   |MultiToner.fx           |Select from sepia, selenium, gold tone, copper tone and ferrotone simulation  |
 |Old film look                 |OldFilmLook.fx          |Emulates black and white film with scratches, sprocket holes, weave & flicker |
+|Silent movie                  |SilentMovie             |This wffwct produces adjustable silent film style film ageing                 |
 |Technicolor                   |Technicolor.fx          |Simulates the look of classic 2-strip and 3-strip Technicolor film processes  |
 |Vintage look                  |VintageLook.fx          |Simulates what happens when dye layers of old colour film stock start to fade |
 
