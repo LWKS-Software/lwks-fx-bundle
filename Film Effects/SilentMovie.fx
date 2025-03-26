@@ -1,13 +1,14 @@
 // @Maintainer jwrl
-// @Released 2025-05-18
+// @Released 2025-03-26
 // @Author jwrl
-// @Created 2025-05-18
+// @Created 2025-03-18
 
 /**
  This effect is similar to Lightworks "Old Time Movie" effect, but has some
  additions. As well as the scratch and grain settings, there is sepia tone
- adjustment and jitter, which simulates worn sprocket holes.  The vignette
- amount is also adjustable.
+ adjustment and jitter, which simulates worn sprocket holes. Jitter not only
+ moves the frame horizontally and vertically, but adds rotation as well.
+ The vignette amount is also adjustable.
 
  The sepia toning has been visually matched to that colour by comparison
  with old photographic prints.  It mimics the chemical changes in film
@@ -41,7 +42,8 @@
 //
 // Version history:
 //
-// Created 2025-03-18 by jwrl.
+// Updated 2025-03-26 by jwrl.
+// Added rotation to the jitter.
 //-----------------------------------------------------------------------------------------//
 
 #include "_utils.fx"
@@ -250,7 +252,14 @@ DeclareEntryPoint (SilentMovie)
    if ((JitterRate > 0.0) && (JitterAmount > 0.0)) {
       float3 xyz = float3 (0.0.xx, frac (_Length * _Progress / 13.0) * JitterRate * 104.0) + 200.0.xxx;
 
+      float c, s, angle = radians (weave (xyz - 10.0.xxx)) * JitterAmount * 3.0;
+
+      xy -= 0.5.xx;
       xy += float2 (weave (xyz), weave (xyz + 10.0.xxx)) * JitterAmount / 30.0;
+
+      sincos (angle, s, c);
+
+      xy = mul (float2x2 (c, s, -s, c), xy) + 0.5.xx;
    }
 
    float4 retval = IsOutOfBounds (uv1) ? _TransparentBlack : ReadPixel (Blemishes, mirrorXY (xy));
@@ -289,4 +298,3 @@ DeclareEntryPoint (SilentMovie)
 
    return retval;
 }
-
