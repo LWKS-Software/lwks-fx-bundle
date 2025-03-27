@@ -1,19 +1,18 @@
 // @Maintainer jwrl
-// @Released 2025-03-26
+// @Released 2025-03-27
 // @Author jwrl
 // @Created 2025-03-18
 
 /**
  This effect is similar to Lightworks "Old Time Movie" effect, but has some
  additions. As well as the scratch and grain settings, there is sepia tone
- adjustment and jitter, which simulates worn sprocket holes. Jitter not only
- moves the frame horizontally and vertically, but adds rotation as well.
- The vignette amount is also adjustable.
+ adjustment and jitter, which simulates worn sprocket holes.  The vignette
+ amount is also adjustable.
 
  The sepia toning has been visually matched to that colour by comparison
  with old photographic prints.  It mimics the chemical changes in film
  stocks very closely.  At it's strongest the lighter areas will appear
- almost white. while the contrast increases as the image becomes more
+ almost white, while the contrast increases as the image becomes more
  sepia, which is what actually happens with film ageing.
 
  So now to the settings:
@@ -41,6 +40,11 @@
 // Lightworks user effect SilentMovie.fx
 //
 // Version history:
+//
+// Updated 2025-03-27 by jwrl.
+// Cleaned up jitter code and frame overshoot trapping, which now uses mirrored tex2D()
+// instead of ReadPixel() in DeclareEntryPoint().  This assists in ensuring that 4x3 media
+// is masked correctly in a 16x9 project.
 //
 // Updated 2025-03-26 by jwrl.
 // Added rotation to the jitter.
@@ -100,8 +104,6 @@ DeclareFloatParam (_OutputAspectRatio);
 #define HALF  0.5.xxx
 #define UNITY 1.0.xxx
 
-float4 _TransparentBlack = 0.0.xxxx;
-
 // Pascal's triangle magic numbers for blur
 
 float _pascal [] = { 0.3125, 0.2344, 0.09375, 0.01563 };
@@ -117,36 +119,36 @@ float2 mirrorXY (float2 uv)
    return abs (1.0.xx - abs (xy));
 }
 
-float3 rand_3 (float3 uvw)
+float3 rand (float3 xyz)
 {
-   float j = 4096.0 * sin (dot (uvw, float3 (17.0, 59.4, 15.0)));
+   float r = 4096.0 * sin (dot (xyz, float3 (17.0, 59.4, 15.0)));
 
-   return frac (float3 (512.0, 64.0, 8.0) * j);
+   return frac (float3 (512.0, 64.0, 8.0) * r);
 }
 
-float weave (float3 posn)
-{    
-   float3 a = floor (posn + dot (posn, THIRD).xxx);
+float weave (float p, float q)
+{
+   float3 p0 = float3 (q.xx, p);
+   float3 p1 = floor (p0 + dot (p0, THIRD).xxx);
 
-   float3 x0 = posn + dot (a, SIXTH).xxx - a;
+   float3 a0 = p0 + dot (p1, SIXTH).xxx - p1;
+   float3 b0 = step (0.0.xxx, a0 - a0.yzx);
 
-   float3 i  = step (0.0.xxx, x0 - x0.yzx);
+   float3 b1 = UNITY - b0;
+   float3 b2 = b0 * b1.zxy;
+   float3 b3 = UNITY - (b0.zxy * b1);
 
-   float3 i0 = UNITY - i;
-   float3 i1 = i * i0.zxy;
-   float3 i2 = UNITY - (i.zxy * i0);
+   float3 a1 = a0 - b2 + SIXTH;
+   float3 a2 = a0 - b3 + THIRD;
+   float3 a3 = a0 - HALF;
 
-   float3 x1 = x0 - i1 + SIXTH;
-   float3 x2 = x0 - i2 + THIRD;
-   float3 x3 = x0 - HALF;
+   float4 retval = float4 (dot (a0, a0), dot (a1, a1), dot (a2, a2), dot (a3, a3));
 
-   float4 ret = float4 (dot (x0, x0), dot (x1, x1), dot (x2, x2), dot (x3, x3));
+   retval  = pow (max (0.6.xxxx - retval, 0.0.xxxx), 4.0);
+   retval *= float4 (dot (rand (p1) - HALF, a0), dot (rand (p1 + b2) - HALF, a1),
+                     dot (rand (p1 + b3) - HALF, a2), dot (rand (p1 + UNITY) - HALF, a3));
 
-   ret  = pow (max (0.6.xxxx - ret, 0.0.xxxx), 4.0);
-   ret *= float4 (dot (rand_3 (a) - HALF, x0), dot (rand_3 (a + i1) - HALF, x1),
-                  dot (rand_3 (a + i2) - HALF, x2), dot (rand_3 (a + UNITY) - HALF, x3));
-
-   return dot (ret, 52.0.xxxx);
+   return dot (retval, 52.0.xxxx);
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -250,19 +252,16 @@ DeclareEntryPoint (SilentMovie)
    float2 xy = uv1;
 
    if ((JitterRate > 0.0) && (JitterAmount > 0.0)) {
-      float3 xyz = float3 (0.0.xx, frac (_Length * _Progress / 13.0) * JitterRate * 104.0) + 200.0.xxx;
+      float x = (frac (_Length * _Progress / 13.0) * JitterRate * 104.0) + 200.0;
+      float a = radians (weave (x - 10.0, 190.0)) * JitterAmount * 3.0;
+      float s, c;
 
-      float c, s, angle = radians (weave (xyz - 10.0.xxx)) * JitterAmount * 3.0;
-
-      xy -= 0.5.xx;
-      xy += float2 (weave (xyz), weave (xyz + 10.0.xxx)) * JitterAmount / 30.0;
-
-      sincos (angle, s, c);
-
+      xy -= 0.5.xx - (float2 (weave (x, 200.0), weave (x + 10.0, 210.0)) * JitterAmount / 30.0);
+      sincos (a, s, c);
       xy = mul (float2x2 (c, s, -s, c), xy) + 0.5.xx;
    }
 
-   float4 retval = IsOutOfBounds (uv1) ? _TransparentBlack : ReadPixel (Blemishes, mirrorXY (xy));
+   float4 retval = IsOutOfBounds (uv1) ? 0.0.xxxx : tex2D (Blemishes, mirrorXY (xy));
 
    float alpha   = retval.a;
 
