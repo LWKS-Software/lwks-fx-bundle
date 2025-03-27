@@ -148,7 +148,7 @@ If you need to use two effects that have the same name, simply open one of them 
 |Filmic look                   |FilmLook.fx             |Simulates a filmic curve with exposure adjustment, halation and vibrance      |
 |Multi toner                   |MultiToner.fx           |Select from sepia, selenium, gold tone, copper tone and ferrotone simulation  |
 |Old film look                 |OldFilmLook.fx          |Emulates black and white film with scratches, sprocket holes, weave & flicker |
-|Silent movie                  |SilentMovie             |This wffwct produces adjustable silent film style film ageing                 |
+|Silent movie                  |SilentMovie             |This effect produces adjustable silent film style film ageing                 |
 |Technicolor                   |Technicolor.fx          |Simulates the look of classic 2-strip and 3-strip Technicolor film processes  |
 |Vintage look                  |VintageLook.fx          |Simulates what happens when dye layers of old colour film stock start to fade |
 
