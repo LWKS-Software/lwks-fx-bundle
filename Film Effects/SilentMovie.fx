@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-03-27
+// @Released 2025-03-29
 // @Author jwrl
 // @Created 2025-03-18
 
@@ -34,6 +34,10 @@
       [*] Falloff size:  Sets the diameter of the falloff vignette.
       [*] Falloff edge:  Sets the softness of the falloff vignette.
       [*] Flicker:  Applies flicker to the image.
+
+ Lightworks' effects masking is also included.  Unlike its normal use to mask out the
+ effect and reveal the unmodified input, this reveals opaque black instead.  An example
+ of its use would be the creation of a 4x3 frame inside an HD aspect ratio.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -41,13 +45,13 @@
 //
 // Version history:
 //
-// Updated 2025-03-27 by jwrl.
-// Cleaned up jitter code and frame overshoot trapping, which now uses mirrored tex2D()
-// instead of ReadPixel() in DeclareEntryPoint().  This assists in ensuring that 4x3 media
-// is masked correctly in a 16x9 project.
+// Updated 2025-03-29 jwrl.
+// Rewrote sepia tone to improve dark area saturation.
+// Rewrote exposure to improve flicker performance.
+// Added masking.
 //
-// Updated 2025-03-26 by jwrl.
-// Added rotation to the jitter.
+// Updated 2025-03-27 jwrl.
+// Cleaned up the jitter code and added rotation to it.
 //-----------------------------------------------------------------------------------------//
 
 #include "_utils.fx"
@@ -59,6 +63,8 @@ DeclareLightworksEffect ("Silent movie", "Stylize", "Film Effects", "This produc
 //-----------------------------------------------------------------------------------------//
 
 DeclareInput (Input);
+
+DeclareMask;
 
 //-----------------------------------------------------------------------------------------//
 // Parameters
@@ -97,7 +103,7 @@ DeclareFloatParam (_OutputAspectRatio);
 #define B_SCALE 0.000545
 
 #define LUMA  float3(0.26, 0.43, 0.31)
-#define SEPIA float3(0.9, 0.8, 0.6)
+#define BLACK float4(0.0.xxx, 1.0)
 
 #define SIXTH 0.1666667.xxx
 #define THIRD 0.3333333.xxx
@@ -212,14 +218,18 @@ DeclarePass (Blemishes)
    float4 retval = ReadPixel (Input, uv1);
    float4 grain  = ReadPixel (Grain, ((uv1 - 0.5.xx) / ((GrainSize * 9.0) + 1.0)) + 0.5.xx);
 
-   grain  += retval * 3.0;
-   grain  /= 4.0;
    grain.a = retval.a;
 
-   retval = lerp (retval, grain, GrainAmount);
+   grain  += retval * 2.0;
+   grain  /= 3.0;
 
-   retval.rgb *= 0.75;
-   retval.rgb  = pow (retval.rgb, 2.0);
+   // Arbitrary scale factor to compensate for the grain affecting the video levels.
+
+   grain.rgb  = 1.0.xxx - grain.rgb;
+   grain.rgb *= 1.25;
+   grain.rgb  = 1.0.xxx - grain.rgb;
+
+   retval = lerp (retval, grain, GrainAmount);
 
    float z = lerp (0.1,  0.9,  _Progress);
 
@@ -264,19 +274,23 @@ DeclareEntryPoint (SilentMovie)
    float4 retval = IsOutOfBounds (uv1) ? 0.0.xxxx : tex2D (Blemishes, mirrorXY (xy));
 
    float alpha   = retval.a;
+   float FLcoord = lerp (0.1, 0.9, _Progress);
+   float flicker = Flicker * (ReadPixel (Noise, FLcoord.xx).x - 0.5);
+   float expose  = Exposure + flicker; // (flicker * 0.5);
 
-   float2 fl = lerp (0.1, 0.9, _Progress).xx;
+   // Exposure and flicker are combined and use a simple gamma adjustment.  This is
+   // OK for the limited exposure range that we require.
 
-   float flicker = Flicker * (ReadPixel (Noise, fl).x - 0.5);
-   float gamma   = pow ((Exposure / 2.0) + flicker + 1.85, 1.5);
+   if (expose < 0.0) { retval.rgb = pow (retval.rgb, 1.0 - expose); }
+   else if (expose > 0.0) { retval.rgb = pow (retval.rgb, 1.0 - (expose * 0.5)); }
 
-   retval.rgb  = lerp (1.0.xxx, SEPIA, SepiaTone * 1.5) * dot (retval.rgb, LUMA).xxx * gamma;
-   retval.rgb *= 1.0 - (flicker * 0.35);
-   retval.rgb += (flicker * 0.1).xxx;
+   // Sepia toning is applied by reducing the red and green channels of the luminance.  Gamma
+   // is adjusted as the sepia is increased to increase contrast.
 
-   float vibrance = 1.5 * (((retval.r + retval.g + retval.b) / 3.0) - retval.g);
-
-   retval.rgb = saturate (lerp (retval.rgb, retval.ggg, vibrance));
+   retval.b   = dot (retval.rgb, LUMA);
+   retval.rg  = 1.0.xx - ((1.0 - retval.b) * float2 (0.7, 0.8125));
+   retval.rg  = lerp (retval.bb, retval.rg, SepiaTone * 2.0);
+   retval.rgb = pow (retval.rgb, 1.0 + SepiaTone);
 
    float4 edges = float4 (lerp (retval, pow (retval, 4.0) * 0.75, sqrt (LampFalloff)).rgb, retval.a);
 
@@ -295,5 +309,5 @@ DeclareEntryPoint (SilentMovie)
       retval = lerp (retval, edges, (dist - (radius - midSoft)) / FalloffEdge);
    }
 
-   return retval;
+   return lerp (BLACK, retval, tex2D (Mask, uv1).x);
 }
