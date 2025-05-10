@@ -44,7 +44,7 @@
 // Built 2025-05-10 by jwrl.
 //-----------------------------------------------------------------------------------------//
 
-DeclareLightworksEffect ("Edge offset", "Text", "Text Effects", "Offsets the text effect to give a 2d edge effect", CanSize);
+DeclareLightworksEffect ("Edge offset", "Text", "Text Effects", "Offsets a text effect to give a 3d bordered edge appearance", CanSize);
 
 //-----------------------------------------------------------------------------------------//
 // Inputs
