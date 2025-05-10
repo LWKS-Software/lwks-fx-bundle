@@ -1,4 +1,4 @@
-# Lightworks user Fx library, March 18, 2025.
+# Lightworks user Fx library, May 10, 2025.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -271,6 +271,7 @@ If you need to use two effects that have the same name, simply open one of them 
 |EFFECT                        |FILE NAME               |DESCRIPTION                                                                   |
 |:---------------------------- |:---------------------- |:---------------------------------------------------------------------------- |
 |Edge colour                   |EdgeColour.fx           |Colours the inside edges of text and other blends                             |
+|Edge offset                   |EdgeOffset.fx           |Offsets a text effect to give a 3d bordered edge appearance                   |
 |Extruded edges                |ExtrudedEdges.fx        |Extrudes the edges of text either linearly or radially                        |
 |Satin sheen                   |SatinSheen.fx           |Adds a satin-like sheen to text                                               |
 |Text pop                      |TextPop.fx              |Applies a range of effects to text to make it pop                             |
