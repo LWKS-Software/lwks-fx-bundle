@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-05-10
+// @Released 2025-05-19
 // @Author jwrl
 // @Created 2025-05-10
 
@@ -32,8 +32,14 @@
      [*] Offset 3 colour:  Self explanatory.
      [*] Offset 4 colour:  Self explanatory.
      [*] Offset 5 colour:  Self explanatory.
+     [*] Borders:  Chooses offsets bordered or unbordered.
 
- The default values set the number of offsets to 3 with a minimal black border.
+ If borders are disabled the offsets can include or exclude the area that would be
+ otherwise occupied by the border.  In this mode and with the number of offsets set
+ to 1 the result is a bordered foreground with a hard edged coloured drop shadow.
+
+ The default values of the effect set the number of offsets to 3 with all layers
+ showing a thin black border.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -41,7 +47,8 @@
 //
 // Version history:
 //
-// Built 2025-05-10 by jwrl.
+// Modified 2025-05-19 by jwrl.
+// Added border mode switching.
 //-----------------------------------------------------------------------------------------//
 
 DeclareLightworksEffect ("Edge offset", "Text", "Text Effects", "Offsets a text effect to give a 3d bordered edge appearance", CanSize);
@@ -78,6 +85,8 @@ DeclareColourParam (Colour_2, "Offset 2 colour", "Offsets", kNoFlags, 0.85, 0.85
 DeclareColourParam (Colour_3, "Offset 3 colour", "Offsets", kNoFlags, 0.25, 0.85, 0.10, 1.0));
 DeclareColourParam (Colour_4, "Offset 4 colour", "Offsets", kNoFlags, 0.01, 0.85, 0.85, 1.0));
 DeclareColourParam (Colour_5, "Offset 5 colour", "Offsets", kNoFlags, 0.10, 0.25, 0.85, 1.0));
+
+DeclareIntParam (Borders, "Borders", "Offsets", 0, "Same as foreground|Unbordered, includes border area|Unbordered");
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -117,12 +126,10 @@ DeclarePass (Bgd)
 
 DeclarePass (RawBorder)
 {
-   float edges = pow (Thickness, 2.0);
-   float edgeX = edges * B_SCALE / _OutputWidth;
+   float edgeX = pow (Thickness, 2.0) * B_SCALE / _OutputWidth;
    float edgeY = edgeX * _OutputAspectRatio;
 
-   float2 offset;
-   float2 xy = uv3;
+   float2 offset, xy = uv3;
 
    float4 retval = ReadPixel (Fgd, xy);
 
@@ -144,16 +151,12 @@ DeclarePass (RawBorder)
 
 DeclarePass (Border)
 {
-   float edgeX = B_SCALE / _OutputWidth;
+   float edgeX = Thickness * B_SCALE / _OutputWidth;
    float edgeY = edgeX * _OutputAspectRatio;
 
-   float2 offset;
-   float2 xy = uv3;
+   float2 offset, xy = uv3;
 
    float4 retval = tex2D (RawBorder, xy);
-
-   edgeX *= Thickness;
-   edgeY *= Thickness;
 
    for (int i = 0; i < 6; i++) {
       offset.x = edgeX * _sin_1 [i];
@@ -168,10 +171,14 @@ DeclarePass (Border)
       retval += tex2D (RawBorder, xy - offset);
    }
 
-   float4 Fgnd = tex2D (Fgd, uv3);
+   // The order in which the paramaters are returned is X is the border value
+   // or zero if no borders are selected.  Y is the foreground alpha when 
+   // Borders is set to 0 or 2, Z is the Fg alpha, and W is the clean border.
 
-   retval.rgb = Fgnd.aaa;
-   retval.a   = saturate (max (Fgnd.a, retval.a));
+   retval.z = tex2D (Fgd, uv3).a;
+   retval.w = saturate (max (retval.w, retval.z));
+   retval.x = Borders == 0 ? retval.w : 0.0;
+   retval.y = Borders == 1 ? retval.w : retval.z;
 
    return retval;
 }
@@ -186,32 +193,31 @@ DeclareEntryPoint (EdgeOffset)
 
    if (Quantity > 4) {
       edges = tex2D (Border, uv3 + (xy1 * 5.0));
-      retval = lerp (lerp (Bgnd, Colour, edges.a), Colour_5, edges.g);
+      retval = lerp (lerp (Bgnd, Colour, edges.x), Colour_5, edges.y);
       }
    else retval = Bgnd;
 
    if (Quantity > 3) {
       edges = tex2D (Border, uv3 + (xy1 * 4.0));
-      retval = lerp (lerp (retval, Colour, edges.a), Colour_4, edges.g);
+      retval = lerp (lerp (retval, Colour, edges.x), Colour_4, edges.y);
       }
 
    if (Quantity > 2) {
       edges = tex2D (Border, uv3 + (xy1 * 3.0));
-      retval = lerp (lerp (retval, Colour, edges.a), Colour_3, edges.g);
+      retval = lerp (lerp (retval, Colour, edges.x), Colour_3, edges.y);
       }
 
    if (Quantity > 1) {
       edges = tex2D (Border, uv3 + (xy1 * 2.0));
-      retval = lerp (lerp (retval, Colour, edges.a), Colour_2, edges.g);
+      retval = lerp (lerp (retval, Colour, edges.x), Colour_2, edges.y);
       }
 
    if (Quantity > 0) {
       edges = tex2D (Border, uv3 + xy1);
-      retval = lerp (lerp (retval, Colour, edges.a), Colour_1, edges.g);
+      retval = lerp (lerp (retval, Colour, edges.x), Colour_1, edges.y);
       }
 
    retval = lerp (lerp (retval, Colour, tex2D (Border, uv3).a), Fgnd, Fgnd.a);
 
    return lerp (Bgnd, retval, ReadPixel (Mask, uv1).x * Opacity);
 }
-
