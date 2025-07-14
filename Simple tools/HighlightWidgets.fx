@@ -1,19 +1,36 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2025-07-14
 // @Author jwrl
 // @Created 2021-11-15
 
 /**
- This is an effect that is used to highlight sections of the input video, using circles,
- squares or arrows.  This is a complete rewrite of an original effect first published
- November 5 2021.  The main purpose of the rewrite was to improve the arrow geometry,
- but there have also been slight improvements made to the circle and square generation.
+ This is an effect that can be used to highlight sections of the input video, using
+ circles, squares or arrows.  This is a complete rewrite of an original effect first
+ published November 15 2021.  The main purpose of the rewrite was to improve the arrow
+ geometry, but there have also been slight improvements made to the circle and square
+ generation.  The settings are:
 
- This effect will break resolution independence.  It was a choice between doing that and
- breaking on-screen position tracking.  I think that from a user's point of view it's
- much more important to preserve the latter than the former.
+   * Choose widget:  Chooses whether to use a circle, square or arrow to highlight
+     the selected item.
+   * Amount:  Fades the selected widget in or out.
+   * Size:  Self explanatory.
+   * Ratio (not for circles):  Sets the aspect ratio of both the square widget and
+     the arrow.  Does not do anything to the circle.
+   * Line weight:  Adjusts the thickness of the widget.
+   * Border:  Adjusts the thickness of the border, which is always black.
+   * Rotate arrow:  Self explanatory.  It has no effect on the square or circle.
+   * Position X:  Self explanatory.
+   * Position Y:  Self explanatory.
+   * Colour:  Sets the colour of the chosen widget.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+ This effect will break resolution independence.  For normal use this will make no
+ difference to its operation.  It was a choice between doing that and breaking on-
+ screen position tracking.  I think that from a user's point of view it's much more
+ important to preserve the latter than the former.  However this means that for
+ best results it's best to apply it after any resizing done to the background video.
+
+ NOTE:  This version of this effect is not suitable for use with versions of
+ Lightworks earlier than 2023.1.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -21,13 +38,16 @@
 //
 // Version history:
 //
+// Updated 2025-07-14 jwrl.
+// Corrected the update below.  The change previously listed was wrong.
+// Descriptive text bought into line with the forum entry.  No operational changes.
+//
 // Updated 2023-05-16 jwrl.
-// Header reformatted.
+// Improved the arrow geometry.
+// Slight efficiency improvements to the circle and square generation.
 //
 // Conversion 2023-01-10 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Highlight widgets", "Key", "Simple tools", "Used to highlight sections of video that you want to emphasize", kNoFlags);
 
@@ -241,4 +261,3 @@ DeclareEntryPoint (HighlightWidgets_Arrow)
 
    return lerp (Bgnd, Fgnd, Amount);                           // Mix over background, quit
 }
-
