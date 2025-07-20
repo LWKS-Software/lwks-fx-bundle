@@ -1,4 +1,4 @@
-# Lightworks user Fx library, May 10, 2025.
+# Lightworks user Fx library, July 20, 2025.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -402,6 +402,7 @@ If you need to use two effects that have the same name, simply open one of them 
 ## CATEGORY FOLDER: Wipe transitions
 |EFFECT                       |DIRECT   |KEYED    |FILE NAME               |DESCRIPTION                                            |
 |:--------------------------- |:------- |:------- |:---------------------- |:----------------------------------------------------- |
+|Adjustable push              |Yes      |No       |AdjustablePush.fx       |Push with variable overlap and directional blur        |
 |Barn door transition         |Yes      |Yes      |BarnDoorTrans.fx        |Splits the image in half and separates the halves      |
 |Bar transition               |No       |Yes      |BarTrans.fx             |Splits a foreground image into strips which separate   |
 |Compound push                |Yes      |No       |CompoundPush.fx         |Pushes inner and outer image sections separately       |
