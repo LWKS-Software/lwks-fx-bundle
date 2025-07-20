@@ -27,7 +27,7 @@
 // Built 2025-07-20 jwrl.
 //-----------------------------------------------------------------------------------------//
 
-DeclareLightworksEffect ("Adjustable push", "Mix", "Wipe transitions", "Variable push overlap with directional blur", CanSize);
+DeclareLightworksEffect ("Adjustable push", "Mix", "Wipe transitions", "Push with variable overlap and directional blur", CanSize);
 
 //-----------------------------------------------------------------------------------------//
 // Inputs
