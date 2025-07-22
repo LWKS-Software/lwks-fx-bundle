@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-04-13
+// @Released 2025-07-23
 // @Author jwrl
 // @Created 2024-04-12
 
@@ -62,10 +62,11 @@
 //
 // Version history:
 //
+// Modified 2025-07-23 jwrl.
+// Corrected duplicate of same effect in this upload.
+//
 // Modified 2024-04-13 jwrl.
-// Corrected a bug caused by bad values returned by _OutputWidth and _OutputHeight.  It
-// has been brought to the attention of Lightworks' developers.  It is highly likely
-// that any changes in their code will require further modifcation of this code.
+// Corrected a bug caused by bad values returned by _OutputWidth and _OutputHeight.
 //-----------------------------------------------------------------------------------------//
 
 #include "_utils.fx"
