@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-11-18
+// @Released 2025-07-23
 // @Author jwrl
 // @Created 2024-11-17
 
@@ -32,11 +32,13 @@
 //
 // Version history:
 //
+// Updated 2025-07-23 jwrl.
+// Corrected a float2 max (float, float2) declaration that's legal in HLSL but not in GLSL.
+//
 // Updated 2024-11-18 jwrl.
+// Replaced the original 3D skew code with a simpler 2D version that behaves the same way.
 // Rolled the original warp and skew functions into the main shader code.
-// Mirrored the foreground sampler to correct the warp factor edge jitter.
-// Corrected scaling and position tracking.
-// Replaced the original unnecessary 3D skew code with simpler 2D skewing.
+// Mirrored the foreground sampler to hide the warp edge jitter.
 //-----------------------------------------------------------------------------------------//
 
 DeclareLightworksEffect ("Warp tools", "DVE", "Distortion", "Warps, skews and scales video", CanSize);
@@ -97,7 +99,7 @@ DeclareEntryPoint (WarpTools)
    // based on YX position.  X and Y are reversed because the horizontal edges need to
    // be moved vertically, and the vertical edges horizontally.
 
-   float2 uv = ((uv3 - float2 (Pos_X, 1.0 - Pos_Y)) / max (1.0e-6, float2 (ScaleX, ScaleY) * ScaleXY)) + 0.5.xx;
+   float2 uv = ((uv3 - float2 (Pos_X, 1.0 - Pos_Y)) / max (1.0e-6.xx, float2 (ScaleX, ScaleY) * ScaleXY)) + 0.5.xx;
    float2 xy = sin (uv.yx * PI);
 
    // Now the warp factors are calculated for the left, right, upper and lower edges.
