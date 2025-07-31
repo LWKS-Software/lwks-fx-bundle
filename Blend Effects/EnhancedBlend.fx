@@ -1,21 +1,38 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2025-07-31
 // @Author jwrl
 // @Created 2018-06-15
 
 /**
- "Enhanced blend" is a variant of the Lightworks blend effect with the option to boost the
- alpha channel (transparency) to match the blending used by title effects.  It can help
- when using titles with their inputs disconnected and used with other effects such as DVEs.
- It also closely emulates most of the Photoshop blend modes.
+ "Enhanced blend" is a variant of the Lightworks blend effect which has been designed
+ to emulate the full range of Photoshop blend modes as closely as possible.  You can
+ also blend a transparent foreground with a transparent background and the effect
+ will export a valid alpha channel of the combined vdeo sources.  This means that
+ those combined sources can be used with further blend and transform effects.  It can
+ deal directly with foreground inputs that are opaque or have transparency or can
+ extract a blended foreground from its background using a difference key.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+   * Source selection:  Selects between an extracted foreground, foreground video, image
+     key or title, or pre LW 2023.2 image keys or titles.
+   * Fg Opacity:  Allows the foreground to be faded in or out.
+   * Blend mode:  The only difference between the blend modes used here and the Photoshop
+     versions is that instead of "Dissolve" the choice is "Export foreground only".
+
+ To elaborate on the source selection modes, if you choose not to extract a blended
+ (transparent) foreground from its background you can use either of the image key or title
+ modes, as long as you disconnect any input to the foreground.  There is a reminder to do
+ this in the settings.  The pre LW 2023.2 choice improves blending when using titles or
+ image keys with versions of Lightworks prior to 2023.2.
 */
 
 //-----------------------------------------------------------------------------------------//
 // User effect EnhancedBlend.fx
 //
 // Version history:
+//
+// Updated 2025-07-31 jwrl.
+// Reworked blend modes to better match Photoshop originals.
+// Reversed source selection order, set default to "Video, image key or title".
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
@@ -43,11 +60,11 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareIntParam (Source, "Source selection", "Disconnect title and image key inputs", 2, "Image key/Title pre LW 2023.2|Video, image key or title|Extracted foreground");
+DeclareIntParam (Source, "Source selection", "Disconnect title and image key inputs", 1, "Extracted foreground|Video, image key or title|Image key/Title pre LW 2023.2");
 
-DeclareFloatParam (Amount, "Fg Opacity", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Amount, "Fg Opacity", "Disconnect title and image key inputs", kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareIntParam (SetTechnique, "Blend mode", kNoGroup, 0, "Normal|Export foreground only|____________________|Darken|Multiply|Colour Burn|Linear Burn|Darker Colour|____________________|Lighten|Screen|Colour Dodge|Linear Dodge (Add)|Lighter Colour|____________________|Overlay|Soft Light|Hard Light|Vivid Light|Linear Light|Pin Light|Hard Mix|____________________|Difference|Exclusion|Subtract|Divide|____________________|Hue|Saturation|Colour|Luminosity");
+DeclareIntParam (SetTechnique, "Blend mode", "Disconnect title and image key inputs", 0, "Normal|Export foreground only|____________________|Darken|Multiply|Colour Burn|Linear Burn|Darker Colour|____________________|Lighten|Screen|Colour Dodge|Linear Dodge (Add)|Lighter Colour|____________________|Overlay|Soft Light|Hard Light|Vivid Light|Linear Light|Pin Light|Hard Mix|____________________|Difference|Exclusion|Subtract|Divide|____________________|Hue|Saturation|Colour|Luminosity");
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -57,22 +74,8 @@ DeclareIntParam (SetTechnique, "Blend mode", kNoGroup, 0, "Normal|Export foregro
 #define PROFILE ps_3_0
 #endif
 
-#define CrR   0.439
-#define CrG   0.368
-#define CrB   0.071
-
-#define CbR   0.148
-#define CbG   0.291
-#define CbB   0.439
-
-#define Rr_R  1.596
-#define Rg_R  0.813
-#define Rg_B  0.391
-#define Rb_B  2.018
-
-#define LUMA  float4(0.2989, 0.5866, 0.1145, 0.0)
-
-#define DELTA_KEY 2
+#define LUM   float3(0.2989, 0.5866, 0.1145)
+#define LUMA  float4(LUM, 0.0)
 
 float4 _TransparentBlack = 0.0.xxxx;
 
@@ -80,70 +83,169 @@ float4 _TransparentBlack = 0.0.xxxx;
 // Functions
 //-----------------------------------------------------------------------------------------//
 
-float4 fn_rgb2hsv (float4 rgb)
+float4 initMedia (sampler F, float2 xy1, sampler B, float2 xy2, out float4 Bgd)
 {
-   float Cmin  = min (rgb.r, min (rgb.g, rgb.b));
-   float Cmax  = max (rgb.r, max (rgb.g, rgb.b));
-   float delta = Cmax - Cmin;
+   Bgd = ReadPixel (B, xy2);
 
-   float4 hsv  = float3 (0.0, Cmax, rgb.a).xxyz;
+   // Instead of using ReadPixel for foreground recovery we check for bounds overflow, and
+   // quit if so.  Doing this after recovering the background ensures that no unnecessary
+   // processing will take place, but a valid foreground and background will be returned.
 
-   if (Cmax != 0.0) {
-      hsv.x = (rgb.r == Cmax) ? (rgb.g - rgb.b) / delta
-            : (rgb.g == Cmax) ? 2.0 + (rgb.b - rgb.r) / delta
-                              : 4.0 + (rgb.r - rgb.g) / delta;
-      hsv.x = frac (hsv.x / 6.0);
-      hsv.y = 1.0 - (Cmin / Cmax);
-   }
-
-   return hsv;
-}
-
-float4 fn_hsv2rgb (float4 hsv)
-{
-   if (hsv.y == 0.0) return hsv.zzzw;
-
-   hsv.x *= 6.0;
-
-   int i = (int) floor (hsv.x);
-
-   float f = hsv.x - (float) i;
-   float p = hsv.z * (1.0 - hsv.y);
-   float q = hsv.z * (1.0 - hsv.y * f);
-   float r = hsv.z * (1.0 - hsv.y * (1.0 - f));
-
-   if (i == 0) return float4 (hsv.z, r, p, hsv.w);
-   if (i == 1) return float4 (q, hsv.z, p, hsv.w);
-   if (i == 2) return float4 (p, hsv.z, r, hsv.w);
-   if (i == 3) return float4 (p, q, hsv.zw);
-   if (i == 4) return float4 (r, p, hsv.zw);
-
-   return float4 (hsv.z, p, q, hsv.w);
-}
-
-float4 initFg (float2 xy1, float2 xy2)
-{
    if (IsOutOfBounds (xy1)) return _TransparentBlack;
 
-   float4 Fgd = tex2D (Fg, xy1);
+   float4 Fgd = tex2D (F, xy1);
 
-   if (Source == 0) {
-      Fgd.a    = pow (Fgd.a, 0.5);
-      Fgd.rgb /= Fgd.a;
-   }
-   else if (Source == 2) {
-      float4 Bgd = ReadPixel (Bg, xy2);
-
-      float kDiff = distance (Fgd.g, Bgd.g);
-
-      kDiff = max (kDiff, distance (Fgd.r, Bgd.r));
-      kDiff = max (kDiff, distance (Fgd.b, Bgd.b));
-
-      Fgd.a = smoothstep (0.0, 0.25, kDiff);
+   if (Source == 0) {                  // Extracts foreground alpha using a difference key.
+      Fgd.a    = saturate (distance (Bgd.rgb, Fgd.rgb) * 4.0);
       Fgd.rgb *= Fgd.a;
    }
+   else if (Source == 2) Fgd.a = pow (Fgd.a, 0.5);    // Enhances alpha for 2022.1 titles.
 
    return Fgd;
+}
+
+//---------------------------  Functions for main blend series  ---------------------------//
+
+float ColourBurnSub (float B, float F)
+// Increases contrast to darken the B channel based on the F channel.
+{
+   return B >= 1.0 ? 1.0 : F <= 0.0 ? 0.0 : 1.0 - min (1.0, (1.0 - B) / F);
+}
+
+float LinearBurnSub (float B, float F)
+// Decreases brightness of the summed B and F channels to darken the output.
+{
+   return max (0.0, B + F - 1.0);
+}
+
+float ColourDodgeSub (float B, float F)
+// Brightens the B channel using the F channel to decrease contrast.
+{
+   return B <= 0.0 ? 0.0 : F >= 1.0 ? 1.0 : min (1.0, B / (1.0 - F));
+}
+
+float LinearDodgeSub (float B, float F)
+// Sums B and F channels and limits them to a maximum of 1.
+{
+   return min (1.0, B + F);
+}
+
+float OverlaySub (float B, float F)
+// Multiplies or screens the channels, depending on the B channel.
+{
+   return B <= 0.5 ? 2.0 * B * F : 1.0 - (2.0 * (1.0 - B) * (1.0 - F));
+}
+
+float SoftLightSub (float B, float F)
+// Darkens or lightens the channels, depending on the F channel.
+{
+   if (F <= 0.5) { return B - ((1.0 - 2.0 * F) * B * (1.0 - B)); }
+
+   float d = B <= 0.25 ?  ( (16.0 * B - 12.0) * B + 4.0) * B : sqrt (B);
+
+   return B + (2.0 * F - 1.0) * (d - B);
+}
+
+float HardLightSub (float B, float F)
+// Multiplies or screens the channels, depending on the F channel.
+{
+   return F <= 0.5 ? 2.0 * B * F : 1.0 - (2.0 * (1.0 - B) * (1.0 - F));
+}
+
+float VividLightSub (float B, float F)
+// Burns or dodges the channels, depending on the F value.
+{
+   return F <= 0.5 ? ColourBurnSub (B, 2.0 * F)
+                    : ColourDodgeSub (B, 2.0 * (F - 0.5));
+}
+
+float LinearLightSub (float B, float F)
+// Burns or dodges the channels depending on the F value.
+{
+   return F <= 0.5 ? LinearBurnSub (B, 2.0 * F)
+                    : LinearDodgeSub (B, 2.0 * (F - 0.5));
+}
+
+float PinLightSub (float B, float F)
+// Replaces the channel values, depending on the F channel.
+{
+   F *= 2.0;
+
+   if (B > F) return F;
+   else F -= 1.0;
+
+   return B < F ? F : B;
+}
+
+float HardMixSub (float B, float F)
+// Add F to B and if the result is 1 or greater, return 1, otherwise return 0.
+{
+   return step (1.0, B + F);
+}
+
+float DivideSub (float B, float F)
+// If F is less than or equal to 0 return 1, otherwise divide B by F.
+{
+   return F > 0.0 ? min (1.0, B / F) : 1.0;
+}
+
+//---------------------------  Functions for HSL-based effects  ---------------------------//
+
+float3 SetLuma (float3 abc, float lum)
+{
+   float diff = lum - dot (abc, LUM);
+
+   abc.rgb += diff.xxx;
+
+   lum = dot (abc, LUM);
+
+   float RGBmin = min (abc.r, min (abc.g, abc.b));
+   float RGBmax = max (abc.r, max (abc.g, abc.b));
+
+   return RGBmin < 0.0 ? lerp (lum.xxx, abc, lum / (lum - RGBmin)) :
+          RGBmax > 1.0 ? lerp (lum.xxx, abc, (1.0 - lum) / (RGBmax - lum)) : abc;
+}
+
+float GetSat (float3 abc)
+{
+   return max (abc.r, max (abc.g, abc.b)) - min (abc.r, min (abc.g, abc.b));
+}
+
+float3 SetSatRange (float3 abc, float sat)
+// Set saturation if colour components are sorted in ascending order.
+{
+   if (abc.z > abc.x) {
+      abc.y = ((abc.y - abc.x) * sat) / (abc.z - abc.x);
+      abc.z = sat;
+   }
+   else {
+      abc.y = 0.0;
+      abc.z = 0.0;
+   }
+
+   abc.x = 0.0;
+
+   return abc;
+}
+
+float3 SetSat (float3 abc, float sat)
+{
+   if ((abc.r <= abc.g) && (abc.r <= abc.b)) {
+      if  (abc.g <= abc.b) { abc.rgb = SetSatRange (abc.rgb, sat); }
+      else abc.rbg = SetSatRange (abc.rbg, sat);
+   }
+   else if ((abc.g <= abc.r) && (abc.g <= abc.b)) {
+      if  (abc.r <= abc.b)
+         abc.grb = SetSatRange (abc.grb, sat);
+      else abc.gbr = SetSatRange (abc.gbr, sat);
+   }
+   else {
+      if (abc.r <= abc.g)
+         abc.brg = SetSatRange (abc.brg, sat);
+      else abc.bgr = SetSatRange (abc.bgr, sat);
+   }
+
+   return abc;
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -152,18 +254,21 @@ float4 initFg (float2 xy1, float2 xy2)
 
 DeclareEntryPoint (Normal)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
-   float alpha = Fgnd.a * Amount;
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
-
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
 DeclareEntryPoint (ExportAlpha)
-{ return lerp (_TransparentBlack, initFg (uv1, uv2), tex2D (Mask, uv1).x); }
+{
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
+
+   float4 retval = float4 (lerp (0.0.xxx, Fgnd.rgb, Fgnd.a), Fgnd.a);
+
+   return lerp (_TransparentBlack, retval, tex2D (Mask, uv1).x * Amount);
+}
 
 DeclareEntryPoint (Dummy_1)
 { return ReadPixel (Bg, uv2); }
@@ -172,76 +277,63 @@ DeclareEntryPoint (Dummy_1)
 
 DeclareEntryPoint (Darken)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
-
-   float alpha = Fgnd.a * Amount;
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
    Fgnd.rgb = min (Fgnd.rgb, Bgnd.rgb);
 
-   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
 DeclareEntryPoint (Multiply)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
-
-   float alpha = Fgnd.a * Amount;
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
    Fgnd.rgb *= Bgnd.rgb;
 
-   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
 DeclareEntryPoint (ColourBurn)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
-   float alpha = Fgnd.a * Amount;
+   Fgnd.r = ColourBurnSub (Bgnd.r, Fgnd.r);
+   Fgnd.g = ColourBurnSub (Bgnd.g, Fgnd.g);
+   Fgnd.b = ColourBurnSub (Bgnd.b, Fgnd.b);
 
-   if (Fgnd.r > 0.0) Fgnd.r = 1.0 - ((1.0 - Bgnd.r) / Fgnd.r);
-   if (Fgnd.g > 0.0) Fgnd.g = 1.0 - ((1.0 - Bgnd.g) / Fgnd.g);
-   if (Fgnd.b > 0.0) Fgnd.b = 1.0 - ((1.0 - Bgnd.b) / Fgnd.b);
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   float4 retval = float4 (lerp (Bgnd.rgb, min (Fgnd.rgb, 1.0.xxx), alpha), max (Bgnd.a, alpha));
-
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
 DeclareEntryPoint (LinearBurn)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
-   float alpha = Fgnd.a * Amount;
+   Fgnd.r = LinearBurnSub (Bgnd.r, Fgnd.r);
+   Fgnd.g = LinearBurnSub (Bgnd.g, Fgnd.g);
+   Fgnd.b = LinearBurnSub (Bgnd.b, Fgnd.b);
 
-   Fgnd.rgb = max (Fgnd.rgb + Bgnd.rgb - 1.0.xxx, 0.0.xxx);
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
-
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
 DeclareEntryPoint (DarkerColour)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
-
-   float alpha = Fgnd.a * Amount;
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
    float luma = dot (Bgnd, LUMA);
 
-   if (dot (Fgnd, LUMA) > luma) Fgnd.rgb = Bgnd.rgb;
+   Fgnd.rgb = luma <= dot (Fgnd, LUMA) ? Bgnd.rgb : Fgnd.rgb;
 
-   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
 DeclareEntryPoint (Dummy_2)
@@ -251,75 +343,63 @@ DeclareEntryPoint (Dummy_2)
 
 DeclareEntryPoint (Lighten)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
-
-   float alpha = Fgnd.a * Amount;
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
    Fgnd.rgb = max (Fgnd.rgb, Bgnd.rgb);
 
-   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
 DeclareEntryPoint (Screen)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
-
-   float alpha = Fgnd.a * Amount;
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
    Fgnd.rgb = saturate (Fgnd.rgb + Bgnd.rgb - (Fgnd.rgb * Bgnd.rgb));
 
-   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
 DeclareEntryPoint (ColourDodge)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
-   float alpha = Fgnd.a * Amount;
+   Fgnd.r = ColourDodgeSub (Bgnd.r, Fgnd.r);
+   Fgnd.g = ColourDodgeSub (Bgnd.g, Fgnd.g);
+   Fgnd.b = ColourDodgeSub (Bgnd.b, Fgnd.b);
 
-   Fgnd.r = (Fgnd.r == 1.0) ? 1.0 : Bgnd.r / (1.0 - Fgnd.r);
-   Fgnd.g = (Fgnd.g == 1.0) ? 1.0 : Bgnd.g / (1.0 - Fgnd.g);
-   Fgnd.b = (Fgnd.b == 1.0) ? 1.0 : Bgnd.b / (1.0 - Fgnd.b);
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   float4 retval = float4 (lerp (Bgnd.rgb, min (Fgnd.rgb, 1.0.xxx), alpha), max (Bgnd.a, alpha));
-
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
 DeclareEntryPoint (LinearDodge)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
-   float alpha = Fgnd.a * Amount;
+   Fgnd.r = LinearDodgeSub (Bgnd.r, Fgnd.r);
+   Fgnd.g = LinearDodgeSub (Bgnd.g, Fgnd.g);
+   Fgnd.b = LinearDodgeSub (Bgnd.b, Fgnd.b);
 
-   Fgnd.rgb = min (Fgnd.rgb + Bgnd.rgb, 1.0.xxx);
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
-
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
 DeclareEntryPoint (LighterColour)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
-   float alpha = Fgnd.a * Amount;
    float luma  = dot (Bgnd, LUMA);
 
-   if (dot (Fgnd, LUMA) < luma) Fgnd.rgb = Bgnd.rgb;
+   Fgnd.rgb = luma > dot (Fgnd, LUMA) ? Bgnd.rgb : Fgnd.rgb;
 
-   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
 DeclareEntryPoint (Dummy_3)
@@ -329,146 +409,93 @@ DeclareEntryPoint (Dummy_3)
 
 DeclareEntryPoint (Overlay)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
-   float3 retMin = 2.0 * Bgnd.rgb * Fgnd.rgb;
-   float3 retMax = 1.0.xxx - 2.0 * (1.0.xxx - Fgnd.rgb) * (1.0.xxx - Bgnd.rgb);
+   Fgnd.r = OverlaySub (Bgnd.r, Fgnd.r);
+   Fgnd.g = OverlaySub (Bgnd.g, Fgnd.g);
+   Fgnd.b = OverlaySub (Bgnd.b, Fgnd.b);
 
-   float alpha = Fgnd.a * Amount;
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   Fgnd.r = (Bgnd.r <= 0.5) ? retMin.r : retMax.r;
-   Fgnd.g = (Bgnd.g <= 0.5) ? retMin.g : retMax.g;
-   Fgnd.b = (Bgnd.b <= 0.5) ? retMin.b : retMax.b;
-
-   float4 retval = float4 (lerp (Bgnd.rgb, saturate (Fgnd.rgb), alpha), max (Bgnd.a, alpha));
-
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
 DeclareEntryPoint (SoftLight)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
-   float3 retMax = (2.0 * Fgnd.rgb) - 1.0.xxx;
-   float3 retMin = Bgnd.rgb * (retMax * (1.0.xxx - Bgnd.rgb) + 1.0.xxx);
+   Fgnd.r = SoftLightSub (Bgnd.r, Fgnd.r);
+   Fgnd.g = SoftLightSub (Bgnd.g, Fgnd.g);
+   Fgnd.b = SoftLightSub (Bgnd.b, Fgnd.b);
 
-   float alpha = Fgnd.a * Amount;
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   retMax *= sqrt (Bgnd.rgb) - Bgnd.rgb;
-   retMax += Bgnd.rgb;
-
-   Fgnd.r = (Fgnd.r <= 0.5) ? retMin.r : retMax.r;
-   Fgnd.g = (Fgnd.g <= 0.5) ? retMin.g : retMax.g;
-   Fgnd.b = (Fgnd.b <= 0.5) ? retMin.b : retMax.b;
-
-   float4 retval = float4 (lerp (Bgnd.rgb, saturate (Fgnd.rgb), alpha), max (Bgnd.a, alpha));
-
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
 DeclareEntryPoint (HardLight)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
-   float3 retMin = saturate (2.0 * Bgnd.rgb * Fgnd.rgb);
-   float3 retMax = saturate (1.0.xxx - 2.0 * (1.0.xxx - Bgnd.rgb) * (1.0.xxx - Fgnd.rgb));
+   Fgnd.r = HardLightSub (Bgnd.r, Fgnd.r);
+   Fgnd.g = HardLightSub (Bgnd.g, Fgnd.g);
+   Fgnd.b = HardLightSub (Bgnd.b, Fgnd.b);
 
-   float alpha = Fgnd.a * Amount;
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   Fgnd.r = (Fgnd.r < 0.5) ? retMin.r : retMax.r;
-   Fgnd.g = (Fgnd.g < 0.5) ? retMin.g : retMax.g;
-   Fgnd.b = (Fgnd.b < 0.5) ? retMin.b : retMax.b;
-
-   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
-
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
 DeclareEntryPoint (VividLight)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
-   float3 retMax, retMin;
+   Fgnd.r = VividLightSub (Bgnd.r, Fgnd.r);
+   Fgnd.g = VividLightSub (Bgnd.g, Fgnd.g);
+   Fgnd.b = VividLightSub (Bgnd.b, Fgnd.b);
 
-   float alpha = Fgnd.a * Amount;
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   retMin.r = (Fgnd.r == 0.0) ? 0.0 : max (1.0 - ((1.0 - Bgnd.r) / (2.0 * Fgnd.r)), 0.0);
-   retMin.g = (Fgnd.g == 0.0) ? 0.0 : max (1.0 - ((1.0 - Bgnd.g) / (2.0 * Fgnd.g)), 0.0);
-   retMin.b = (Fgnd.b == 0.0) ? 0.0 : max (1.0 - ((1.0 - Bgnd.b) / (2.0 * Fgnd.b)), 0.0);
-
-   retMax.r = (Fgnd.r == 1.0) ? 1.0 : Bgnd.r / (2.0 * (1.0 - Fgnd.r));
-   retMax.g = (Fgnd.g == 1.0) ? 1.0 : Bgnd.g / (2.0 * (1.0 - Fgnd.g));
-   retMax.b = (Fgnd.b == 1.0) ? 1.0 : Bgnd.b / (2.0 * (1.0 - Fgnd.b));
-
-   retMin = min (retMin, (1.0).xxx);
-   retMax = min (retMax, (1.0).xxx);
-
-   Fgnd.r = (Fgnd.r < 0.5) ? retMin.r : retMax.r;
-   Fgnd.g = (Fgnd.g < 0.5) ? retMin.g : retMax.g;
-   Fgnd.b = (Fgnd.b < 0.5) ? retMin.b : retMax.b;
-
-   float4 retval = float4 (lerp (Bgnd.rgb, saturate (Fgnd.rgb), alpha), max (Bgnd.a, alpha));
-
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
 DeclareEntryPoint (LinearLight)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
-   float4 retMin = max ((2.0 * Fgnd) + Bgnd - 1.0.xxxx, _TransparentBlack);
-   float4 retMax = min ((2.0 * Fgnd) + Bgnd - 1.0.xxxx, 1.0.xxxx);
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
-   float alpha = Fgnd.a * Amount;
+   Fgnd.r = LinearLightSub (Bgnd.r, Fgnd.r);
+   Fgnd.g = LinearLightSub (Bgnd.g, Fgnd.g);
+   Fgnd.b = LinearLightSub (Bgnd.b, Fgnd.b);
 
-   Fgnd.r = (Fgnd.r < 0.5) ? retMin.r : retMax.r;
-   Fgnd.g = (Fgnd.g < 0.5) ? retMin.g : retMax.g;
-   Fgnd.b = (Fgnd.b < 0.5) ? retMin.b : retMax.b;
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
-
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
 DeclareEntryPoint (PinLight)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
-   float3 retMax = 2.0 * Fgnd.rgb;
-   float3 retMin = retMax - 1.0.xxx;
+   Fgnd.r = PinLightSub (Bgnd.r, Fgnd.r);
+   Fgnd.g = PinLightSub (Bgnd.g, Fgnd.g);
+   Fgnd.b = PinLightSub (Bgnd.b, Fgnd.b);
 
-   float alpha = Fgnd.a * Amount;
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   Fgnd.r = (Bgnd.r > retMax.r) ? retMax.r : (Bgnd.r < retMin.r) ? retMin.r : Bgnd.r;
-   Fgnd.g = (Bgnd.g > retMax.g) ? retMax.g : (Bgnd.g < retMin.g) ? retMin.g : Bgnd.g;
-   Fgnd.b = (Bgnd.b > retMax.b) ? retMax.b : (Bgnd.b < retMin.b) ? retMin.b : Bgnd.b;
-
-   float4 retval = float4 (lerp (Bgnd.rgb, saturate (Fgnd.rgb), alpha), max (Bgnd.a, alpha));
-
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
 DeclareEntryPoint (HardMix)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
-   float3 ref = 1.0.xxx - Bgnd.rgb;
+   Fgnd.r = HardMixSub (Bgnd.r, Fgnd.r);
+   Fgnd.g = HardMixSub (Bgnd.g, Fgnd.g);
+   Fgnd.b = HardMixSub (Bgnd.b, Fgnd.b);
 
-   float alpha = Fgnd.a * Amount;
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   Fgnd.r = (Fgnd.r < ref.r) ? 0.0 : 1.0;
-   Fgnd.g = (Fgnd.g < ref.g) ? 0.0 : 1.0;
-   Fgnd.b = (Fgnd.b < ref.b) ? 0.0 : 1.0;
-
-   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
-
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
 DeclareEntryPoint (Dummy_4)
@@ -478,60 +505,48 @@ DeclareEntryPoint (Dummy_4)
 
 DeclareEntryPoint (Difference)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
-
-   float alpha = Fgnd.a * Amount;
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
    Fgnd.rgb = abs (Fgnd.rgb - Bgnd.rgb);
 
-   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
 DeclareEntryPoint (Exclusion)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
-   float alpha = Fgnd.a * Amount;
+   Fgnd.rgb = saturate (Fgnd.rgb + Bgnd.rgb - (2.0 * Bgnd.rgb * Fgnd.rgb));
 
-   Fgnd.rgb = saturate (Fgnd.rgb + Bgnd.rgb * (1.0.xxx - (2.0 * Fgnd.rgb)));
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
-
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
 DeclareEntryPoint (Subtract)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
-
-   float alpha = Fgnd.a * Amount;
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
    Fgnd.rgb = max (Bgnd.rgb - Fgnd.rgb, 0.0.xxx);
 
-   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
 DeclareEntryPoint (Divide)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
-   float alpha = Fgnd.a * Amount;
+   Fgnd.r = DivideSub (Bgnd.r, Fgnd.r);
+   Fgnd.g = DivideSub (Bgnd.g, Fgnd.g);
+   Fgnd.b = DivideSub (Bgnd.b, Fgnd.b);
 
-   Fgnd.r = (Fgnd.r == 0.0) ? 1.0 : min (Bgnd.r / Fgnd.r, 1.0);
-   Fgnd.g = (Fgnd.g == 0.0) ? 1.0 : min (Bgnd.g / Fgnd.g, 1.0);
-   Fgnd.b = (Fgnd.b == 0.0) ? 1.0 : min (Bgnd.b / Fgnd.b, 1.0);
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
-
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
 DeclareEntryPoint (Dummy_5)
@@ -541,60 +556,44 @@ DeclareEntryPoint (Dummy_5)
 
 DeclareEntryPoint (Hue)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
-   float4 blnd = fn_rgb2hsv (Bgnd);
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
-   float alpha = Fgnd.a * Amount;
+   Fgnd.rgb = SetLuma (SetSat (Fgnd.rgb, GetSat (Bgnd.rgb)), dot (Bgnd, LUMA));
 
-   blnd.xw = (fn_rgb2hsv (Fgnd)).xw;
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   float4 retval = float4 (lerp (Bgnd.rgb, fn_hsv2rgb (blnd).rgb, alpha), max (Bgnd.a, alpha));
-
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
-DeclareEntryPoint (Saturation)
+DeclareEntryPoint (Sat)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
-   float4 blnd = fn_rgb2hsv (Bgnd);
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
-   float alpha = Fgnd.a * Amount;
+   Fgnd.rgb = SetLuma (SetSat (Bgnd.rgb, GetSat (Fgnd.rgb)), dot (Bgnd, LUMA));
 
-   blnd.yw = fn_rgb2hsv (Fgnd).yw;
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   float4 retval = float4 (lerp (Bgnd.rgb, fn_hsv2rgb (blnd).rgb, alpha), max (Bgnd.a, alpha));
-
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
 DeclareEntryPoint (Colour)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
-   float4 blnd = fn_rgb2hsv (Fgnd);
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
-   float alpha = Fgnd.a * Amount;
+   Fgnd.rgb = SetLuma (Fgnd.rgb, dot (Bgnd, LUMA));
 
-   blnd.x = (fn_rgb2hsv (Bgnd)).x;
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   float4 retval = float4 (lerp (Bgnd.rgb, fn_hsv2rgb (blnd).rgb, alpha), max (Bgnd.a, alpha));
-
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
-DeclareEntryPoint (Luminosity)
+DeclareEntryPoint (Luma)
 {
-   float4 Fgnd = initFg (uv1, uv2);
-   float4 Bgnd = ReadPixel (Bg, uv2);
-   float4 blnd = fn_rgb2hsv (Bgnd);
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Bgnd);
 
-   float alpha = Fgnd.a * Amount;
+   Fgnd.rgb = SetLuma (Bgnd.rgb, dot (Fgnd, LUMA));
 
-   blnd.zw = (fn_rgb2hsv (Fgnd)).zw;
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   float4 retval = float4 (lerp (Bgnd.rgb, fn_hsv2rgb (blnd).rgb, alpha), max (Bgnd.a, alpha));
-
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
