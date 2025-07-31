@@ -1,4 +1,4 @@
-# Lightworks user Fx library, July 20, 2025.
+# Lightworks user Fx library, July 31, 2025.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -363,6 +363,7 @@ If you need to use two effects that have the same name, simply open one of them 
 |EFFECT                       |DIRECT   |KEYED    |FILE NAME               |DESCRIPTION                                            |
 |:--------------------------- |:------- |:------- |:---------------------- |:----------------------------------------------------- |
 |Chinagraph markup            |Yes      |No       |ChinagraphMarkup.fx     |Simulates the chinagraph marks used by film editors    |
+|Fade                         |Yes      |No       |Fade.fx                 |Fades a single video stream out or in                  |
 |Fade out / fade in           |Yes      |No       |FadeOutIn.fx            |Fades the first video out then the next in             |
 |Fades                        |Yes      |No       |Fades.fx                |Fades video to or from black                           |
 |Optical fades                |Yes      |No       |OpticalFades.fx         |Simulates the black crush effect of a film optical     |
