@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-07-31
+// @Released 2025-08-01
 // @Author khaver
 // @Created 2012-12-18
 
@@ -14,10 +14,12 @@
 //
 // Version history:
 //
-// Converted from HLSL 2025-12-31 jwrl.
+// Updated 2025-08-01 jwrl.  Renamed from "Fade".
+//
+// Converted from HLSL 2025-07-31 jwrl.
 //-----------------------------------------------------------------------------------------//
 
-DeclareLightworksEffect ("Fade", "Mix", "Fades and non mixes", "Fades video out or in.", CanSize);
+DeclareLightworksEffect ("Fade to black", "Mix", "Fades and non mixes", "Fades video out or in.", CanSize);
 
 //-----------------------------------------------------------------------------------------//
 // Inputs
