@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-07-21
+// @Released 2025-08-05
 // @Author jwrl
 // @Created 2025-07-20
 
@@ -15,7 +15,8 @@
    * Progress:  Sets and shows the progress of the push.
    * Overlap
       * Amount:  Adjusts the amount of overlap between the two sources.
-      * Edge mix:  Adjusts the width of the overlap mix.  It's limited to the available overlap.
+      * Edge mix:  Adjusts the width of the overlap mix.  It's limited to the
+        available overlap.
    * Blur:  Controls the amount of the blur in the direction of the push.
 */
 
@@ -23,6 +24,9 @@
 // Lightworks user effect AdjustablePush.fx
 //
 // Version history:
+//
+// Modified 2025-08-05 jwrl.
+// Rewritten to correct edge overflow problems when the frame isn't filled.
 //
 // Modified 2025-07-21 jwrl.
 // Commented code and did some code optimisation.
@@ -50,7 +54,7 @@ DeclareFloatParamAnimated (Progress, "Progress", kNoGroup, kNoFlags, 0.5, 0.0, 1
 DeclareFloatParam (Amount,  "Amount",   "Overlap", kNoFlags, 0.5, 0.0, 1.0);
 DeclareFloatParam (EdgeMix, "Edge mix", "Overlap", kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareFloatParam (Blur, "Blur", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Blur,    "Blur",      kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -63,18 +67,37 @@ DeclareFloatParam (_OutputAspectRatio);
 #endif
 
 #define TWO_PI    6.2831853072
-#define PI        3.1415926536
 
 #define SAMPLES   30
 #define SAMPSCALE 61.0
-
 #define STRENGTH  0.0025
 
 #define SCALE     0.25
 
+#define BLACK     float2(0.0, 1.0).xxxy
+
 //-----------------------------------------------------------------------------------------//
 // Functions
 //-----------------------------------------------------------------------------------------//
+
+// This mirrors the edges of the frame to emulate sampler mirror addressing.
+
+float4 mirror2D (sampler video, float2 uv)
+{
+   float2 xy = 1.0.xx - abs (abs (uv) - 1.0.xx);
+
+   return tex2D (video, xy);
+}
+
+// ReadOpaque() ensures that the recovered video is opaque, with any transparency or
+// out of bounds media returned as black.
+
+float4 ReadOpaque (sampler video, float2 uv)
+{
+   float4 retval = ReadPixel (video, uv);
+
+   return lerp (BLACK, retval, retval.a);
+}
 
 // This function generates both the outgoing and incoming push values.
 
@@ -99,10 +122,10 @@ float generatePush (out float pushIn)
 
 float4 directionalBlurX (sampler video, float2 uv)
 {
-   float4 retval = tex2D (video, uv);
+   float4 retval = ReadPixel (video, uv);
 
-   // The blur increases to a maximum at Progress = 50% then returns to zero.  A
-   // trigonometric curve has been created by applying cos() to Progress.
+   // The blur increases to a maximum at Progress = 50% then returns to zero.
+   // A trigonometric curve has been created by applying cos() to Progress.
 
    float amount = (1.0 - cos (Progress * TWO_PI)) / 2.0;
 
@@ -117,7 +140,7 @@ float4 directionalBlurX (sampler video, float2 uv)
    for (int i = 0; i < SAMPLES; i++) {
       xy1 -= xy0;
       xy2 += xy0;
-      retval += tex2D (video, xy1) + tex2D (video, xy2);
+      retval += mirror2D (video, xy1) + mirror2D (video, xy2);
    }
 
    return retval / SAMPSCALE;
@@ -127,7 +150,7 @@ float4 directionalBlurX (sampler video, float2 uv)
 
 float4 directionalBlurY (sampler video, float2 uv)
 {
-   float4 retval = tex2D (video, uv);
+   float4 retval = ReadPixel (video, uv);
 
    float amount = (1.0 - cos (Progress * TWO_PI)) / 2.0;
 
@@ -142,7 +165,7 @@ float4 directionalBlurY (sampler video, float2 uv)
    for (int i = 0; i < SAMPLES; i++) {
       xy1 -= xy0;
       xy2 += xy0;
-      retval += tex2D (video, xy1) + tex2D (video, xy2);
+      retval += mirror2D (video, xy1) + mirror2D (video, xy2);
    }
 
    return retval / SAMPSCALE;
@@ -154,17 +177,23 @@ float4 directionalBlurY (sampler video, float2 uv)
 
 //-----  Push left to right  --------------------------------------------------------------//
 
-// This first pass produces a horizontal blur for the outgoing video on Fg.
+// These first passes map Fg and Bg to sequence coordinates and remove rotation.
+
+DeclarePass (F0)
+{ return ReadOpaque (Fg, uv1); }
+
+DeclarePass (B0)
+{ return ReadOpaque (Bg, uv2); }
 
 DeclarePass (Fg0)
-{ return directionalBlurX (Fg, uv1); }
+{ return ReadPixel (F0, uv3); }
 
-// This produces the blur for the incoming video on Bg.  It then produces the blend
-// overlap and applies it to the alpha channel for later use in the final pass.
+// This recovers Bg and produces the blend overlap.  That is then applied to the alpha
+// channel for later use in the final pass.
 
 DeclarePass (Bg0)
 {
-   float4 retval = directionalBlurX (Bg, uv2);
+    float4 retval = ReadOpaque (B0, uv3);
 
    float overlap = Amount * EdgeMix * SCALE;
    float start   = 1.0 - overlap;
@@ -175,10 +204,10 @@ DeclarePass (Bg0)
    return retval;
 }
 
-// The incoming and outgoing video is recovered with the appropriate pushes.  They
-// are then combined using the alpha channel of the incoming video.
+// This pass produces a horizontal push for the outgoing video on Fg0 and the
+// incoming video on Bg0.  The incoming alpha channel has the overlap blend.
 
-DeclareEntryPoint (AdjustablePushLR)
+DeclarePass (PushLR)
 {
    float incoming;
    float outgoing = generatePush (incoming);
@@ -189,16 +218,27 @@ DeclareEntryPoint (AdjustablePushLR)
    return lerp (outwards, inwards, inwards.a);
 }
 
+// This produces the blur for the composite push video and finishes the effect.
+
+DeclareEntryPoint (AdjustablePushLR)
+{ return directionalBlurX (PushLR, uv3); }
+
 //-----  Push right to left  --------------------------------------------------------------//
 
 // The comments for the left to right passes apply here, with the direction changed.
 
+DeclarePass (F1)
+{ return ReadOpaque (Fg, uv1); }
+
+DeclarePass (B1)
+{ return ReadOpaque (Bg, uv2); }
+
 DeclarePass (Fg1)
-{ return directionalBlurX (Fg, uv1); }
+{ return ReadPixel (F1, uv3); }
 
 DeclarePass (Bg1)
 {
-   float4 retval = directionalBlurX (Bg, uv2);
+    float4 retval = ReadOpaque (B1, uv3);
 
    float overlap = Amount * EdgeMix * SCALE;
    float start   = 1.0 - overlap;
@@ -209,7 +249,7 @@ DeclarePass (Bg1)
    return retval;
 }
 
-DeclareEntryPoint (AdjustablePushRL)
+DeclarePass (PushRL)
 {
    float incoming;
    float outgoing = generatePush (incoming);
@@ -220,16 +260,25 @@ DeclareEntryPoint (AdjustablePushRL)
    return lerp (outwards, inwards, inwards.a);
 }
 
+DeclareEntryPoint (AdjustablePushRL)
+{ return directionalBlurX (PushRL, uv3); }
+
 //-----  Push top to bottom  --------------------------------------------------------------//
 
 // The comments for the left to right passes apply here, with the direction changed.
 
+DeclarePass (F2)
+{ return ReadOpaque (Fg, uv1); }
+
+DeclarePass (B2)
+{ return ReadOpaque (Bg, uv2); }
+
 DeclarePass (Fg2)
-{ return directionalBlurY (Fg, uv1); }
+{ return ReadPixel (F2, uv3); }
 
 DeclarePass (Bg2)
 {
-   float4 retval = directionalBlurY (Bg, uv2);
+    float4 retval = ReadOpaque (B2, uv3);
 
    float overlap = Amount * EdgeMix * SCALE;
    float start   = 1.0 - overlap;
@@ -240,7 +289,7 @@ DeclarePass (Bg2)
    return retval;
 }
 
-DeclareEntryPoint (AdjustablePushDown)
+DeclarePass (PushDown)
 {
    float incoming;
    float outgoing = generatePush (incoming);
@@ -251,16 +300,25 @@ DeclareEntryPoint (AdjustablePushDown)
    return lerp (outwards, inwards, inwards.a);
 }
 
+DeclareEntryPoint (AdjustablePushDown)
+{ return directionalBlurY (PushDown, uv3); }
+
 //-----  Push bottom to top  --------------------------------------------------------------//
 
 // The comments for the left to right passes apply here, with the direction changed.
 
+DeclarePass (F3)
+{ return ReadOpaque (Fg, uv1); }
+
+DeclarePass (B3)
+{ return ReadOpaque (Bg, uv2); }
+
 DeclarePass (Fg3)
-{ return directionalBlurY (Fg, uv1); }
+{ return ReadPixel (F3, uv3); }
 
 DeclarePass (Bg3)
 {
-   float4 retval = directionalBlurY (Bg, uv2);
+    float4 retval = ReadOpaque (B3, uv3);
 
    float overlap = Amount * EdgeMix * SCALE;
    float start   = 1.0 - overlap;
@@ -271,7 +329,7 @@ DeclarePass (Bg3)
    return retval;
 }
 
-DeclareEntryPoint (AdjustablePushUp)
+DeclarePass (PushUp)
 {
    float incoming;
    float outgoing = generatePush (incoming);
@@ -281,3 +339,6 @@ DeclareEntryPoint (AdjustablePushUp)
 
    return lerp (outwards, inwards, inwards.a);
 }
+
+DeclareEntryPoint (AdjustablePushUp)
+{ return directionalBlurY (PushUp, uv3); }
