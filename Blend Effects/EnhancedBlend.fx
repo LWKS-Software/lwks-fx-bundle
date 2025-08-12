@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-07-31
+// @Released 2025-08-12
 // @Author jwrl
 // @Created 2018-06-15
 
@@ -29,6 +29,9 @@
 // User effect EnhancedBlend.fx
 //
 // Version history:
+//
+// Updated 2025-08-12 jwrl.
+// Corrected a potential divide by zero bug when used with GLSL compilers.
 //
 // Updated 2025-07-31 jwrl.
 // Reworked blend modes to better match Photoshop originals.
