@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-01-21
+// @Released 2025-08-12
 // @Author baopao
 // @Author jwrl
 // @Created 2024-01-21
@@ -30,11 +30,13 @@
 //
 // Version history:
 //
+// Updated 2025-08-12 jwrl.
+// Corrected Soft light, Colour, Luminosity and Dodge.  Did not fully match LW versions.
+// Optimised the code - each blend mode now has the form initialise / body code / exit.
+//
 // Created 2024-01-21 jwrl.
-// Combined code from baopao's Unpremultiply and jwrl's Enhanced blend tools.
+// Combined code from baopao's Unpremultiply and jwrl's Enhanced blend.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Blend with unpremultiply", "Mix", "Blend Effects", "Can remove the hard outline you can get with premultiplied blend effects", CanSize);
 
@@ -64,59 +66,89 @@ DeclareFloatParam (Ammount, "Fg Opacity", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
 #define PROFILE ps_3_0
 #endif
 
+#define LUMA float3(0.2991, 0.5868, 0.1141)
+
+#define _TransparentBlack 0.0.xxxx
+
 //-----------------------------------------------------------------------------------------//
 // Functions
 //-----------------------------------------------------------------------------------------//
 
-float4 fn_rgb2hsv (float4 rgb)
+float overlaySub (float B, float F)
 {
-   float Cmin  = min (rgb.r, min (rgb.g, rgb.b));
-   float Cmax  = max (rgb.r, max (rgb.g, rgb.b));
-   float delta = Cmax - Cmin;
+   F = B <= 0.5 ? 2.0 * B * F : 1.0 - 2.0 * (1.0 - F) * (1.0 - B);
 
-   float4 hsv  = float3 (0.0, Cmax, rgb.a).xxyz;
-
-   if (Cmax != 0.0) {
-      hsv.x = (rgb.r == Cmax) ? (rgb.g - rgb.b) / delta
-            : (rgb.g == Cmax) ? 2.0 + (rgb.b - rgb.r) / delta
-                              : 4.0 + (rgb.r - rgb.g) / delta;
-      hsv.x = frac (hsv.x / 6.0);
-      hsv.y = 1.0 - (Cmin / Cmax);
-   }
-
-   return hsv;
+   return saturate (F);
 }
 
-float4 fn_hsv2rgb (float4 hsv)
+float softLightSub (float B, float F)
 {
-   if (hsv.y == 0.0) return hsv.zzzw;
+   float retval = (1.0 - B) * (F * B) + (B * (1.0 - ((1.0 - B) * (1.0 - F))));
 
-   hsv.x *= 6.0;
-
-   int i = (int) floor (hsv.x);
-
-   float f = hsv.x - (float) i;
-   float p = hsv.z * (1.0 - hsv.y);
-   float q = hsv.z * (1.0 - hsv.y * f);
-   float r = hsv.z * (1.0 - hsv.y * (1.0 - f));
-
-   if (i == 0) return float4 (hsv.z, r, p, hsv.w);
-   if (i == 1) return float4 (q, hsv.z, p, hsv.w);
-   if (i == 2) return float4 (p, hsv.z, r, hsv.w);
-   if (i == 3) return float4 (p, q, hsv.zw);
-   if (i == 4) return float4 (r, p, hsv.zw);
-
-   return float4 (hsv.z, p, q, hsv.w);
+   return saturate (retval);
 }
 
-float4 fn_Premul (sampler S, float2 xy)
+float hardLightSub (float B, float F)
 {
-   float4 retval = IsOutOfBounds (xy) ? 0.0.xxxx : tex2D (S, xy);
+   F = F < 0.5 ? 2.0 * B * F : 1.0 - 2.0 * (1.0 - B) * (1.0 - F);
 
-   if (Unpremultiply == 1) { retval.rgb /= retval.a; }
-   else if (Unpremultiply == 2) retval.rgb *= retval.a;
+   return saturate (F);
+}
 
-   return retval;
+float3 ColourLumaSub (float3 V, float3 F)
+{
+   float Y  = dot (V, LUMA);
+   float Cr = (0.439 * F.r) - (0.368 * F.g) - (0.071 * F.b) + 0.5;
+   float Cb = (0.439 * F.b) - (0.291 * F.g) - (0.148 * F.r) + 0.5;
+
+   float R = Y + (1.596 * (Cr - 0.5));
+   float G = Y - (0.813 * (Cr - 0.5)) - (0.391 * (Cb - 0.5));
+   float B = Y + (2.018 * (Cb - 0.5));
+
+   return saturate (float3 (R, G, B));
+}
+
+float dodgeSub (float B, float F)
+{
+   float D = 1.0 - F;
+
+   if (D == 0.0) D = 1.0e-9;
+
+   return saturate (B / D);
+}
+
+float burnSub (float B, float F)
+{
+   if (F > 0.0) F = 1.0 - ((1.0 - B) / F);
+
+   return saturate (F);
+}
+
+float4 initMedia (sampler F, float2 xy1, sampler B, float2 xy2, sampler M,
+                  out float4 Bgd, inout float A)
+{
+   Bgd = ReadPixel (B, xy2);
+
+   // Instead of using ReadPixel for foreground recovery we check for bounds overflow, and
+   // quit if so.  Doing this after recovering the background ensures that no unnecessary
+   // processing will take place, but a valid foreground and background will be returned.
+   // The alpha channel, A, is initialised to zero externally so that it's also valid.
+
+   if (IsOutOfBounds (xy1)) { return _TransparentBlack; }
+
+   float4 Fgd = tex2D (F, xy1);
+
+   if (Unpremultiply == 1) { Fgd.rgb /= Fgd.a; }
+   else if (Unpremultiply == 2) Fgd.rgb *= Fgd.a;
+
+   A = ReadPixel (M, xy1).x * Fgd.a * Ammount;
+
+   return Fgd;
+}
+
+float4 exitVFX (float4 Bgd, float4 Fgd, float amt)
+{
+   return float4 (lerp (Bgd.rgb, Fgd.rgb, amt), max (Bgd.a, amt));
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -125,231 +157,195 @@ float4 fn_Premul (sampler S, float2 xy)
 
 DeclareEntryPoint (InFront)
 {
-   float4 Fgnd = fn_Premul (Fg, uv1);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float alpha = 0.0;
 
-   float alpha = (ReadPixel (Mask, uv3) * Fgnd.a * Ammount).x;
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
-   return float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
+   return exitVFX (Bgnd, Fgnd, alpha);
 }
 
 DeclareEntryPoint (Add)
 {
-   float4 Fgnd = fn_Premul (Fg, uv1);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float alpha = 0.0;
 
-   float alpha = (ReadPixel (Mask, uv3) * Fgnd.a * Ammount).x;
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
-   Fgnd.rgb = min (Fgnd.rgb + Bgnd.rgb, 1.0.xxx);
+   Fgnd.rgb = saturate (Fgnd.rgb + Bgnd.rgb);
 
-   return float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
+   return exitVFX (Bgnd, Fgnd, alpha);
 }
 
 DeclareEntryPoint (Subtract)
 {
-   float4 Fgnd = fn_Premul (Fg, uv1);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float alpha = 0.0;
 
-   float alpha = (ReadPixel (Mask, uv3) * Fgnd.a * Ammount).x;
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
    Fgnd.rgb = saturate (Fgnd.rgb - Bgnd.rgb);
 
-   return float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
+   return exitVFX (Bgnd, Fgnd, alpha);
 }
 
 DeclareEntryPoint (Multiply)
 {
-   float4 Fgnd = fn_Premul (Fg, uv1);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float alpha = 0.0;
 
-   float alpha = (ReadPixel (Mask, uv3) * Fgnd.a * Ammount).x;
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
    Fgnd.rgb *= Bgnd.rgb;
 
-   return float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
+   return exitVFX (Bgnd, Fgnd, alpha);
 }
 
 DeclareEntryPoint (Screen)
 {
-   float4 Fgnd = fn_Premul (Fg, uv1);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float alpha = 0.0;
 
-   float alpha = (ReadPixel (Mask, uv3) * Fgnd.a * Ammount).x;
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
    Fgnd.rgb = saturate (Fgnd.rgb + Bgnd.rgb - (Fgnd.rgb * Bgnd.rgb));
 
-   return float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
+   return exitVFX (Bgnd, Fgnd, alpha);
 }
 
 DeclareEntryPoint (Overlay)
 {
-   float4 Fgnd = fn_Premul (Fg, uv1);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float alpha = 0.0;
 
-   float3 retMin = 2.0 * Bgnd.rgb * Fgnd.rgb;
-   float3 retMax = 1.0.xxx - 2.0 * (1.0.xxx - Fgnd.rgb) * (1.0.xxx - Bgnd.rgb);
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
-   float alpha = (ReadPixel (Mask, uv3) * Fgnd.a * Ammount).x;
+   Fgnd.r = overlaySub (Bgnd.r, Fgnd.r);
+   Fgnd.g = overlaySub (Bgnd.g, Fgnd.g);
+   Fgnd.b = overlaySub (Bgnd.b, Fgnd.b);
 
-   Fgnd.r = (Bgnd.r <= 0.5) ? retMin.r : retMax.r;
-   Fgnd.g = (Bgnd.g <= 0.5) ? retMin.g : retMax.g;
-   Fgnd.b = (Bgnd.b <= 0.5) ? retMin.b : retMax.b;
-
-   return float4 (lerp (Bgnd.rgb, saturate (Fgnd.rgb), alpha), max (Bgnd.a, alpha));
+   return exitVFX (Bgnd, Fgnd, alpha);
 }
 
 DeclareEntryPoint (SoftLight)
 {
-   float4 Fgnd = fn_Premul (Fg, uv1);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float alpha = 0.0;
 
-   float3 retMax = (2.0 * Fgnd.rgb) - 1.0.xxx;
-   float3 retMin = Bgnd.rgb * (retMax * (1.0.xxx - Bgnd.rgb) + 1.0.xxx);
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
-   float alpha = (ReadPixel (Mask, uv3) * Fgnd.a * Ammount).x;
+   Fgnd.r = softLightSub (Bgnd.r, Fgnd.r);
+   Fgnd.g = softLightSub (Bgnd.g, Fgnd.g);
+   Fgnd.b = softLightSub (Bgnd.b, Fgnd.b);
 
-   retMax *= sqrt (Bgnd.rgb) - Bgnd.rgb;
-   retMax += Bgnd.rgb;
-
-   Fgnd.r = (Fgnd.r <= 0.5) ? retMin.r : retMax.r;
-   Fgnd.g = (Fgnd.g <= 0.5) ? retMin.g : retMax.g;
-   Fgnd.b = (Fgnd.b <= 0.5) ? retMin.b : retMax.b;
-
-   return float4 (lerp (Bgnd.rgb, saturate (Fgnd.rgb), alpha), max (Bgnd.a, alpha));
+   return exitVFX (Bgnd, Fgnd, alpha);
 }
 
 DeclareEntryPoint (HardLight)
 {
-   float4 Fgnd = fn_Premul (Fg, uv1);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float alpha = 0.0;
 
-   float3 retMin = saturate (2.0 * Bgnd.rgb * Fgnd.rgb);
-   float3 retMax = saturate (1.0.xxx - 2.0 * (1.0.xxx - Bgnd.rgb) * (1.0.xxx - Fgnd.rgb));
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
-   float alpha = (ReadPixel (Mask, uv3) * Fgnd.a * Ammount).x;
+   Fgnd.r = hardLightSub (Bgnd.r, Fgnd.r);
+   Fgnd.g = hardLightSub (Bgnd.g, Fgnd.g);
+   Fgnd.b = hardLightSub (Bgnd.b, Fgnd.b);
 
-   Fgnd.r = (Fgnd.r < 0.5) ? retMin.r : retMax.r;
-   Fgnd.g = (Fgnd.g < 0.5) ? retMin.g : retMax.g;
-   Fgnd.b = (Fgnd.b < 0.5) ? retMin.b : retMax.b;
-
-   return float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
+   return exitVFX (Bgnd, Fgnd, alpha);
 }
 
 DeclareEntryPoint (Exclusion)
 {
-   float4 Fgnd = fn_Premul (Fg, uv1);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float alpha = 0.0;
 
-   float alpha = (ReadPixel (Mask, uv3) * Fgnd.a * Ammount).x;
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
    Fgnd.rgb = saturate (Fgnd.rgb + Bgnd.rgb * (1.0.xxx - (2.0 * Fgnd.rgb)));
 
-   return float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
+   return exitVFX (Bgnd, Fgnd, alpha);
 }
 
 DeclareEntryPoint (Lighten)
 {
-   float4 Fgnd = fn_Premul (Fg, uv1);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float alpha = 0.0;
 
-   float alpha = (ReadPixel (Mask, uv3) * Fgnd.a * Ammount).x;
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
    Fgnd.rgb = max (Fgnd.rgb, Bgnd.rgb);
 
-   return float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
+   return exitVFX (Bgnd, Fgnd, alpha);
 }
 
 DeclareEntryPoint (Darken)
 {
-   float4 Fgnd = fn_Premul (Fg, uv1);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float alpha = 0.0;
 
-   float alpha = (ReadPixel (Mask, uv3) * Fgnd.a * Ammount).x;
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
    Fgnd.rgb = min (Fgnd.rgb, Bgnd.rgb);
 
-   return float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
+   return exitVFX (Bgnd, Fgnd, alpha);
 }
 
 DeclareEntryPoint (Average)
 {
-   float4 Fgnd = fn_Premul (Fg, uv1);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float alpha = 0.0;
 
-   float alpha = (ReadPixel (Mask, uv3) * Fgnd.a * Ammount).x;
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
    Fgnd.rgb = (Fgnd.rgb + Bgnd.rgb) / 2.0;
 
-   return float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
+   return exitVFX (Bgnd, Fgnd, alpha);
 }
 
 DeclareEntryPoint (Difference)
 {
-   float4 Fgnd = fn_Premul (Fg, uv1);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float alpha = 0.0;
 
-   float alpha = (ReadPixel (Mask, uv3) * Fgnd.a * Ammount).x;
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
    Fgnd.rgb = abs (Fgnd.rgb - Bgnd.rgb);
 
-   return float4 (lerp (Bgnd.rgb, Fgnd.rgb, alpha), max (Bgnd.a, alpha));
+   return exitVFX (Bgnd, Fgnd, alpha);
 }
 
 DeclareEntryPoint (Colour)
 {
-   float4 Fgnd = fn_Premul (Fg, uv1);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float alpha = 0.0;
 
-   float4 blnd = fn_rgb2hsv (Fgnd);
-   float4 hsv = fn_rgb2hsv (Bgnd);
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
-   blnd.y = max (blnd.y, hsv.y);
-   blnd.z = hsv.z;
+   Fgnd.rgb = ColourLumaSub (Bgnd.rgb, Fgnd.rgb);
 
-   float alpha = (ReadPixel (Mask, uv3) * Fgnd.a * Ammount).x;
-
-   return float4 (lerp (Bgnd.rgb, fn_hsv2rgb (blnd).rgb, alpha), max (Bgnd.a, alpha));
+   return exitVFX (Bgnd, Fgnd, alpha);
 }
 
 DeclareEntryPoint (Luminosity)
 {
-   float4 Fgnd = fn_Premul (Fg, uv1);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float alpha = 0.0;
 
-   float4 blnd = fn_rgb2hsv (Bgnd);
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
-   float alpha = (ReadPixel (Mask, uv3) * Fgnd.a * Ammount).x;
+   Fgnd.rgb = ColourLumaSub (Fgnd.rgb, Bgnd.rgb);
 
-   blnd.zw = (fn_rgb2hsv (Fgnd)).zw;
-
-   return float4 (lerp (Bgnd.rgb, fn_hsv2rgb (blnd).rgb, alpha), max (Bgnd.a, alpha));
+   return exitVFX (Bgnd, Fgnd, alpha);
 }
 
 DeclareEntryPoint (Dodge)
 {
-   float4 Fgnd = fn_Premul (Fg, uv1);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float alpha = 0.0;
 
-   float alpha = (ReadPixel (Mask, uv3) * Fgnd.a * Ammount).x;
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
-   Fgnd.r = (Fgnd.r == 1.0) ? 1.0 : Bgnd.r / (1.0 - Fgnd.r);
-   Fgnd.g = (Fgnd.g == 1.0) ? 1.0 : Bgnd.g / (1.0 - Fgnd.g);
-   Fgnd.b = (Fgnd.b == 1.0) ? 1.0 : Bgnd.b / (1.0 - Fgnd.b);
+   Fgnd.r = dodgeSub (Bgnd.r, Fgnd.r);
+   Fgnd.g = dodgeSub (Bgnd.g, Fgnd.g);
+   Fgnd.b = dodgeSub (Bgnd.b, Fgnd.b);
 
-   return float4 (lerp (Bgnd.rgb, min (Fgnd.rgb, 1.0.xxx), alpha), max (Bgnd.a, alpha));
+   return exitVFX (Bgnd, Fgnd, alpha);
 }
 
 DeclareEntryPoint (Burn)
 {
-   float4 Fgnd = fn_Premul (Fg, uv1);
-   float4 Bgnd = ReadPixel (Bg, uv2);
+   float alpha = 0.0;
 
-   float alpha = (ReadPixel (Mask, uv3) * Fgnd.a * Ammount).x;
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
-   if (Fgnd.r > 0.0) Fgnd.r = 1.0 - ((1.0 - Bgnd.r) / Fgnd.r);
-   if (Fgnd.g > 0.0) Fgnd.g = 1.0 - ((1.0 - Bgnd.g) / Fgnd.g);
-   if (Fgnd.b > 0.0) Fgnd.b = 1.0 - ((1.0 - Bgnd.b) / Fgnd.b);
+   Fgnd.r = burnSub (Bgnd.r, Fgnd.r);
+   Fgnd.g = burnSub (Bgnd.g, Fgnd.g);
+   Fgnd.b = burnSub (Bgnd.b, Fgnd.b);
 
-   return float4 (lerp (Bgnd.rgb, min (Fgnd.rgb, 1.0.xxx), alpha), max (Bgnd.a, alpha));
+   return exitVFX (Bgnd, Fgnd, alpha);
 }
-
