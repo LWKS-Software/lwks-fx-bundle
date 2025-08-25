@@ -1,13 +1,15 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2025-08-25
 // @Author jwrl
 // @Created 2022-08-28
 
 /**
  This is just a simple rule of thirds grid generator.  That's it.  It will handle both
- portrait and landscape format media at any resolution supported by Lightworks.
+ portrait and landscape format media at any resolution supported by Lightworks.  The
+ display is locked to the sequence size and aspect ratio.  It is NOT intended to be
+ locked to the size and aspect ratio of the input video.
 
- It is suitable for LW version 2022.2 and above, and is unlikely to compile on older
+ It is suitable for LW version 2022.2 and above, but is unlikely to compile on older
  versions.
 */
 
@@ -16,15 +18,16 @@
 //
 // Version history:
 //
+// Updated 2025-08-25 jwrl.
+// Corrected a geometry bug affecting rotated media.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-01-25 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
 
-#include "_utils.fx"
-
-DeclareLightworksEffect ("Rule of thirds", "User", "Technical", "A simple rule of thirds grid generator", CanSize);
+DeclareLightworksEffect ("Rule of thirds", "User", "Technical", "A simple rule of thirds grid generator", "ScaleAware|HasMinOutputSize");
 
 //-----------------------------------------------------------------------------------------//
 // Inputs
@@ -36,14 +39,16 @@ DeclareInput (Input);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Opacity, "Opacity", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (GridWeight, "Line weight", kNoGroup, kNoFlags, 0.2, 0.0, 1.0);
+DeclareFloatParam (Opacity,   "Opacity",      kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Lweight,   "Line weight",  kNoGroup, kNoFlags, 0.2, 0.0, 1.0);
 
-DeclareIntParam (BlendGrid, "Grid display", kNoGroup, 0, "Add|Subtract|Difference");
+DeclareIntParam   (BlendMode, "Grid display", kNoGroup, 0, "Add|Subtract|Difference");
 
 DeclareFloatParam (_OutputAspectRatio);
 
-DeclareIntParam (_InputOrientation);
+DeclareIntParam   (_InputOrientation);
+
+DeclareFloat4Param (_InputExtents);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -53,8 +58,69 @@ DeclareIntParam (_InputOrientation);
 #define PROFILE ps_3_0
 #endif
 
-#define SUBTRACT   1       // Subtract value used by BlendGrid
-#define DIFFRNCE   2       // Difference value used by BlendGrid
+#define SUBTRACT 1       // Subtract value used by BlendMode
+#define DIFFRNCE 2       // Difference value used by BlendMode
+
+#define WHITE    1.0.xxxx
+
+//-----------------------------------------------------------------------------------------//
+// Functions
+//-----------------------------------------------------------------------------------------//
+
+float4 Hline (float4 video, float2 uv, float pos, float thickness)
+{
+   // To calculate the position of the horizontal guide we only need the y coordinate.
+   // Since y values in Lightworks have 0 at the top of frame and HLSL / GLSL place
+   // it at the bottom the position must be inverted by subtracting it from 1.0.
+
+   float position = 1.0 - pos;
+
+   // First remap the Y coords to sequence space if there's 0 degree orientation.
+
+   if (_InputOrientation == 0)
+      uv.y = (uv.y - _InputExtents.y) / (_InputExtents.w - _InputExtents.y);
+
+   // Now we calculate the boundaries by adding and subtracting the line thickness.
+
+   float Abounds = position - thickness;
+   float Bbounds = position + thickness;
+
+   // If the Y position is inside the boundaries we can now blend the line over the video.
+
+   if ((uv.y > Abounds) && (uv.y < Bbounds)) {
+      video = BlendMode == DIFFRNCE ? abs (video - WHITE) :
+              BlendMode == SUBTRACT ? saturate (video - WHITE) : saturate (video + WHITE);
+
+      // Regardless of the blend mode used, alpha is turned fully on.  This ensures that
+      // even if we blend this effect with something else the guide will still show.
+
+      video.a = 1.0;
+   }
+
+   return video;
+}
+
+float4 Vline (float4 video, float2 uv, float position, float thickness)
+{
+   // X coordinates don't need inversion so this process is as shown in Hline() after
+   // the position inversion.  First remap the X coords to sequence space if there's
+   // 0 degree orientation.
+
+   if (_InputOrientation == 0)
+      uv.x = (uv.x - _InputExtents.x) / (_InputExtents.z - _InputExtents.x);
+
+   float Abounds = position - thickness;
+   float Bbounds = position + thickness;
+
+   if ((uv.x > Abounds) && (uv.x < Bbounds)) {
+      video = BlendMode == DIFFRNCE ? abs (video - WHITE) :
+              BlendMode == SUBTRACT ? saturate (video - WHITE) : saturate (video + WHITE);
+
+      video.a = 1.0;
+   }
+
+   return video;
+}
 
 //-----------------------------------------------------------------------------------------//
 // Code
@@ -62,42 +128,27 @@ DeclareIntParam (_InputOrientation);
 
 DeclareEntryPoint (ThirdsRule)
 {
-   float4 Bgnd = ReadPixel (Input, uv1);
+   // Start by calculating the H and V guide line weights, allowing for the aspect ratio.
 
-   // Quit if the opacity is zero and we don't need to show the rule of thirds pattern.
+   float Hweight = ((Lweight * 4.5) + 0.5) * 0.001;
+   float Vweight;
 
-   if (Opacity == 0.0) return Bgnd;
+   // Next adjust the line weight variation caused by rotation.
 
-   // Now we calculate the X and Y grid overlay line weights.  The scale factor is arbitrary.
-
-   float x = ((GridWeight * 5.0) + 1.0) * 0.001;
-   float y = x;
-
-   // Correct x or y for aspect ratio based on the input video orientation.
-
-   if ((_InputOrientation == 0) || (_InputOrientation == 180)) { x /= _OutputAspectRatio; }
-   else y /= _OutputAspectRatio;
-
-   float2 xy;
-
-   // Initialise the grid to off, then turn it on inside the loop if it's needed.
-
-   bool grid = false;
-
-   for (float f = 0.0; f <= 3.0; f++) {
-      xy = abs (uv1 - (f.xx / 3.0));
-
-      grid = (xy.x < x) || (xy.y < y) || grid;
+   if ((_InputOrientation == 0) || (_InputOrientation == 180)) {
+      Vweight  = Hweight;
+      Hweight *= _OutputAspectRatio;
    }
+   else Vweight = Hweight * _OutputAspectRatio;
 
-   // The opacity setting is used to generate the grid at this point with alpha set to zero
-   // so that we can blend the grid with the input video without affecting transparency.
+   // Recover the video input and do the rule of thirds.
 
-   float4 retval = grid ? float4 (Opacity.xxx, 0.0) : kTransparentBlack;
+   float4 video  = ReadPixel (Input, uv1);
+   float4 retval = Hline (video, uv1, 0.33333333, Hweight);
 
-   // Exit with the background blended with the grid, using difference, subtract or add.
+   retval = Hline (retval, uv1, 0.66666667, Hweight);
+   retval = Vline (retval, uv1, 0.33333333, Vweight);
+   retval = Vline (retval, uv1, 0.66666667, Vweight);
 
-   return BlendGrid == DIFFRNCE ? abs (Bgnd - retval) :
-          BlendGrid == SUBTRACT ? saturate (Bgnd - retval) : saturate (Bgnd + retval);
+   return lerp (video, retval, Opacity);
 }
-
