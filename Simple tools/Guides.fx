@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-08-17
+// @Released 2025-08-25
 // @Author jwrl
 // @Created 2025-08-17
 
@@ -35,8 +35,11 @@
       * Show guide 4:  As for show guide 3.
       * Guide 4:  As for guide 3.
 
- It's suitable for use with LW versions over 2022.1, but is unlikely to compile on any
- earlier versions.
+ This effect works with rotated media, and works within sequence bounds.  It is NOT
+ designed to lock the guides to the input media size and aspect ratio.
+
+ The effect is suitable for use with LW versions above 2022.1, but is unlikely to
+ compile on earlier versions.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -44,10 +47,13 @@
 //
 // Version history:
 //
+// Updated 2025-08-25 jwrl.
+// Corrected a geometry bug affecting rotated media.
+//
 // Built 2025-08-17 by jwrl.
 //-----------------------------------------------------------------------------------------//
 
-DeclareLightworksEffect ("Guides", "Key", "Simple tools", "Displays up to four horizontal guides and four vertical", CanSize);
+DeclareLightworksEffect ("Guides", "Key", "Simple tools", "Displays up to four horizontal guides and four vertical", "ScaleAware|HasMinOutputSize");
 
 //-----------------------------------------------------------------------------------------//
 // Inputs
@@ -66,27 +72,29 @@ DeclareBoolParam  (Rule3rds,  "Rule of thirds", kNoGroup, false);
 
 DeclareIntParam   (BlendMode, "Guide blending", kNoGroup, 2, "Add|Subtract|Difference");
 
-DeclareBoolParam  (Show_H1, "Show guide 1", "Horizontal", true);
-DeclareFloatParam (Hguide1, "Guide 1",      "Horizontal", kNoFlags, 0.5,  0.0, 1.0);
-DeclareBoolParam  (Show_H2, "Show guide 2", "Horizontal", false);
-DeclareFloatParam (Hguide2, "Guide 2",      "Horizontal", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam  (Show_H3, "Show guide 3", "Horizontal", false);
-DeclareFloatParam (Hguide3, "Guide 3",      "Horizontal", kNoFlags, 0.75, 0.0, 1.0);
-DeclareBoolParam  (Show_H4, "Show guide 4", "Horizontal", false);
-DeclareFloatParam (Hguide4, "Guide 4",      "Horizontal", kNoFlags, 0.95, 0.0, 1.0);
+DeclareBoolParam  (Show_H0, "Show guide 1", "Horizontal", true);
+DeclareFloatParam (Hguide0, "Guide 1",      "Horizontal", kNoFlags, 0.5,  0.0, 1.0);
+DeclareBoolParam  (Show_H1, "Show guide 2", "Horizontal", false);
+DeclareFloatParam (Hguide1, "Guide 2",      "Horizontal", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (Show_H2, "Show guide 3", "Horizontal", false);
+DeclareFloatParam (Hguide2, "Guide 3",      "Horizontal", kNoFlags, 0.75, 0.0, 1.0);
+DeclareBoolParam  (Show_H3, "Show guide 4", "Horizontal", false);
+DeclareFloatParam (Hguide3, "Guide 4",      "Horizontal", kNoFlags, 0.95, 0.0, 1.0);
 
-DeclareBoolParam  (Show_V1, "Show guide 1", "Vertical", true);
-DeclareFloatParam (Vguide1, "Guide 1",      "Vertical", kNoFlags, 0.5,  0.0, 1.0);
-DeclareBoolParam  (Show_V2, "Show guide 2", "Vertical", false);
-DeclareFloatParam (Vguide2, "Guide 2",      "Vertical", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam  (Show_V3, "Show guide 3", "Vertical", false);
-DeclareFloatParam (Vguide3, "Guide 3",      "Vertical", kNoFlags, 0.75, 0.0, 1.0);
-DeclareBoolParam  (Show_V4, "Show guide 4", "Vertical", false);
-DeclareFloatParam (Vguide4, "Guide 4",      "Vertical", kNoFlags, 0.05, 0.0, 1.0);
+DeclareBoolParam  (Show_V0, "Show guide 1", "Vertical", true);
+DeclareFloatParam (Vguide0, "Guide 1",      "Vertical", kNoFlags, 0.5,  0.0, 1.0);
+DeclareBoolParam  (Show_V1, "Show guide 2", "Vertical", false);
+DeclareFloatParam (Vguide1, "Guide 2",      "Vertical", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (Show_V2, "Show guide 3", "Vertical", false);
+DeclareFloatParam (Vguide2, "Guide 3",      "Vertical", kNoFlags, 0.75, 0.0, 1.0);
+DeclareBoolParam  (Show_V3, "Show guide 4", "Vertical", false);
+DeclareFloatParam (Vguide3, "Guide 4",      "Vertical", kNoFlags, 0.05, 0.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
 DeclareIntParam (_InpOrientation);
+
+DeclareFloat4Param (_InpExtents);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -96,24 +104,42 @@ DeclareIntParam (_InpOrientation);
 #define PROFILE ps_3_0
 #endif
 
-#define WHITE    1.0.xxxx
-
 // Index values for subtract and difference settings as used by BlendMode
 
 #define SUBTRACT 1
 #define DIFFRNCE 2
 
+#define WHITE    1.0.xxxx
+
 //-----------------------------------------------------------------------------------------//
 // Functions
 //-----------------------------------------------------------------------------------------//
 
+float4 setPos (float P0, float P1, float P2, float P3,
+               bool bP0, bool bP1, bool bP2, bool bP3)
+{
+   float sP0 = bP0 ? saturate (P0) : -1.0;
+   float sP1 = bP1 ? saturate (P1) : -1.0;
+   float sP2 = bP2 ? saturate (P2) : -1.0;
+   float sP3 = bP3 ? saturate (P3) : -1.0;
+
+   return float4 (sP1, sP2, sP3, sP0);
+}
+
 float4 Hline (float4 video, float2 uv, float pos, float thickness)
 {
+   if (IsOutOfBounds (pos)) return video;
+
    // To calculate the position of the horizontal guide we only need the y coordinate.
    // Since y values in Lightworks have 0 at the top of frame and HLSL / GLSL place
    // it at the bottom the position must be inverted by subtracting it from 1.0.
 
    float position = 1.0 - pos;
+
+   // First remap the Y coords to sequence space if there's 0 degree orientation.
+
+   if (_InpOrientation == 0)
+      uv.y = (uv.y - _InpExtents.y) / (_InpExtents.w - _InpExtents.y);
 
    // Now we calculate the boundaries by adding and subtracting the line thickness.
 
@@ -137,8 +163,14 @@ float4 Hline (float4 video, float2 uv, float pos, float thickness)
 
 float4 Vline (float4 video, float2 uv, float position, float thickness)
 {
+   if (IsOutOfBounds (position)) return video;
+
    // X coordinates don't need inversion so this process is as shown in Hline() after
-   // the position inversion.
+   // the position inversion.  First remap the X coords to sequence space if there's
+   // 0 degree orientation.
+
+   if (_InpOrientation == 0)
+      uv.x = (uv.x - _InpExtents.x) / (_InpExtents.z - _InpExtents.x);
 
    float Abounds = position - thickness;
    float Bbounds = position + thickness;
@@ -159,48 +191,70 @@ float4 Vline (float4 video, float2 uv, float position, float thickness)
 
 DeclareEntryPoint (RefLine)
 {
-   // Start by calculating the H and V guide line weights.  The H and V values allow
-   // for the aspect ratio.
+   // Start by calculating the H and V guide line weights, allowing for the aspect ratio.
 
    float Hweight = ((Lweight * 4.5) + 0.5) * 0.001;
    float Vweight;
 
+   // Next take care of any rotation.  90 degree and 270 degree rotation means that the
+   // X and Y position coordinates must be swapped, and X must be inverted by subtracting
+   // it from 1.0.  The line weights must also be adjusted to match.
+
+   float4 Xguide, Yguide;
+
    if ((_InpOrientation == 0) || (_InpOrientation == 180)) {
       Vweight = Hweight;
       Hweight *= _OutputAspectRatio;
+      Xguide = setPos (Hguide0, Hguide1, Hguide2, Hguide3,
+                       Show_H0, Show_H1, Show_H2, Show_H3);
+      Yguide = setPos (Vguide0, Vguide1, Vguide2, Vguide3,
+                       Show_V0, Show_V1, Show_V2, Show_V3);
    }
-   else Vweight = Hweight * _OutputAspectRatio;
+   else {
+      Vweight = Hweight * _OutputAspectRatio;
+      Xguide = 1.0.xxxx - setPos (Vguide0, Vguide1, Vguide2, Vguide3,
+                                  Show_V0, Show_V1, Show_V2, Show_V3);
+      Yguide = setPos (Hguide0, Hguide1, Hguide2, Hguide3,
+                       Show_H0, Show_H1, Show_H2, Show_H3);
+   }
 
-   // Recover the video input and set up the guide blend variable.
+   // If the rotation is greater than 90 degrees both positions must be further inverted.
+
+   if (_InpOrientation > 90) {
+      Xguide = 1.0.xxxx - Xguide;
+      Yguide = 1.0.xxxx - Yguide;
+   }
+
+   // Recover the video input and set up the guide blend variable in retval.
 
    float4 Input  = ReadPixel (Inp, uv1);
-   float4 retval;
+   float4 retval = Input;
 
-   // If we want to display the rule of thirds grid we do that first.  Otherwise we
-   // preload retval with the background video.
+   // If we want to display the rule of thirds grid we do that first.  Since it doesn't
+   // matter if the position coordinates are rotated we only need correct line weights.
 
    if (Rule3rds) {
-      retval =  Hline (Input,  uv1, 0.333333, Hweight);
-      retval =  Hline (retval, uv1, 0.666667, Hweight);
-      retval =  Vline (retval, uv1, 0.333333, Vweight);
-      retval =  Vline (retval, uv1, 0.666667, Vweight);
+      retval =  Hline (Input,  uv1, 0.33333333, Hweight);
+      retval =  Hline (retval, uv1, 0.66666667, Hweight);
+      retval =  Vline (retval, uv1, 0.33333333, Vweight);
+      retval =  Vline (retval, uv1, 0.66666667, Vweight);
    }
-   else retval = Input;
 
-   // Now do the four horizontal guides then the four verticals.
+   // Now do the four horizontal guides then the four verticals.  The float4 suffixes
+   // are actually in the order xyzw, but for readability I have run them in alphabetic
+   // order both here and in setPos ().  Order really doesn't matter in this context.
 
-   if (Show_H1) retval = Hline (retval, uv1, Hguide1, Hweight);
-   if (Show_H2) retval = Hline (retval, uv1, Hguide2, Hweight);
-   if (Show_H3) retval = Hline (retval, uv1, Hguide3, Hweight);
-   if (Show_H4) retval = Hline (retval, uv1, Hguide4, Hweight);
+   retval = Hline (retval, uv1, Xguide.w, Hweight);
+   retval = Hline (retval, uv1, Xguide.x, Hweight);
+   retval = Hline (retval, uv1, Xguide.y, Hweight);
+   retval = Hline (retval, uv1, Xguide.z, Hweight);
 
-   if (Show_V1) retval = Vline (retval, uv1, Vguide1, Vweight);
-   if (Show_V2) retval = Vline (retval, uv1, Vguide2, Vweight);
-   if (Show_V3) retval = Vline (retval, uv1, Vguide3, Vweight);
-   if (Show_V4) retval = Vline (retval, uv1, Vguide4, Vweight);
+   retval = Vline (retval, uv1, Yguide.w, Vweight);
+   retval = Vline (retval, uv1, Yguide.x, Vweight);
+   retval = Vline (retval, uv1, Yguide.y, Vweight);
+   retval = Vline (retval, uv1, Yguide.z, Vweight);
 
    // Finally mix back the guides over the original video and quit.
 
    return lerp (Input, retval, Opacity);
 }
-
