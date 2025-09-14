@@ -1,4 +1,4 @@
-# Lightworks user Fx library, September 1, 2025.
+# Lightworks user Fx library, September 14, 2025.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -334,6 +334,7 @@ If you need to use two effects that have the same name, simply open one of them 
 |Dry brush transition         |Yes      |Yes      |DryBrushTrans.fx        |Angled brush stroke transitions between shots          |
 |Flare transition             |Yes      |No       |FlareTran.fx            |Dissolves between images using a burnout flare         |
 |Granular transition          |Yes      |Yes      |GranularTrans.fx        |A granular noise driven dissolve between shots         |
+|Lumakey transition           |Yes      |No       |LumakeyTrans.fx         |Overlays a luminance key generated border over a mix   |
 |Toon transition              |Yes      |Yes      |ToonTrans.fx            |A stylised cartoon transition between images           |
 
 ## CATEGORY FOLDER: Blend transitions
