@@ -1,19 +1,57 @@
 // @Maintainer jwrl
-// @Released 2023-06-24
+// @Released 2025-09-15
 // @Author jwrl
 // @Created 2018-11-14
 
 /**
  This is a combination of two transform effects designed to provide a drop shadow and
  vignette effect while matching Lightworks' transform parameters.  Because of the way
- that the transforms operate they have exactly the same quality impact on the final
- result as a single transform effect would.  The main transform adjusts the foreground,
- crop, frame and drop shadow.  When the foreground is cropped it can be given a bevelled
- textured border.  The bevel can be feathered, as can the drop shadow.  The second
- transform adjusts the size and position of the foreground inside the frame.
+ that the transforms are produced they have exactly the same quality impact on the
+ final result as a single transform effect would.
 
- There is actually a third transform of sorts that adjusts the size and offset of the
- border texture.  This is extremely rudimentary though.
+   [*] Opacity:  Self explanatory.
+   [*] Transform
+      [*] Scale:  Adjusts the scale of the beveled foreground video.
+      [*] Z angle:  Rotates the beveled  foreground.
+      [*] X position:  Moves the beveled  foreground horizontally.
+      [*] Y position:  Moves the beveled  foreground vertically.
+   [*] Crop upper left X:  Crops the left of the beveled foreground.
+   [*] Crop upper left Y:  Crops the top of the beveled foreground.
+   [*] Crop lower right:  Crops the right of the beveled foreground.
+   [*] Crop lower right:  Crops the bottom of the beveled foreground.
+   [*] Video insert
+      [*] Scale:  Scales the foreground inside the bevel.
+      [*] X position:  Adjusts the foreground horizontally inside the bevel.
+      [*] Y position:  Adjusts the foreground vertically inside the bevel.
+   [*] Border
+      [*] Border width:  Adjusts the border size including the bevel.
+      [*] Bevel width:  Adjusts the bevel width without changing the overall
+          border size.
+      [*] Bevel sharpness:  Reducing the bevel sharpness increases the apparent
+          roundness.
+      [*] Outer brightness:  Adjusts the brightness of the outer bevel edge.
+      [*] Inner brightness:  Adjusts the brightness of the inner bevel edge.
+      [*] Texture scale:  Scales the texture used by the border.
+      [*] Texture X:  Adjusts the horizontal position of the texture inside
+          the border.
+      [*] Texture Y:  Adjusts the vertical position of the texture inside the
+          border.
+   [*] Shadow
+      [*] Opacity:  Adjusts the opacity of the shadow.
+      [*] Softness:  Softens the shadow's edge.
+      [*] Angle:  Adjusts the angle of the light throwing the shadow:
+      [*] Offset:  Adjusts the shadow displacement.
+      [*] Distance:  Adjusts the apparent distance of the shadow.  This has the
+          effect of reducing the shadow size and changing its displacement.
+
+ The main transform adjusts the foreground, crop, frame and drop shadow.  When the
+ foreground is cropped it can be given a beveled textured border.  The bevel can be
+ feathered, as can the drop shadow.  The second transform adjusts the size and position
+ of the foreground inside the frame.
+
+ Lightworks' masking has also been included. There is actually a third transform of sorts
+ that adjusts the size and offset of the border texture.  This is extremely rudimentary
+ though. 
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -22,6 +60,14 @@
 // Lightworks user effect FramedTransform.fx
 //
 // Version history:
+//
+// Updated 2025-09-15 jwrl.
+// Changed Width to Border width.
+// Changed Bevel to Bevel width.
+// Changed Outer edge to Outer brightness.
+// Changed Inner edge to Inner brightness.
+// Changed the crop settings to something much more sensible.  The crop order still
+// sucks, but that's inevitable if we want to be able to drag cropping.
 //
 // Updated 2023-06-24 jwrl.
 // Changed foreground autocrop to masking.
@@ -36,8 +82,6 @@
 //
 // Conversion 2023-02-17 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Framed transform", "DVE", "Transform plus", "Creates a textured frame around the foreground image and resizes and positions the result.", "ScaleAware|HasMinOutputSize");
 
@@ -55,34 +99,34 @@ DeclareMask;
 
 DeclareFloatParam (Opacity, "Opacity", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareFloatParam (DVE_Scale, "Scale", "Transform", kNoFlags, 1.0, 0.0, 10.0);
-DeclareFloatParam (DVE_Z_angle, "Z angle", "Transform", kNoFlags, 0.0, -360.0, 360.0);
-DeclareFloatParam (DVE_PosX, "X position", "Transform", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (DVE_PosY, "Y position", "Transform", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (DVE_Scale,   "Scale",      "Transform", kNoFlags, 1.0,    0.0,  10.0);
+DeclareFloatParam (DVE_Z_angle, "Z angle",    "Transform", kNoFlags, 0.0, -360.0, 360.0);
+DeclareFloatParam (DVE_PosX,    "X position", "Transform", kNoFlags, 0.0,   -1.0,   1.0);
+DeclareFloatParam (DVE_PosY,    "Y position", "Transform", kNoFlags, 0.0,   -1.0,   1.0);
 
-DeclareFloatParam (TLcropX, "Top left crop", kNoGroup, "SpecifiesPointX", 0.1, 0.0, 1.0);
-DeclareFloatParam (TLcropY, "Top left crop", kNoGroup, "SpecifiesPointY", 0.9, 0.0, 1.0);
-DeclareFloatParam (BRcropX, "Bottom right crop", kNoGroup, "SpecifiesPointX", 0.9, 0.0, 1.0);
-DeclareFloatParam (BRcropY, "Bottom right crop", kNoGroup, "SpecifiesPointY", 0.1, 0.0, 1.0);
+DeclareFloatParam (TLcropX, "Crop upper left",  kNoGroup, "SpecifiesPointX", 0.1, 0.0, 1.0);
+DeclareFloatParam (TLcropY, "Crop upper left",  kNoGroup, "SpecifiesPointY", 0.9, 0.0, 1.0);
+DeclareFloatParam (BRcropX, "Crop lower right", kNoGroup, "SpecifiesPointX", 0.9, 0.0, 1.0);
+DeclareFloatParam (BRcropY, "Crop lower right", kNoGroup, "SpecifiesPointY", 0.1, 0.0, 1.0);
 
-DeclareFloatParam (VideoScale, "Scale", "Video insert", kNoFlags, 1.0, 0.0, 10.0);
-DeclareFloatParam (VideoPosX, "X position", "Video insert", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (VideoPosY, "Y position", "Video insert", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (VideoScale, "Scale",      "Video insert", kNoFlags, 1.0,  0.0, 10.0);
+DeclareFloatParam (VideoPosX,  "X position", "Video insert", kNoFlags, 0.0, -1.0,  1.0);
+DeclareFloatParam (VideoPosY,  "Y position", "Video insert", kNoFlags, 0.0, -1.0,  1.0);
 
-DeclareFloatParam (BorderWidth, "Width", "Border", kNoFlags, 0.4, 0.0, 1.0);
-DeclareFloatParam (BorderBevel, "Bevel", "Border", kNoFlags, 0.4, 0.0, 1.0);
-DeclareFloatParam (BorderSharpness, "Bevel sharpness", "Border", kNoFlags, 0.2, 0.0, 1.0);
-DeclareFloatParam (BorderOuter, "Outer edge", "Border", kNoFlags, 0.6, -1.0, 1.0);
-DeclareFloatParam (BorderInner, "Inner edge", "Border", kNoFlags, -0.4, -1.0, 1.0);
-DeclareFloatParam (TexScale, "Texture scale", "Border", kNoFlags, 1.0, 0.5, 2.0);
-DeclareFloatParam (TexPosX, "Texture X", "Border", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (TexPosY, "Texture Y", "Border", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (BorderWidth,    "Border width",     "Border", kNoFlags,  0.4,  0.0, 1.0);
+DeclareFloatParam (BevelWidth,     "Bevel width",      "Border", kNoFlags,  0.4,  0.0, 1.0);
+DeclareFloatParam (BevelSharpness, "Bevel sharpness",  "Border", kNoFlags,  0.2,  0.0, 1.0);
+DeclareFloatParam (BevelOuter,     "Outer brightness", "Border", kNoFlags,  0.6, -1.0, 1.0);
+DeclareFloatParam (BevelInner,     "Inner brightness", "Border", kNoFlags, -0.4, -1.0, 1.0);
+DeclareFloatParam (TextureScale,   "Texture scale",    "Border", kNoFlags,  1.0,  0.5, 2.0);
+DeclareFloatParam (TextureX,       "Texture X",        "Border", kNoFlags,  0.0, -1.0, 1.0);
+DeclareFloatParam (TextureY,       "Texture Y",        "Border", kNoFlags,  0.0, -1.0, 1.0);
 
-DeclareFloatParam (ShadowOpacity, "Opacity", "Shadow", kNoFlags, 0.75, 0.0, 1.0);
-DeclareFloatParam (ShadowSoft, "Softness", "Shadow", kNoFlags, 0.2, 0.0, 1.0);
-DeclareFloatParam (ShadowAngle, "Angle", "Shadow", kNoFlags, 45.0, -180.0, 180.0);
-DeclareFloatParam (ShadowOffset, "Offset", "Shadow", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (ShadowDistance, "Distance", "Shadow", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (ShadowOpacity,  "Opacity",  "Shadow", kNoFlags,  0.75,   0.0,   1.0);
+DeclareFloatParam (ShadowSoft,     "Softness", "Shadow", kNoFlags,  0.2,    0.0,   1.0);
+DeclareFloatParam (ShadowAngle,    "Angle",    "Shadow", kNoFlags, 45.0, -180.0, 180.0);
+DeclareFloatParam (ShadowOffset,   "Offset",   "Shadow", kNoFlags,  0.5,    0.0,   1.0);
+DeclareFloatParam (ShadowDistance, "Distance", "Shadow", kNoFlags,  0.0,    0.0,   1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -152,12 +196,12 @@ DeclarePass (CropMask)
    xyCrop = abs (xyCrop - ccCrop);
 
    float2 border = max (0.0.xx, xyCrop - (aspect * BorderWidth * BORDER_SCALE));
-   float2 edge_0 = aspect * BorderWidth * BorderBevel * BEVEL_SCALE;
+   float2 edge_0 = aspect * BorderWidth * BevelWidth * BEVEL_SCALE;
    float2 edge_1 = max (0.0.xx, border + edge_0);
 
    edge_0 = max (0.0.xx, xyCrop - edge_0);
    edge_0 = (smoothstep (edge_0, xyCrop, uvCrop) + smoothstep (border, edge_1, uvCrop)) - 1.0.xx;
-   edge_0 = (clamp (edge_0 * (1.0 + (BorderSharpness * 9.0)), -1.0.xx, 1.0.xx) * 0.5) + 0.5.xx;
+   edge_0 = (clamp (edge_0 * (1.0 + (BevelSharpness * 9.0)), -1.0.xx, 1.0.xx) * 0.5) + 0.5.xx;
    edge_1 = max (0.0.xx, xyCrop - (aspect * ShadowSoft * SHADOW_SOFT));
    edge_1 = smoothstep (edge_1, xyCrop, uvCrop);
 
@@ -202,8 +246,8 @@ DeclareEntryPoint (FramedTransform)
 
    scale = VideoScale < 0.0001 ? 10000.0 : 1.0 / VideoScale;
    xy1   = (CENTRE + ((xy1 - CENTRE) * scale)) - (float2 (VideoPosX, -VideoPosY) * 2.0);
-   scale = TexScale < 0.0001 ? 10000.0 : 1.0 / TexScale;
-   xy3   = (CENTRE + ((xy3 - CENTRE) * scale)) - (float2 (TexPosX, -TexPosY) * 2.0);
+   scale = TextureScale < 0.0001 ? 10000.0 : 1.0 / TextureScale;
+   xy3   = (CENTRE + ((xy3 - CENTRE) * scale)) - (float2 (TextureX, -TextureY) * 2.0);
 
    float4 Fgnd = BdrPixel (Fgd, xy1);
    float4 Bgnd = ReadPixel (Bg, uv2);
@@ -211,14 +255,13 @@ DeclareEntryPoint (FramedTransform)
    float4 retval = lerp (Bgnd, BLACK, MaskIt.z * ShadowOpacity);
 
    float alpha_O = ((2.0 * MaskIt.y) - 1.0);
-   float alpha_I = max (0.0, -alpha_O) * abs (BorderInner);
+   float alpha_I = max (0.0, -alpha_O) * abs (BevelInner);
 
-   alpha_O = max (0.0, alpha_O) * abs (BorderOuter);
-   frame = BorderOuter > 0.0 ? lerp (frame, WHITE, alpha_O) : lerp (frame, BLACK, alpha_O);
-   frame = BorderInner > 0.0 ? lerp (frame, WHITE, alpha_I) : lerp (frame, BLACK, alpha_I);
+   alpha_O = max (0.0, alpha_O) * abs (BevelOuter);
+   frame = BevelOuter > 0.0 ? lerp (frame, WHITE, alpha_O) : lerp (frame, BLACK, alpha_O);
+   frame = BevelInner > 0.0 ? lerp (frame, WHITE, alpha_I) : lerp (frame, BLACK, alpha_I);
    retval = lerp (retval, frame, MaskIt.w);
    retval = lerp (retval, Fgnd, MaskIt.x);
 
    return lerp (Bgnd, retval, tex2D (Mask, uv4).x * Opacity);
 }
-
