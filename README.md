@@ -1,4 +1,4 @@
-# Lightworks user Fx library, September 14, 2025.
+# Lightworks user Fx library, September 21, 2025.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -302,6 +302,7 @@ If you need to use two effects that have the same name, simply open one of them 
 |Spin zoom                     |SpinZoom.fx             |Similar to the transform 3D, but the settings are much easier to use          |
 |Tiled images                  |TiledImages.fx          |Creates tile patterns from the image, which can be rotated                    |
 |Triple DVE                    |TripleDVE.fx            |Foreground, background and the overall effect have independent DVE adjustment |
+|Video feedback                |VideoFeedback.fx        |Produces the classic video feedback effect                                    |
 
 ## CATEGORY FOLDER: Video artefacts
 |EFFECT                        |FILE NAME               |DESCRIPTION                                                                   |
