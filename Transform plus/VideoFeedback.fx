@@ -1,35 +1,45 @@
 // @Maintainer jwrl
-// @Released 2025-09-21
+// @Released 2025-09-22
 // @Author jwrl
 // @Created 2025-09-21
 
 /**
  This effect is designed to apply a mini transform effect to the background source.
- It can scale, crop and position the background and fade it out.  The foreground can
- be blended with the processed background using normal blend mode or Lighten, Screen,
+ It can blur, scale, crop and position the background and fade it out.  The foreground
+ can be blended with the processed background using normal blend mode or Lighten, Screen,
  Add, Lighter Colour, Overlay or Soft Light blends.  It can can be masked as well.
 
    [*] Foreground:  Adjusts the mix of the foreground over the transformed background.
    [*] Blend mode:  Selects from Normal, Lighten, Screen, Add, Lighter Colour, Overlay
        or Soft Light blend modes.
    [*] Background
-      [*] Opacity:  Adjusts the foreground opacity.
-      [*] Softness:  Softens the background slightly.  It's not intended to really blur.
+      [*] Opacity:  Adjusts the background opacity.
+      [*] Softness:  Softens the background slightly.  It's not intended to produce
+          really strong blurs because this would destroy multi layer versions of the effect.
       [*] Scale:  Scales the background.  This has the same reduction range of the
           background, but can only double enlargement size.
       [*] Position X:  Adjusts the horizontal position of the background.
       [*] Position Y:  Adjusts the vertical position of the background.
    [*] Crop
       [*] Left:  Crops the left side of the background.
-      [*] Top":  Crops the top edge of the background.
+      [*] Top:  Crops the top edge of the background.
       [*] Right:  Crops the right side of the background.
       [*] Bottom:  Crops the bottom edge of the background.
+
+ The intention is to use multiple versions of this effect with a series of delayed
+ video sources to create the classic video feedback effect.  If the result that you get
+ isn't visually very interesting you should experiment with the various blend options.
+ Often it's because the images used have low contrast and/or high luminance. You will
+ always get the best results with high contrast or transparent images, however the last
+ eight blend modes are definitely worth exploring when faced with difficult media.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect VideoFeedback.fx
 //
-// Built 2025-09-21 jwrl.
+// Updated 2025-09-22 jwrl.
+// Added four darken blend functions plus hard light and vivid light.
+// Added to the descriptive text to improve the explanation.
 //-----------------------------------------------------------------------------------------//
 
 DeclareLightworksEffect ("Video feedback", "DVE", "Transform plus", "Produces the classic video feedback effect", CanSize);
@@ -47,7 +57,7 @@ DeclareMask;
 //-----------------------------------------------------------------------------------------//
 
 DeclareFloatParam (Amount,     "Foreground", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
-DeclareIntParam (SetTechnique, "Blend mode", kNoGroup, 0, "Normal|Lighten|Screen|Add|Lighter Colour|Overlay|Soft Light");
+DeclareIntParam (SetTechnique, "Blend mode", kNoGroup, 0, "Normal|Lighten|Screen|Add|Lighter Colour|Overlay|Soft Light|Darken|Multiply|Linear Burn|Darker Colour|Hard Light|Vivid Light");
 
 DeclareFloatParam (Opacity,  "Opacity",  "Background", kNoFlags, 1.0, 0.0, 1.0);
 DeclareFloatParam (Softness, "Softness", "Background", kNoFlags, 0.2, 0.0, 1.0);
@@ -152,6 +162,25 @@ float SoftLightSub (float B, float F)
    float d = B <= 0.25 ?  ( (16.0 * B - 12.0) * B + 4.0) * B : sqrt (B);
 
    return B + (2.0 * F - 1.0) * (d - B);
+}
+
+float HardLightSub (float B, float F)
+// Multiplies or screens the channels, depending on the F channel.
+{
+   return F <= 0.5 ? 2.0 * B * F : 1.0 - (2.0 * (1.0 - B) * (1.0 - F));
+}
+
+float VividLightSub (float B, float F)
+// Burns or dodges the channels, depending on the F value.
+{
+   float4 retval;
+
+   if (F <= 0.5) {
+      retval = B >= 1.0 ? 1.0 : F <= 0.0 ? 0.0 : 1.0 - min (1.0, (1.0 - B) / F);
+   }
+   else retval = B <= 0.0 ? 0.0 : F >= 1.0 ? 1.0 : min (1.0, B / (1.0 - F));
+
+   return retval;
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -277,3 +306,107 @@ DeclareEntryPoint (SoftLight)
    return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
 
+//-----  Darken  --------------------------------------------------------------------------//
+
+DeclarePass (DVE_7)
+{ return TransformSub (Bg, uv2); }
+
+DeclareEntryPoint (Darken)
+{
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, DVE_7, uv3, Bgnd);
+
+   Fgnd.rgb = min (Fgnd.rgb, Bgnd.rgb);
+
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
+
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+}
+
+//-----  Multiply  ------------------------------------------------------------------------//
+
+DeclarePass (DVE_8)
+{ return TransformSub (Bg, uv2); }
+
+DeclareEntryPoint (Multiply)
+{
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, DVE_8, uv3, Bgnd);
+
+   Fgnd.rgb *= Bgnd.rgb;
+
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
+
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+}
+
+//-----  Linear Burn  ---------------------------------------------------------------------//
+
+DeclarePass (DVE_9)
+{ return TransformSub (Bg, uv2); }
+
+DeclareEntryPoint (LinearBurn)
+{
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, DVE_9, uv3, Bgnd);
+
+   Fgnd.r = max (0.0, Bgnd.r + Fgnd.r - 1.0);
+   Fgnd.g = max (0.0, Bgnd.g + Fgnd.g - 1.0);
+   Fgnd.b = max (0.0, Bgnd.b + Fgnd.b - 1.0);
+
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
+
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+}
+
+//-----  Darker Colour  -------------------------------------------------------------------//
+
+DeclarePass (DVE_10)
+{ return TransformSub (Bg, uv2); }
+
+DeclareEntryPoint (DarkerColour)
+{
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, DVE_10, uv3, Bgnd);
+
+   float B_luma = dot (Bgnd, LUMA);
+   float F_luma = dot (Fgnd, LUMA);
+
+   Fgnd.rgb = B_luma <= F_luma ? Bgnd.rgb : Fgnd.rgb;
+
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
+
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+}
+
+//-----  Hard Light  ----------------------------------------------------------------------//
+
+DeclarePass (DVE_11)
+{ return TransformSub (Bg, uv2); }
+
+DeclareEntryPoint (HardLight)
+{
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, DVE_11, uv3, Bgnd);
+
+   Fgnd.r = HardLightSub (Bgnd.r, Fgnd.r);
+   Fgnd.g = HardLightSub (Bgnd.g, Fgnd.g);
+   Fgnd.b = HardLightSub (Bgnd.b, Fgnd.b);
+
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
+
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+}
+
+//-----  Vivid Light  ---------------------------------------------------------------------//
+
+DeclarePass (DVE_12)
+{ return TransformSub (Bg, uv2); }
+
+DeclareEntryPoint (VividLight)
+{
+   float4 Bgnd, Fgnd = initMedia (Fg, uv1, DVE_12, uv3, Bgnd);
+
+   Fgnd.r = VividLightSub (Bgnd.r, Fgnd.r);
+   Fgnd.g = VividLightSub (Bgnd.g, Fgnd.g);
+   Fgnd.b = VividLightSub (Bgnd.b, Fgnd.b);
+
+   float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
+
+   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+}
