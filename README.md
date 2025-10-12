@@ -1,4 +1,4 @@
-# Lightworks user Fx library, September 21, 2025.
+# Lightworks user Fx library, October 12, 2025.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -318,6 +318,7 @@ If you need to use two effects that have the same name, simply open one of them 
 |Quadruplex VTR simulator      |QuadVTRsimulator.fx     |Emulates the faults that could occur with Quadruplex videotape playback       |
 |Screen shake                  |Screenshake.fx          |Random screen shake, slightly zoomed in, no motion blur                       |
 |VHS simulator                 |VHSsimulator.fx         |Simulates a damaged VHS tape                                                  |
+|Video trails                  |VideoTrails.fx          |Produces video trails up to three layers deep - simulates video feedback      |
 
 ## TRANSITIONS
 
