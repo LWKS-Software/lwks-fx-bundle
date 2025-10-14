@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-10-12
+// @Released 2025-10-14
 // @Author jwrl
 // @Created 2025-10-12
 
@@ -67,7 +67,9 @@
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect VideoTrails.fx
 //
-// Created 2025-10-12 jwrl.
+// Modified 2025-10-14 jwrl.
+// Removed SetTechnique, which in turn enabled the removal of a heap of functions.  The
+// end result is very much faster compile times with very little impact on execution.
 //-----------------------------------------------------------------------------------------//
 
 DeclareLightworksEffect ("Video trails", "Stylize", "Video artefacts", "Produces video trails up to three layers deep", CanSize);
@@ -89,9 +91,9 @@ DeclareFloatParam (KeyClip,      "Key clip",      kNoGroup,      kNoFlags, 0.1, 
 DeclareFloatParam (KeySoftness,  "Key softness",  kNoGroup,      kNoFlags, 0.2, 0.0, 1.0);
 DeclareBoolParam  (KeyInvert,    "Key invert",    kNoGroup,      false);
 DeclareColourParam (KeyColour,   "Key colour",    kNoGroup,      kNoFlags, 0.0, 0.8, 0.0, 1.0);
-DeclareIntParam   (FgBlendMode,  "Fg blend mode", kNoGroup,      0, "Normal|Lumakey|Chromakey|Darken|Multiply|Colour Burn|Linear burn|Darker colour|Lighten|Screen|Colour Dodge|Add|Lighter colour|Overlay|Soft light|Hard light|Vivid light|Linear Light|Pin Light|Hard Mix");
+DeclareIntParam   (FgTechnique,  "Fg blend mode", kNoGroup,      0, "Normal|Lumakey|Chromakey|Darken|Multiply|Colour Burn|Linear burn|Darker colour|Lighten|Screen|Colour Dodge|Add|Lighter colour|Overlay|Soft light|Hard light|Vivid light|Linear Light|Pin Light|Hard Mix");
 
-DeclareIntParam   (SetTechnique, "Bg blend mode", "Backgrounds", 0, "Same as Foreground|Normal|Lumakey|Chromakey|Darken|Multiply|Colour Burn|Linear burn|Darker colour|Lighten|Screen|Colour Dodge|Add|Lighter colour|Overlay|Soft light|Hard light|Vivid light|Linear Light|Pin Light|Hard Mix");
+DeclareIntParam   (BgTechnique,  "Bg blend mode", "Backgrounds", 0, "Same as Foreground|Normal|Lumakey|Chromakey|Darken|Multiply|Colour Burn|Linear burn|Darker colour|Lighten|Screen|Colour Dodge|Add|Lighter colour|Overlay|Soft light|Hard light|Vivid light|Linear Light|Pin Light|Hard Mix");
 DeclareIntParam   (Tracks,       "Use bg tracks", "Backgrounds", 0, "B1, B2 and B3|B1 and B2|B1 only");
 DeclareFloatParam (BgLevels,     "Bg levels",     "Backgrounds", kNoFlags, 0.9,  0.0, 1.0);
 DeclareFloatParam (Softness,     "Softness",      "Backgrounds", kNoFlags, 0.05, 0.0, 1.0);
@@ -119,8 +121,8 @@ DeclareFloatParam (_OutputAspectRatio);
 #define PROFILE ps_3_0
 #endif
 
-#define LUM     float3(0.2989, 0.5866, 0.1145)
-#define LUMA    float4(0.2989, 0.5866, 0.1145, 0.0)
+#define LUM  float3(0.2989, 0.5866, 0.1145)
+#define LUMA float4(0.2989, 0.5866, 0.1145, 0.0)
 
 float4 _TransparentBlack = 0.0.xxxx;
 
@@ -477,27 +479,29 @@ float4 BlurVid (sampler Vid, float2 uv, float depth)
       angle  += 0.24166097;            // Increment the angle by 13.85 degrees in radians.
    }
 
-   retval   /= 27;                     // The loop is 26 because sampling has been doubled.
+   // Normally with a loop size of 13 we would divide by 14, viz, loop size plus one.
+   // Here the divisor is 27 because sampling has been doubled in each loop pass.
+
+   retval /= 27;
 
    return retval;
 }
 
-float4 BlurB1 (sampler A, float2 xy1, sampler B, float2 xy2)
-{ return (Tracks == 2) && OpaqueOutput ? ReadPixel (A, xy1) : BlurVid (B, xy2, 1.0); }
+//--------------------------------------  Bg loader  --------------------------------------//
 
-float4 BlurB2 (sampler A, float2 xy1, sampler B, float2 xy2)
-{ return (Tracks == 1) && OpaqueOutput ? ReadPixel (A, xy1) : BlurVid (B, xy2, 2.0); }
-
-float4 BlurB3 (sampler A, float2 xy1, sampler B, float2 xy2)
-{ return (Tracks == 0) && OpaqueOutput ? ReadPixel (A, xy1) : BlurVid (B, xy2, 3.0); }
-
-float4 FgVideo (sampler S, float2 uv, int keyBg)
+float4 getBg (sampler B, float2 uv, float d, bool sw)
 {
-   float4 retval = ReadPixel (S, uv);
+   float4 retval;
 
-  float keyFg = FgBlendMode == 0 ? keyBg : FgBlendMode;
+   if (sw) { retval = _TransparentBlack; }   // If sw is on return transparent black.
+   else {
+      // Check if the background is using FgTechnique.  If not use BgTechnique minus
+      // one so that the indexing matches BlendMode indexing.
 
-   retval.a  = MakeKey (retval, keyFg);
+      int BlendChoice = BgTechnique == 0 ? FgTechnique :  BgTechnique - 1;
+
+      retval = TransformVid (B, uv, d, BlendChoice);
+   }
 
    return retval;
 }
@@ -506,8 +510,8 @@ float4 FgVideo (sampler S, float2 uv, int keyBg)
 
 float4 BlendMode (float4 X, float4 Y, float amount, int Method)
 {
-   // This function is necessary because we cannot use SetTechnique twice, which would
-   // be the only way to independently set the blend mode for Fg from the other 3 inputs.
+   // This function is necessary because we are not using SetTechnique.  Even if we
+   // were it would still be needed to independently set the blend modes for Bg and Fg.
 
    if (Method == 3)  return DarkenMode (X, Y, amount);
    if (Method == 4)  return MultiplyMode (X, Y, amount);
@@ -534,46 +538,50 @@ float4 BlendMode (float4 X, float4 Y, float amount, int Method)
 // Code
 //-----------------------------------------------------------------------------------------//
 
-//-----  Same as Foreground  --------------------------------------------------------------//
-
-DeclarePass (B3_0)
-{ return (Tracks > 0) || OpaqueOutput ? _TransparentBlack : TransformVid (B3, uv4, 3.0, FgBlendMode); }
-
-DeclarePass (B2_0)
-{ return ((Tracks == 1) && OpaqueOutput) || (Tracks == 2) ? _TransparentBlack : TransformVid (B2, uv3, 2.0, FgBlendMode); }
-
-DeclarePass (B1_0)
-{ return (Tracks == 2) && OpaqueOutput ? _TransparentBlack : TransformVid (B1, uv2, 1.0, FgBlendMode); }
-
-DeclarePass (Fg_0)
-{ return FgVideo (Fg, uv1, FgBlendMode); }
-
-DeclarePass (Bg_0)
+DeclarePass (Fgd)
 {
-   float4 B_1 = BlurB1 (B1, uv2, B1_0, uv5);
-   float4 B_2 = BlurB2 (B2, uv3, B2_0, uv5);
-   float4 B_3 = BlurB3 (B3, uv4, B3_0, uv5);
+   float4 retval = ReadPixel (Fg, uv1);
+
+   return float4 (retval.rgb, MakeKey (retval, FgTechnique));
+}
+
+DeclarePass (Bg1)
+{ return getBg (B1, uv2, 1.0, (Tracks == 2) && OpaqueOutput); }
+
+DeclarePass (Bg2)
+{ return getBg (B2, uv3, 2.0, ((Tracks == 1) && OpaqueOutput) || (Tracks == 2)); }
+
+DeclarePass (Bg3)
+{ return getBg (B3, uv4, 3.0, (Tracks > 0) || OpaqueOutput); }
+
+DeclarePass (Bgd)
+{
+   float4 B_1 = (Tracks == 2) && OpaqueOutput ? ReadPixel (B1, uv2) : BlurVid (Bg1, uv5, 1.0);
+   float4 B_2 = (Tracks == 1) && OpaqueOutput ? ReadPixel (B2, uv3) : BlurVid (Bg2, uv5, 2.0);
+   float4 B_3 = (Tracks == 0) && OpaqueOutput ? ReadPixel (B3, uv4) : BlurVid (Bg3, uv5, 3.0);
+
+   int BlendTechnique = BgTechnique == 0 ? FgTechnique :  BgTechnique - 1;
 
    float amount1 = BgLevels;
    float amount2 = amount1 * BgLevels;
 
    if (Tracks == 0) {
-      float amount3 = amount2 * BgLevels;
-
       if (!OpaqueOutput) {
-         if ((FgBlendMode == 1) || (FgBlendMode == 2)) {
-            B_3 = BlendMode (B_3, _TransparentBlack, amount3, FgBlendMode);
+          float amount3 = amount2 * BgLevels;
+
+         if ((BlendTechnique == 1) || (BlendTechnique == 2)) {
+            B_3 = BlendMode (B_3, _TransparentBlack, amount3, BlendTechnique);
          }
          else B_3 *= amount3;
       }
 
-      B_3 = BlendMode (B_3, B_2, amount2, FgBlendMode);
-      B_3 = BlendMode (B_3, B_1, amount1, FgBlendMode);
+      B_3 = BlendMode (B_3, B_2, amount2, BlendTechnique);
+      B_3 = BlendMode (B_3, B_1, amount1, BlendTechnique);
    }
    else if (Tracks == 1) {
       if (!OpaqueOutput) B_2 *= amount2;
 
-      B_3 = BlendMode (B_2, B_1, amount1, FgBlendMode);
+      B_3 = BlendMode (B_2, B_1, amount1, BlendTechnique);
    }
    else {
       if (OpaqueOutput) { B_3 = B_1; }
@@ -583,1124 +591,15 @@ DeclarePass (Bg_0)
    return B_3;
 }
 
-DeclareEntryPoint (Default)
+DeclareEntryPoint (VideoTrails)
 {
    float2 xy = scaleXY (uv5, ZoomSize, Zpos_X, Zpos_Y, 1.0);
 
-   float4 Bgnd   = tex2D (Bg_0, xy);
-   float4 Fgnd   = tex2D (Fg_0, xy);
+   float4 Bgnd   = tex2D (Bgd, xy);
+   float4 Fgnd   = tex2D (Fgd, xy);
    float4 retval = lerp (_TransparentBlack, Fgnd, tex2D (Mask, uv5).x);
 
-   retval = BlendMode (Bgnd, Fgnd, FgOpacity, FgBlendMode);
+   retval = BlendMode (Bgnd, Fgnd, FgOpacity, FgTechnique);
 
    return OpaqueOutput ? float4 (retval.rgb, 1.0) : retval;
 }
-
-//-----  Normal  --------------------------------------------------------------------------//
-
-DeclarePass (B3_1)
-{ return (Tracks > 0) || OpaqueOutput ? _TransparentBlack : TransformVid (B3, uv4, 3.0, 0); }
-
-DeclarePass (B2_1)
-{ return ((Tracks == 1) && OpaqueOutput) || (Tracks == 2) ? _TransparentBlack : TransformVid (B2, uv3, 2.0, 0); }
-
-DeclarePass (B1_1)
-{ return (Tracks == 2) && OpaqueOutput ? _TransparentBlack : TransformVid (B1, uv2, 1.0, 0); }
-
-DeclarePass (Fg_1)
-{ return FgVideo (Fg, uv1, FgBlendMode); }
-
-DeclarePass (Bg_1)
-{
-   float4 B_1 = BlurB1 (B1, uv2, B1_1, uv5);
-   float4 B_2 = BlurB2 (B2, uv3, B2_1, uv5);
-   float4 B_3 = BlurB3 (B3, uv4, B3_1, uv5);
-
-   float amount1 = BgLevels;
-   float amount2 = amount1 * BgLevels;
-
-   if (Tracks == 0) {
-      if (!OpaqueOutput) B_3 *= amount2 * BgLevels;
-
-      B_3 = NormalMode (B_3, B_2, amount2);
-      B_3 = NormalMode (B_3, B_1, amount1);
-   }
-   else if (Tracks == 1) {
-      if (!OpaqueOutput) B_2 *= amount2;
-
-      B_3 = NormalMode (B_2, B_1, amount1);
-   }
-   else {
-      if (OpaqueOutput) { B_3 = B_1; }
-      else B_3 = B_1 * amount1;
-   }
-
-   return B_3;
-}
-
-DeclareEntryPoint (Normal)
-{
-   float2 xy = scaleXY (uv5, ZoomSize, Zpos_X, Zpos_Y, 1.0);
-
-   float4 Bgnd   = tex2D (Bg_1, xy);
-   float4 Fgnd   = tex2D (Fg_1, xy);
-   float4 retval = lerp (_TransparentBlack, Fgnd, tex2D (Mask, uv5).x);
-
-   retval = BlendMode (Bgnd, Fgnd, FgOpacity, FgBlendMode);
-
-   return OpaqueOutput ? float4 (retval.rgb, 1.0) : retval;
-}
-
-//-----------------------------------------------------------------------------------------//
-
-//-----  Lumakey  -------------------------------------------------------------------------//
-
-DeclarePass (B3_2)
-{ return (Tracks > 0) || OpaqueOutput ? _TransparentBlack : TransformVid (B3, uv4, 3.0, 1); }
-
-DeclarePass (B2_2)
-{ return ((Tracks == 1) && OpaqueOutput) || (Tracks == 2) ? _TransparentBlack : TransformVid (B2, uv3, 2.0, 1); }
-
-DeclarePass (B1_2)
-{ return (Tracks == 2) && OpaqueOutput ? _TransparentBlack : TransformVid (B1, uv2, 1.0, 1); }
-
-DeclarePass (Fg_2)
-{ return FgVideo (Fg, uv1, FgBlendMode); }
-
-DeclarePass (Bg_2)
-{
-   float4 B_1 = BlurB1 (B1, uv2, B1_2, uv5);
-   float4 B_2 = BlurB2 (B2, uv3, B2_2, uv5);
-   float4 B_3 = BlurB3 (B3, uv4, B3_2, uv5);
-
-   float amount1 = BgLevels;
-   float amount2 = amount1 * BgLevels;
-
-   if (Tracks == 0) {
-      if (!OpaqueOutput) B_3 = NormalMode (B_3, _TransparentBlack, amount2 * BgLevels);
-
-      B_3 = NormalMode (B_3, B_2, amount2);
-      B_3 = NormalMode (B_3, B_1, amount1);
-   }
-   else if (Tracks == 1) {
-      if (!OpaqueOutput) B_2 *= amount2;
-
-      B_3 = NormalMode (B_2, B_1, amount1);
-   }
-   else {
-      if (OpaqueOutput) { B_3 = B_1; }
-      else B_3 = B_1 * amount1;
-   }
-
-   return B_3;
-}
-
-DeclareEntryPoint (Lumakey)
-{
-   float2 xy = scaleXY (uv5, ZoomSize, Zpos_X, Zpos_Y, 1.0);
-
-   float4 Bgnd   = tex2D (Bg_2, xy);
-   float4 Fgnd   = tex2D (Fg_2, xy);
-   float4 retval = lerp (_TransparentBlack, Fgnd, tex2D (Mask, uv5).x);
-
-   retval = BlendMode (Bgnd, Fgnd, FgOpacity, FgBlendMode);
-
-   return OpaqueOutput ? float4 (retval.rgb, 1.0) : retval;
-}
-
-//-----  Chromakey  -----------------------------------------------------------------------//
-
-DeclarePass (B3_3)
-{ return (Tracks > 0) || OpaqueOutput ? _TransparentBlack : TransformVid (B3, uv4, 3.0, 2); }
-
-DeclarePass (B2_3)
-{ return ((Tracks == 1) && OpaqueOutput) || (Tracks == 2) ? _TransparentBlack : TransformVid (B2, uv3, 2.0, 2); }
-
-DeclarePass (B1_3)
-{ return (Tracks == 2) && OpaqueOutput ? _TransparentBlack : TransformVid (B1, uv2, 1.0, 2); }
-
-DeclarePass (Fg_3)
-{ return FgVideo (Fg, uv1, FgBlendMode); }
-
-DeclarePass (Bg_3)
-{
-   float4 B_1 = BlurB1 (B1, uv2, B1_3, uv5);
-   float4 B_2 = BlurB2 (B2, uv3, B2_3, uv5);
-   float4 B_3 = BlurB3 (B3, uv4, B3_3, uv5);
-
-   float amount1 = BgLevels;
-   float amount2 = amount1 * BgLevels;
-
-   if (Tracks == 0) {
-      if (!OpaqueOutput) B_3 = NormalMode (B_3, _TransparentBlack, amount2 * BgLevels);
-
-      B_3 = NormalMode (B_3, B_2, amount2);
-      B_3 = NormalMode (B_3, B_1, amount1);
-   }
-   else if (Tracks == 1) {
-      if (!OpaqueOutput) B_2 *= amount2;
-
-      B_3 = NormalMode (B_2, B_1, amount1);
-   }
-   else {
-      if (OpaqueOutput) { B_3 = B_1; }
-      else B_3 = B_1 * amount1;
-   }
-
-   return B_3;
-}
-
-DeclareEntryPoint (Chromakey)
-{
-   float2 xy = scaleXY (uv5, ZoomSize, Zpos_X, Zpos_Y, 1.0);
-
-   float4 Bgnd   = tex2D (Bg_3, xy);
-   float4 Fgnd   = tex2D (Fg_3, xy);
-   float4 retval = lerp (_TransparentBlack, Fgnd, tex2D (Mask, uv5).x);
-
-   retval = BlendMode (Bgnd, Fgnd, FgOpacity, FgBlendMode);
-
-   return OpaqueOutput ? float4 (retval.rgb, 1.0) : retval;
-}
-
-//-----------------------------------------------------------------------------------------//
-
-//-----  Darken  --------------------------------------------------------------------------//
-
-DeclarePass (B3_4)
-{ return (Tracks > 0) || OpaqueOutput ? _TransparentBlack : TransformVid (B3, uv4, 3.0, 0); }
-
-DeclarePass (B2_4)
-{ return ((Tracks == 1) && OpaqueOutput) || (Tracks == 2) ? _TransparentBlack : TransformVid (B2, uv3, 2.0, 0); }
-
-DeclarePass (B1_4)
-{ return (Tracks == 2) && OpaqueOutput ? _TransparentBlack : TransformVid (B1, uv2, 1.0, 0); }
-
-DeclarePass (Fg_4)
-{ return FgVideo (Fg, uv1, FgBlendMode); }
-
-DeclarePass (Bg_4)
-{
-   float4 B_1 = BlurB1 (B1, uv2, B1_4, uv5);
-   float4 B_2 = BlurB2 (B2, uv3, B2_4, uv5);
-   float4 B_3 = BlurB3 (B3, uv4, B3_4, uv5);
-
-   float amount1 = BgLevels;
-   float amount2 = amount1 * BgLevels;
-
-   if (Tracks == 0) {
-      if (!OpaqueOutput) B_3 *= amount2 * BgLevels;
-
-      B_3 = DarkenMode (B_3, B_2, amount2);
-      B_3 = DarkenMode (B_3, B_1, amount1);
-   }
-   else if (Tracks == 1) {
-      if (!OpaqueOutput) B_2 *= amount2;
-
-      B_3 = DarkenMode (B_2, B_1, amount1);
-   }
-   else {
-      if (OpaqueOutput) { B_3 = B_1; }
-      else B_3 = B_1 * amount1;
-   }
-
-   return B_3;
-}
-
-DeclareEntryPoint (Darken)
-{
-   float2 xy = scaleXY (uv5, ZoomSize, Zpos_X, Zpos_Y, 1.0);
-
-   float4 Bgnd   = tex2D (Bg_4, xy);
-   float4 Fgnd   = tex2D (Fg_4, xy);
-   float4 retval = lerp (_TransparentBlack, Fgnd, tex2D (Mask, uv5).x);
-
-   retval = BlendMode (Bgnd, Fgnd, FgOpacity, FgBlendMode);
-
-   return OpaqueOutput ? float4 (retval.rgb, 1.0) : retval;
-}
-
-//-----  Multiply  ------------------------------------------------------------------------//
-
-DeclarePass (B3_5)
-{ return (Tracks > 0) || OpaqueOutput ? _TransparentBlack : TransformVid (B3, uv4, 3.0, 0); }
-
-DeclarePass (B2_5)
-{ return ((Tracks == 1) && OpaqueOutput) || (Tracks == 2) ? _TransparentBlack : TransformVid (B2, uv3, 2.0, 0); }
-
-DeclarePass (B1_5)
-{ return (Tracks == 2) && OpaqueOutput ? _TransparentBlack : TransformVid (B1, uv2, 1.0, 0); }
-
-DeclarePass (Fg_5)
-{ return FgVideo (Fg, uv1, FgBlendMode); }
-
-DeclarePass (Bg_5)
-{
-   float4 B_1 = BlurB1 (B1, uv2, B1_5, uv5);
-   float4 B_2 = BlurB2 (B2, uv3, B2_5, uv5);
-   float4 B_3 = BlurB3 (B3, uv4, B3_5, uv5);
-
-   float amount1 = BgLevels;
-   float amount2 = amount1 * BgLevels;
-
-   if (Tracks == 0) {
-      if (!OpaqueOutput) B_3 *= amount2 * BgLevels;
-
-      B_3 = MultiplyMode (B_3, B_2, amount2);
-      B_3 = MultiplyMode (B_3, B_1, amount1);
-   }
-   else if (Tracks == 1) {
-      if (!OpaqueOutput) B_2 *= amount2;
-
-      B_3 = MultiplyMode (B_2, B_1, amount1);
-   }
-   else {
-      if (OpaqueOutput) { B_3 = B_1; }
-      else B_3 = B_1 * amount1;
-   }
-
-   return B_3;
-}
-
-DeclareEntryPoint (Multiply)
-{
-   float2 xy = scaleXY (uv5, ZoomSize, Zpos_X, Zpos_Y, 1.0);
-
-   float4 Bgnd   = tex2D (Bg_5, xy);
-   float4 Fgnd   = tex2D (Fg_5, xy);
-   float4 retval = lerp (_TransparentBlack, Fgnd, tex2D (Mask, uv5).x);
-
-   retval = BlendMode (Bgnd, Fgnd, FgOpacity, FgBlendMode);
-
-   return OpaqueOutput ? float4 (retval.rgb, 1.0) : retval;
-}
-
-//-----  Colour Burn  ---------------------------------------------------------------------//
-
-DeclarePass (B3_6)
-{ return (Tracks > 0) || OpaqueOutput ? _TransparentBlack : TransformVid (B3, uv4, 3.0, 0); }
-
-DeclarePass (B2_6)
-{ return ((Tracks == 1) && OpaqueOutput) || (Tracks == 2) ? _TransparentBlack : TransformVid (B2, uv3, 2.0, 0); }
-
-DeclarePass (B1_6)
-{ return (Tracks == 2) && OpaqueOutput ? _TransparentBlack : TransformVid (B1, uv2, 1.0, 0); }
-
-DeclarePass (Fg_6)
-{ return FgVideo (Fg, uv1, FgBlendMode); }
-
-DeclarePass (Bg_6)
-{
-   float4 B_1 = BlurB1 (B1, uv2, B1_6, uv5);
-   float4 B_2 = BlurB2 (B2, uv3, B2_6, uv5);
-   float4 B_3 = BlurB3 (B3, uv4, B3_6, uv5);
-
-   float amount1 = BgLevels;
-   float amount2 = amount1 * BgLevels;
-
-   if (Tracks == 0) {
-      if (!OpaqueOutput) B_3 *= amount2 * BgLevels;
-
-      B_3 = ColourBurnMode (B_3, B_2, amount2);
-      B_3 = ColourBurnMode (B_3, B_1, amount1);
-   }
-   else if (Tracks == 1) {
-      if (!OpaqueOutput) B_2 *= amount2;
-
-      B_3 = ColourBurnMode (B_2, B_1, amount1);
-   }
-   else {
-      if (OpaqueOutput) { B_3 = B_1; }
-      else B_3 = B_1 * amount1;
-   }
-
-   return B_3;
-}
-
-DeclareEntryPoint (ColourBurn)
-{
-   float2 xy = scaleXY (uv5, ZoomSize, Zpos_X, Zpos_Y, 1.0);
-
-   float4 Bgnd   = tex2D (Bg_6, xy);
-   float4 Fgnd   = tex2D (Fg_6, xy);
-   float4 retval = lerp (_TransparentBlack, Fgnd, tex2D (Mask, uv5).x);
-
-   retval = BlendMode (Bgnd, Fgnd, FgOpacity, FgBlendMode);
-
-   return OpaqueOutput ? float4 (retval.rgb, 1.0) : retval;
-}
-
-//-----  Linear Burn  ---------------------------------------------------------------------//
-
-DeclarePass (B3_7)
-{ return (Tracks > 0) || OpaqueOutput ? _TransparentBlack : TransformVid (B3, uv4, 3.0, 0); }
-
-DeclarePass (B2_7)
-{ return ((Tracks == 1) && OpaqueOutput) || (Tracks == 2) ? _TransparentBlack : TransformVid (B2, uv3, 2.0, 0); }
-
-DeclarePass (B1_7)
-{ return (Tracks == 2) && OpaqueOutput ? _TransparentBlack : TransformVid (B1, uv2, 1.0, 0); }
-
-DeclarePass (Fg_7)
-{ return FgVideo (Fg, uv1, FgBlendMode); }
-
-DeclarePass (Bg_7)
-{
-   float4 B_1 = BlurB1 (B1, uv2, B1_7, uv5);
-   float4 B_2 = BlurB2 (B2, uv3, B2_7, uv5);
-   float4 B_3 = BlurB3 (B3, uv4, B3_7, uv5);
-
-   float amount1 = BgLevels;
-   float amount2 = amount1 * BgLevels;
-
-   if (Tracks == 0) {
-      if (!OpaqueOutput) B_3 *= amount2 * BgLevels;
-
-      B_3 = LinearBurnMode (B_3, B_2, amount2);
-      B_3 = LinearBurnMode (B_3, B_1, amount1);
-   }
-   else if (Tracks == 1) {
-      if (!OpaqueOutput) B_2 *= amount2;
-
-      B_3 = LinearBurnMode (B_2, B_1, amount1);
-   }
-   else {
-      if (OpaqueOutput) { B_3 = B_1; }
-      else B_3 = B_1 * amount1;
-   }
-
-   return B_3;
-}
-
-DeclareEntryPoint (LinearBurn)
-{
-   float2 xy = scaleXY (uv5, ZoomSize, Zpos_X, Zpos_Y, 1.0);
-
-   float4 Bgnd   = tex2D (Bg_7, xy);
-   float4 Fgnd   = tex2D (Fg_7, xy);
-   float4 retval = lerp (_TransparentBlack, Fgnd, tex2D (Mask, uv5).x);
-
-   retval = BlendMode (Bgnd, Fgnd, FgOpacity, FgBlendMode);
-
-   return OpaqueOutput ? float4 (retval.rgb, 1.0) : retval;
-}
-
-//-----  Darker Colour  ------------------------------------------------------------------//
-
-DeclarePass (B3_8)
-{ return (Tracks > 0) || OpaqueOutput ? _TransparentBlack : TransformVid (B3, uv4, 3.0, 0); }
-
-DeclarePass (B2_8)
-{ return ((Tracks == 1) && OpaqueOutput) || (Tracks == 2) ? _TransparentBlack : TransformVid (B2, uv3, 2.0, 0); }
-
-DeclarePass (B1_8)
-{ return (Tracks == 2) && OpaqueOutput ? _TransparentBlack : TransformVid (B1, uv2, 1.0, 0); }
-
-DeclarePass (Fg_8)
-{ return FgVideo (Fg, uv1, FgBlendMode); }
-
-DeclarePass (Bg_8)
-{
-   float4 B_1 = BlurB1 (B1, uv2, B1_8, uv5);
-   float4 B_2 = BlurB2 (B2, uv3, B2_8, uv5);
-   float4 B_3 = BlurB3 (B3, uv4, B3_8, uv5);
-
-   float amount1 = BgLevels;
-   float amount2 = amount1 * BgLevels;
-
-   if (Tracks == 0) {
-      if (!OpaqueOutput) B_3 *= amount2 * BgLevels;
-
-      B_3 = DarkerColourMode (B_3, B_2, amount2);
-      B_3 = DarkerColourMode (B_3, B_1, amount1);
-   }
-   else if (Tracks == 1) {
-      if (!OpaqueOutput) B_2 *= amount2;
-
-      B_3 = DarkerColourMode (B_2, B_1, amount1);
-   }
-   else {
-      if (OpaqueOutput) { B_3 = B_1; }
-      else B_3 = B_1 * amount1;
-   }
-
-   return B_3;
-}
-
-DeclareEntryPoint (DarkerColour)
-{
-   float2 xy = scaleXY (uv5, ZoomSize, Zpos_X, Zpos_Y, 1.0);
-
-   float4 Bgnd   = tex2D (Bg_8, xy);
-   float4 Fgnd   = tex2D (Fg_8, xy);
-   float4 retval = lerp (_TransparentBlack, Fgnd, tex2D (Mask, uv5).x);
-
-   retval = BlendMode (Bgnd, Fgnd, FgOpacity, FgBlendMode);
-
-   return OpaqueOutput ? float4 (retval.rgb, 1.0) : retval;
-}
-
-//-----------------------------------------------------------------------------------------//
-
-//-----  Lighten  -------------------------------------------------------------------------//
-
-DeclarePass (B3_9)
-{ return (Tracks > 0) || OpaqueOutput ? _TransparentBlack : TransformVid (B3, uv4, 3.0, 0); }
-
-DeclarePass (B2_9)
-{ return ((Tracks == 1) && OpaqueOutput) || (Tracks == 2) ? _TransparentBlack : TransformVid (B2, uv3, 2.0, 0); }
-
-DeclarePass (B1_9)
-{ return (Tracks == 2) && OpaqueOutput ? _TransparentBlack : TransformVid (B1, uv2, 1.0, 0); }
-
-DeclarePass (Fg_9)
-{ return FgVideo (Fg, uv1, FgBlendMode); }
-
-DeclarePass (Bg_9)
-{
-   float4 B_1 = BlurB1 (B1, uv2, B1_9, uv5);
-   float4 B_2 = BlurB2 (B2, uv3, B2_9, uv5);
-   float4 B_3 = BlurB3 (B3, uv4, B3_9, uv5);
-
-   float amount1 = BgLevels;
-   float amount2 = amount1 * BgLevels;
-
-   if (Tracks == 0) {
-      if (!OpaqueOutput) B_3 *= amount2 * BgLevels;
-
-      B_3 = LightenMode (B_3, B_2, amount2);
-      B_3 = LightenMode (B_3, B_1, amount1);
-   }
-   else if (Tracks == 1) {
-      if (!OpaqueOutput) B_2 *= amount2;
-
-      B_3 = LightenMode (B_2, B_1, amount1);
-   }
-   else {
-      if (OpaqueOutput) { B_3 = B_1; }
-      else B_3 = B_1 * amount1;
-   }
-
-   return B_3;
-}
-
-DeclareEntryPoint (Lighten)
-{
-   float2 xy = scaleXY (uv5, ZoomSize, Zpos_X, Zpos_Y, 1.0);
-
-   float4 Bgnd   = tex2D (Bg_9, xy);
-   float4 Fgnd   = tex2D (Fg_9, xy);
-   float4 retval = lerp (_TransparentBlack, Fgnd, tex2D (Mask, uv5).x);
-
-   retval = BlendMode (Bgnd, Fgnd, FgOpacity, FgBlendMode);
-
-   return OpaqueOutput ? float4 (retval.rgb, 1.0) : retval;
-}
-
-//-----  Screen  --------------------------------------------------------------------------//
-
-DeclarePass (B3_10)
-{ return (Tracks > 0) || OpaqueOutput ? _TransparentBlack : TransformVid (B3, uv4, 3.0, 0); }
-
-DeclarePass (B2_10)
-{ return ((Tracks == 1) && OpaqueOutput) || (Tracks == 2) ? _TransparentBlack : TransformVid (B2, uv3, 2.0, 0); }
-
-DeclarePass (B1_10)
-{ return (Tracks == 2) && OpaqueOutput ? _TransparentBlack : TransformVid (B1, uv2, 1.0, 0); }
-
-DeclarePass (Fg_10)
-{ return FgVideo (Fg, uv1, FgBlendMode); }
-
-DeclarePass (Bg_10)
-{
-   float4 B_1 = BlurB1 (B1, uv2, B1_10, uv5);
-   float4 B_2 = BlurB2 (B2, uv3, B2_10, uv5);
-   float4 B_3 = BlurB3 (B3, uv4, B3_10, uv5);
-
-   float amount1 = BgLevels;
-   float amount2 = amount1 * BgLevels;
-
-   if (Tracks == 0) {
-      if (!OpaqueOutput) B_3 *= amount2 * BgLevels;
-
-      B_3 = ScreenMode (B_3, B_2, amount2);
-      B_3 = ScreenMode (B_3, B_1, amount1);
-   }
-   else if (Tracks == 1) {
-      if (!OpaqueOutput) B_2 *= amount2;
-
-      B_3 = ScreenMode (B_2, B_1, amount1);
-   }
-   else {
-      if (OpaqueOutput) { B_3 = B_1; }
-      else B_3 = B_1 * amount1;
-   }
-
-   return B_3;
-}
-
-DeclareEntryPoint (Screen)
-{
-   float2 xy = scaleXY (uv5, ZoomSize, Zpos_X, Zpos_Y, 1.0);
-
-   float4 Bgnd   = tex2D (Bg_10, xy);
-   float4 Fgnd   = tex2D (Fg_10, xy);
-   float4 retval = lerp (_TransparentBlack, Fgnd, tex2D (Mask, uv5).x);
-
-   retval = BlendMode (Bgnd, Fgnd, FgOpacity, FgBlendMode);
-
-   return OpaqueOutput ? float4 (retval.rgb, 1.0) : retval;
-}
-
-//-----  Colour Dodge  --------------------------------------------------------------------//
-
-DeclarePass (B3_11)
-{ return (Tracks > 0) || OpaqueOutput ? _TransparentBlack : TransformVid (B3, uv4, 3.0, 0); }
-
-DeclarePass (B2_11)
-{ return ((Tracks == 1) && OpaqueOutput) || (Tracks == 2) ? _TransparentBlack : TransformVid (B2, uv3, 2.0, 0); }
-
-DeclarePass (B1_11)
-{ return (Tracks == 2) && OpaqueOutput ? _TransparentBlack : TransformVid (B1, uv2, 1.0, 0); }
-
-DeclarePass (Fg_11)
-{ return FgVideo (Fg, uv1, FgBlendMode); }
-
-DeclarePass (Bg_11)
-{
-   float4 B_1 = BlurB1 (B1, uv2, B1_11, uv5);
-   float4 B_2 = BlurB2 (B2, uv3, B2_11, uv5);
-   float4 B_3 = BlurB3 (B3, uv4, B3_11, uv5);
-
-   float amount1 = BgLevels;
-   float amount2 = amount1 * BgLevels;
-
-   if (Tracks == 0) {
-      if (!OpaqueOutput) B_3 *= amount2 * BgLevels;
-
-      B_3 = ColourDodgeMode (B_3, B_2, amount2);
-      B_3 = ColourDodgeMode (B_3, B_1, amount1);
-   }
-   else if (Tracks == 1) {
-      if (!OpaqueOutput) B_2 *= amount2;
-
-      B_3 = ColourDodgeMode (B_2, B_1, amount1);
-   }
-   else {
-      if (OpaqueOutput) { B_3 = B_1; }
-      else B_3 = B_1 * amount1;
-   }
-
-   return B_3;
-}
-
-DeclareEntryPoint (ColourDodge)
-{
-   float2 xy = scaleXY (uv5, ZoomSize, Zpos_X, Zpos_Y, 1.0);
-
-   float4 Bgnd   = tex2D (Bg_11, xy);
-   float4 Fgnd   = tex2D (Fg_11, xy);
-   float4 retval = lerp (_TransparentBlack, Fgnd, tex2D (Mask, uv5).x);
-
-   retval = BlendMode (Bgnd, Fgnd, FgOpacity, FgBlendMode);
-
-   return OpaqueOutput ? float4 (retval.rgb, 1.0) : retval;
-}
-
-//-----  Add  -----------------------------------------------------------------------------//
-
-DeclarePass (B3_12)
-{ return (Tracks > 0) || OpaqueOutput ? _TransparentBlack : TransformVid (B3, uv4, 3.0, 0); }
-
-DeclarePass (B2_12)
-{ return ((Tracks == 1) && OpaqueOutput) || (Tracks == 2) ? _TransparentBlack : TransformVid (B2, uv3, 2.0, 0); }
-
-DeclarePass (B1_12)
-{ return (Tracks == 2) && OpaqueOutput ? _TransparentBlack : TransformVid (B1, uv2, 1.0, 0); }
-
-DeclarePass (Fg_12)
-{ return FgVideo (Fg, uv1, FgBlendMode); }
-
-DeclarePass (Bg_12)
-{
-   float4 B_1 = BlurB1 (B1, uv2, B1_12, uv5);
-   float4 B_2 = BlurB2 (B2, uv3, B2_12, uv5);
-   float4 B_3 = BlurB3 (B3, uv4, B3_12, uv5);
-
-   float amount1 = BgLevels;
-   float amount2 = amount1 * BgLevels;
-
-   if (Tracks == 0) {
-      if (!OpaqueOutput) B_3 *= amount2 * BgLevels;
-
-      B_3 = AddMode (B_3, B_2, amount2);
-      B_3 = AddMode (B_3, B_1, amount1);
-   }
-   else if (Tracks == 1) {
-      if (!OpaqueOutput) B_2 *= amount2;
-
-      B_3 = AddMode (B_2, B_1, amount1);
-   }
-   else {
-      if (OpaqueOutput) { B_3 = B_1; }
-      else B_3 = B_1 * amount1;
-   }
-
-   return B_3;
-}
-
-DeclareEntryPoint (Add)
-{
-   float2 xy = scaleXY (uv5, ZoomSize, Zpos_X, Zpos_Y, 1.0);
-
-   float4 Bgnd   = tex2D (Bg_12, xy);
-   float4 Fgnd   = tex2D (Fg_12, xy);
-   float4 retval = lerp (_TransparentBlack, Fgnd, tex2D (Mask, uv5).x);
-
-   retval = BlendMode (Bgnd, Fgnd, FgOpacity, FgBlendMode);
-
-   return OpaqueOutput ? float4 (retval.rgb, 1.0) : retval;
-}
-
-//-----  Lighter Colour  ------------------------------------------------------------------//
-
-DeclarePass (B3_13)
-{ return (Tracks > 0) || OpaqueOutput ? _TransparentBlack : TransformVid (B3, uv4, 3.0, 0); }
-
-DeclarePass (B2_13)
-{ return ((Tracks == 1) && OpaqueOutput) || (Tracks == 2) ? _TransparentBlack : TransformVid (B2, uv3, 2.0, 0); }
-
-DeclarePass (B1_13)
-{ return (Tracks == 2) && OpaqueOutput ? _TransparentBlack : TransformVid (B1, uv2, 1.0, 0); }
-
-DeclarePass (Fg_13)
-{ return FgVideo (Fg, uv1, FgBlendMode); }
-
-DeclarePass (Bg_13)
-{
-   float4 B_1 = BlurB1 (B1, uv2, B1_13, uv5);
-   float4 B_2 = BlurB2 (B2, uv3, B2_13, uv5);
-   float4 B_3 = BlurB3 (B3, uv4, B3_13, uv5);
-
-   float amount1 = BgLevels;
-   float amount2 = amount1 * BgLevels;
-
-   if (Tracks == 0) {
-      if (!OpaqueOutput) B_3 *= amount2 * BgLevels;
-
-      B_3 = LighterColourMode (B_3, B_2, amount2);
-      B_3 = LighterColourMode (B_3, B_1, amount1);
-   }
-   else if (Tracks == 1) {
-      if (!OpaqueOutput) B_2 *= amount2;
-
-      B_3 = LighterColourMode (B_2, B_1, amount1);
-   }
-   else {
-      if (OpaqueOutput) { B_3 = B_1; }
-      else B_3 = B_1 * amount1;
-   }
-
-   return B_3;
-}
-
-DeclareEntryPoint (LighterColour)
-{
-   float2 xy = scaleXY (uv5, ZoomSize, Zpos_X, Zpos_Y, 1.0);
-
-   float4 Bgnd   = tex2D (Bg_13, xy);
-   float4 Fgnd   = tex2D (Fg_13, xy);
-   float4 retval = lerp (_TransparentBlack, Fgnd, tex2D (Mask, uv5).x);
-
-   retval = BlendMode (Bgnd, Fgnd, FgOpacity, FgBlendMode);
-
-   return OpaqueOutput ? float4 (retval.rgb, 1.0) : retval;
-}
-
-//-----------------------------------------------------------------------------------------//
-
-//-----  Overlay  -------------------------------------------------------------------------//
-
-DeclarePass (B3_14)
-{ return (Tracks > 0) || OpaqueOutput ? _TransparentBlack : TransformVid (B3, uv4, 3.0, 0); }
-
-DeclarePass (B2_14)
-{ return ((Tracks == 1) && OpaqueOutput) || (Tracks == 2) ? _TransparentBlack : TransformVid (B2, uv3, 2.0, 0); }
-
-DeclarePass (B1_14)
-{ return (Tracks == 2) && OpaqueOutput ? _TransparentBlack : TransformVid (B1, uv2, 1.0, 0); }
-
-DeclarePass (Fg_14)
-{ return FgVideo (Fg, uv1, FgBlendMode); }
-
-DeclarePass (Bg_14)
-{
-   float4 B_1 = BlurB1 (B1, uv2, B1_14, uv5);
-   float4 B_2 = BlurB2 (B2, uv3, B2_14, uv5);
-   float4 B_3 = BlurB3 (B3, uv4, B3_14, uv5);
-
-   float amount1 = BgLevels;
-   float amount2 = amount1 * BgLevels;
-
-   if (Tracks == 0) {
-      if (!OpaqueOutput) B_3 *= amount2 * BgLevels;
-
-      B_3 = OverlayMode (B_3, B_2, amount2);
-      B_3 = OverlayMode (B_3, B_1, amount1);
-   }
-   else if (Tracks == 1) {
-      if (!OpaqueOutput) B_2 *= amount2;
-
-      B_3 = OverlayMode (B_2, B_1, amount1);
-   }
-   else {
-      if (OpaqueOutput) { B_3 = B_1; }
-      else B_3 = B_1 * amount1;
-   }
-
-   return B_3;
-}
-
-DeclareEntryPoint (Overlay)
-{
-   float2 xy = scaleXY (uv5, ZoomSize, Zpos_X, Zpos_Y, 1.0);
-
-   float4 Bgnd   = tex2D (Bg_14, xy);
-   float4 Fgnd   = tex2D (Fg_14, xy);
-   float4 retval = lerp (_TransparentBlack, Fgnd, tex2D (Mask, uv5).x);
-
-   retval = BlendMode (Bgnd, Fgnd, FgOpacity, FgBlendMode);
-
-   return OpaqueOutput ? float4 (retval.rgb, 1.0) : retval;
-}
-
-//-----  Soft Light  ---------------------------------------------------------------------//
-
-DeclarePass (B3_15)
-{ return (Tracks > 0) || OpaqueOutput ? _TransparentBlack : TransformVid (B3, uv4, 3.0, 0); }
-
-DeclarePass (B2_15)
-{ return ((Tracks == 1) && OpaqueOutput) || (Tracks == 2) ? _TransparentBlack : TransformVid (B2, uv3, 2.0, 0); }
-
-DeclarePass (B1_15)
-{ return (Tracks == 2) && OpaqueOutput ? _TransparentBlack : TransformVid (B1, uv2, 1.0, 0); }
-
-DeclarePass (Fg_15)
-{ return FgVideo (Fg, uv1, FgBlendMode); }
-
-DeclarePass (Bg_15)
-{
-   float4 B_1 = BlurB1 (B1, uv2, B1_15, uv5);
-   float4 B_2 = BlurB2 (B2, uv3, B2_15, uv5);
-   float4 B_3 = BlurB3 (B3, uv4, B3_15, uv5);
-
-   float amount1 = BgLevels;
-   float amount2 = amount1 * BgLevels;
-
-   if (Tracks == 0) {
-      if (!OpaqueOutput) B_3 *= amount2 * BgLevels;
-
-      B_3 = SoftLightMode (B_3, B_2, amount2);
-      B_3 = SoftLightMode (B_3, B_1, amount1);
-   }
-   else if (Tracks == 1) {
-      if (!OpaqueOutput) B_2 *= amount2;
-
-      B_3 = SoftLightMode (B_2, B_1, amount1);
-   }
-   else {
-      if (OpaqueOutput) { B_3 = B_1; }
-      else B_3 = B_1 * amount1;
-   }
-
-   return B_3;
-}
-
-DeclareEntryPoint (SoftLight)
-{
-   float2 xy = scaleXY (uv5, ZoomSize, Zpos_X, Zpos_Y, 1.0);
-
-   float4 Bgnd   = tex2D (Bg_15, xy);
-   float4 Fgnd   = tex2D (Fg_15, xy);
-   float4 retval = lerp (_TransparentBlack, Fgnd, tex2D (Mask, uv5).x);
-
-   retval = BlendMode (Bgnd, Fgnd, FgOpacity, FgBlendMode);
-
-   return OpaqueOutput ? float4 (retval.rgb, 1.0) : retval;
-}
-
-//-----  Hard Light  ----------------------------------------------------------------------//
-
-DeclarePass (B3_16)
-{ return (Tracks > 0) || OpaqueOutput ? _TransparentBlack : TransformVid (B3, uv4, 3.0, 0); }
-
-DeclarePass (B2_16)
-{ return ((Tracks == 1) && OpaqueOutput) || (Tracks == 2) ? _TransparentBlack : TransformVid (B2, uv3, 2.0, 0); }
-
-DeclarePass (B1_16)
-{ return (Tracks == 2) && OpaqueOutput ? _TransparentBlack : TransformVid (B1, uv2, 1.0, 0); }
-
-DeclarePass (Fg_16)
-{ return FgVideo (Fg, uv1, FgBlendMode); }
-
-DeclarePass (Bg_16)
-{
-   float4 B_1 = BlurB1 (B1, uv2, B1_16, uv5);
-   float4 B_2 = BlurB2 (B2, uv3, B2_16, uv5);
-   float4 B_3 = BlurB3 (B3, uv4, B3_16, uv5);
-
-   float amount1 = BgLevels;
-   float amount2 = amount1 * BgLevels;
-
-   if (Tracks == 0) {
-      if (!OpaqueOutput) B_3 *= amount2 * BgLevels;
-
-      B_3 = HardLightMode (B_3, B_2, amount2);
-      B_3 = HardLightMode (B_3, B_1, amount1);
-   }
-   else if (Tracks == 1) {
-      if (!OpaqueOutput) B_2 *= amount2;
-
-      B_3 = HardLightMode (B_2, B_1, amount1);
-   }
-   else {
-      if (OpaqueOutput) { B_3 = B_1; }
-      else B_3 = B_1 * amount1;
-   }
-
-   return B_3;
-}
-
-DeclareEntryPoint (HardLight)
-{
-   float2 xy = scaleXY (uv5, ZoomSize, Zpos_X, Zpos_Y, 1.0);
-
-   float4 Bgnd   = tex2D (Bg_16, xy);
-   float4 Fgnd   = tex2D (Fg_16, xy);
-   float4 retval = lerp (_TransparentBlack, Fgnd, tex2D (Mask, uv5).x);
-
-   retval = BlendMode (Bgnd, Fgnd, FgOpacity, FgBlendMode);
-
-   return OpaqueOutput ? float4 (retval.rgb, 1.0) : retval;
-}
-
-//-----  Vivid Light  ---------------------------------------------------------------------//
-
-DeclarePass (B3_17)
-{ return (Tracks > 0) || OpaqueOutput ? _TransparentBlack : TransformVid (B3, uv4, 3.0, 0); }
-
-DeclarePass (B2_17)
-{ return ((Tracks == 1) && OpaqueOutput) || (Tracks == 2) ? _TransparentBlack : TransformVid (B2, uv3, 2.0, 0); }
-
-DeclarePass (B1_17)
-{ return (Tracks == 2) && OpaqueOutput ? _TransparentBlack : TransformVid (B1, uv2, 1.0, 0); }
-
-DeclarePass (Fg_17)
-{ return FgVideo (Fg, uv1, FgBlendMode); }
-
-DeclarePass (Bg_17)
-{
-   float4 B_1 = BlurB1 (B1, uv2, B1_17, uv5);
-   float4 B_2 = BlurB2 (B2, uv3, B2_17, uv5);
-   float4 B_3 = BlurB3 (B3, uv4, B3_17, uv5);
-
-   float amount1 = BgLevels;
-   float amount2 = amount1 * BgLevels;
-
-   if (Tracks == 0) {
-      if (!OpaqueOutput) B_3 *= amount2 * BgLevels;
-
-      B_3 = VividLightMode (B_3, B_2, amount2);
-      B_3 = VividLightMode (B_3, B_1, amount1);
-   }
-   else if (Tracks == 1) {
-      if (!OpaqueOutput) B_2 *= amount2;
-
-      B_3 = VividLightMode (B_2, B_1, amount1);
-   }
-   else {
-      if (OpaqueOutput) { B_3 = B_1; }
-      else B_3 = B_1 * amount1;
-   }
-
-   return B_3;
-}
-
-DeclareEntryPoint (VividLight)
-{
-   float2 xy = scaleXY (uv5, ZoomSize, Zpos_X, Zpos_Y, 1.0);
-
-   float4 Bgnd   = tex2D (Bg_17, xy);
-   float4 Fgnd   = tex2D (Fg_17, xy);
-   float4 retval = lerp (_TransparentBlack, Fgnd, tex2D (Mask, uv5).x);
-
-   retval = BlendMode (Bgnd, Fgnd, FgOpacity, FgBlendMode);
-
-   return OpaqueOutput ? float4 (retval.rgb, 1.0) : retval;
-}
-
-//-----  Linear Light  --------------------------------------------------------------------//
-
-DeclarePass (B3_18)
-{ return (Tracks > 0) || OpaqueOutput ? _TransparentBlack : TransformVid (B3, uv4, 3.0, 0); }
-
-DeclarePass (B2_18)
-{ return ((Tracks == 1) && OpaqueOutput) || (Tracks == 2) ? _TransparentBlack : TransformVid (B2, uv3, 2.0, 0); }
-
-DeclarePass (B1_18)
-{ return (Tracks == 2) && OpaqueOutput ? _TransparentBlack : TransformVid (B1, uv2, 1.0, 0); }
-
-DeclarePass (Fg_18)
-{ return FgVideo (Fg, uv1, FgBlendMode); }
-
-DeclarePass (Bg_18)
-{
-   float4 B_1 = BlurB1 (B1, uv2, B1_18, uv5);
-   float4 B_2 = BlurB2 (B2, uv3, B2_18, uv5);
-   float4 B_3 = BlurB3 (B3, uv4, B3_18, uv5);
-
-   float amount1 = BgLevels;
-   float amount2 = amount1 * BgLevels;
-
-   if (Tracks == 0) {
-      if (!OpaqueOutput) B_3 *= amount2 * BgLevels;
-
-      B_3 = LinearLightMode (B_3, B_2, amount2);
-      B_3 = LinearLightMode (B_3, B_1, amount1);
-   }
-   else if (Tracks == 1) {
-      if (!OpaqueOutput) B_2 *= amount2;
-
-      B_3 = LinearLightMode (B_2, B_1, amount1);
-   }
-   else {
-      if (OpaqueOutput) { B_3 = B_1; }
-      else B_3 = B_1 * amount1;
-   }
-
-   return B_3;
-}
-
-DeclareEntryPoint (LinearLight)
-{
-   float2 xy = scaleXY (uv5, ZoomSize, Zpos_X, Zpos_Y, 1.0);
-
-   float4 Bgnd   = tex2D (Bg_18, xy);
-   float4 Fgnd   = tex2D (Fg_18, xy);
-   float4 retval = lerp (_TransparentBlack, Fgnd, tex2D (Mask, uv5).x);
-
-   retval = BlendMode (Bgnd, Fgnd, FgOpacity, FgBlendMode);
-
-   return OpaqueOutput ? float4 (retval.rgb, 1.0) : retval;
-}
-
-//-----  Pin Light  -----------------------------------------------------------------------//
-
-DeclarePass (B3_19)
-{ return (Tracks > 0) || OpaqueOutput ? _TransparentBlack : TransformVid (B3, uv4, 3.0, 0); }
-
-DeclarePass (B2_19)
-{ return ((Tracks == 1) && OpaqueOutput) || (Tracks == 2) ? _TransparentBlack : TransformVid (B2, uv3, 2.0, 0); }
-
-DeclarePass (B1_19)
-{ return (Tracks == 2) && OpaqueOutput ? _TransparentBlack : TransformVid (B1, uv2, 1.0, 0); }
-
-DeclarePass (Fg_19)
-{ return FgVideo (Fg, uv1, FgBlendMode); }
-
-DeclarePass (Bg_19)
-{
-   float4 B_1 = BlurB1 (B1, uv2, B1_19, uv5);
-   float4 B_2 = BlurB2 (B2, uv3, B2_19, uv5);
-   float4 B_3 = BlurB3 (B3, uv4, B3_19, uv5);
-
-   float amount1 = BgLevels;
-   float amount2 = amount1 * BgLevels;
-
-   if (Tracks == 0) {
-      if (!OpaqueOutput) B_3 *= amount2 * BgLevels;
-
-      B_3 = PinLightMode (B_3, B_2, amount2);
-      B_3 = PinLightMode (B_3, B_1, amount1);
-   }
-   else if (Tracks == 1) {
-      if (!OpaqueOutput) B_2 *= amount2;
-
-      B_3 = PinLightMode (B_2, B_1, amount1);
-   }
-   else {
-      if (OpaqueOutput) { B_3 = B_1; }
-      else B_3 = B_1 * amount1;
-   }
-
-   return B_3;
-}
-
-DeclareEntryPoint (PinLight)
-{
-   float2 xy = scaleXY (uv5, ZoomSize, Zpos_X, Zpos_Y, 1.0);
-
-   float4 Bgnd   = tex2D (Bg_19, xy);
-   float4 Fgnd   = tex2D (Fg_19, xy);
-   float4 retval = lerp (_TransparentBlack, Fgnd, tex2D (Mask, uv5).x);
-
-   retval = BlendMode (Bgnd, Fgnd, FgOpacity, FgBlendMode);
-
-   return OpaqueOutput ? float4 (retval.rgb, 1.0) : retval;
-}
-
-//-----  Hard Mix  ------------------------------------------------------------------------//
-
-DeclarePass (B3_20)
-{ return (Tracks > 0) || OpaqueOutput ? _TransparentBlack : TransformVid (B3, uv4, 3.0, 0); }
-
-DeclarePass (B2_20)
-{ return ((Tracks == 1) && OpaqueOutput) || (Tracks == 2) ? _TransparentBlack : TransformVid (B2, uv3, 2.0, 0); }
-
-DeclarePass (B1_20)
-{ return (Tracks == 2) && OpaqueOutput ? _TransparentBlack : TransformVid (B1, uv2, 1.0, 0); }
-
-DeclarePass (Fg_20)
-{ return FgVideo (Fg, uv1, FgBlendMode); }
-
-DeclarePass (Bg_20)
-{
-   float4 B_1 = BlurB1 (B1, uv2, B1_20, uv5);
-   float4 B_2 = BlurB2 (B2, uv3, B2_20, uv5);
-   float4 B_3 = BlurB3 (B3, uv4, B3_20, uv5);
-
-   float amount1 = BgLevels;
-   float amount2 = amount1 * BgLevels;
-
-   if (Tracks == 0) {
-      if (!OpaqueOutput) B_3 *= amount2 * BgLevels;
-
-      B_3 = HardMixMode (B_3, B_2, amount2);
-      B_3 = HardMixMode (B_3, B_1, amount1);
-   }
-   else if (Tracks == 1) {
-      if (!OpaqueOutput) B_2 *= amount2;
-
-      B_3 = HardMixMode (B_2, B_1, amount1);
-   }
-   else {
-      if (OpaqueOutput) { B_3 = B_1; }
-      else B_3 = B_1 * amount1;
-   }
-
-   return B_3;
-}
-
-DeclareEntryPoint (HardMix)
-{
-   float2 xy = scaleXY (uv5, ZoomSize, Zpos_X, Zpos_Y, 1.0);
-
-   float4 Bgnd   = tex2D (Bg_20, xy);
-   float4 Fgnd   = tex2D (Fg_20, xy);
-   float4 retval = lerp (_TransparentBlack, Fgnd, tex2D (Mask, uv5).x);
-
-   retval = BlendMode (Bgnd, Fgnd, FgOpacity, FgBlendMode);
-
-   return OpaqueOutput ? float4 (retval.rgb, 1.0) : retval;
-}
-
