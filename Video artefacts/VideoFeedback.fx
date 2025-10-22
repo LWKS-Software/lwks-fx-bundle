@@ -34,10 +34,11 @@
 // Lightworks user effect VideoFeedback.fx
 //
 // Updated 2025-10-22 jwrl.
+// Changed the category from "DVE" to "Stylize".
 // Changed the subcategory from "Transform plus" to "Video artefacts".
 //-----------------------------------------------------------------------------------------//
 
-DeclareLightworksEffect ("Video feedback", "DVE", "Video artefacts", "Produces the classic video feedback effect", CanSize);
+DeclareLightworksEffect ("Video feedback", "Stylize", "Video artefacts", "Produces the classic video feedback effect", CanSize);
 
 //-----------------------------------------------------------------------------------------//
 // Inputs
@@ -281,4 +282,5 @@ DeclareEntryPoint (SoftLight)
 
    return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
 }
+
 
