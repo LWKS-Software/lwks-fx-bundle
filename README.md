@@ -1,4 +1,4 @@
-# Lightworks user Fx library, October 15, 2025.
+# Lightworks user Fx library, October 22, 2025.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -303,23 +303,27 @@ If you need to use two effects that have the same name, simply open one of them 
 |Spin zoom                     |SpinZoom.fx             |Similar to the transform 3D, but the settings are much easier to use          |
 |Tiled images                  |TiledImages.fx          |Creates tile patterns from the image, which can be rotated                    |
 |Triple DVE                    |TripleDVE.fx            |Foreground, background and the overall effect have independent DVE adjustment |
-|Video feedback                |VideoFeedback.fx        |Produces the classic video feedback effect                                    |
 
 ## CATEGORY FOLDER: Video artefacts
 |EFFECT                        |FILE NAME               |DESCRIPTION                                                                   |
 |:---------------------------- |:---------------------- |:---------------------------------------------------------------------------- |
-|Analog TV disaster            |AnalogTVdisaster.fx     |Simulates just about anything that could go wrong with analog TV              |
 |Camera distortion             |CameraDistortion.fx     |Simulates a range of digital camera distortion artefacts                      |
 |Camera shake                  |CameraShake.fx          |Adds simulated camera motion horizontally, vertically and/or rotationally     |
 |Chroma bleed                  |ChromaBleed.fx          |Gives the horizontal smeared colour look of early helical scan recorders      |
+|Screen shake                  |Screenshake.fx          |Random screen shake, slightly zoomed in, no motion blur                       |
+|Video feedback                |VideoFeedback.fx        |Produces the classic video feedback effect                                    |
+|Video trails                  |VideoTrails.fx          |Produces video trails up to three layers deep - simulates video feedback      |
+
+## CATEGORY FOLDER: Video simulation
+|EFFECT                        |FILE NAME               |DESCRIPTION                                                                   |
+|:---------------------------- |:---------------------- |:---------------------------------------------------------------------------- |
+|Analog TV disaster            |AnalogTVdisaster.fx     |Simulates just about anything that could go wrong with analog TV              |
 |CRT TV screen                 |CRTscreen.fx            |Simulates close-up looks at one of three different analogue colour TV screens |
 |Low-res camera                |LowResCamera.fx         |Simulates the pixellation seen when a low-res camera is blown up too much     |
 |Night vision                  |NightVision.fx          |Simulates infra-red night time cinematography                                 |
 |Old monitor                   |OldMonitor.fx           |This effect gives a black and white image with fully adjustable scan lines    |
 |Quadruplex VTR simulator      |QuadVTRsimulator.fx     |Emulates the faults that could occur with Quadruplex videotape playback       |
-|Screen shake                  |Screenshake.fx          |Random screen shake, slightly zoomed in, no motion blur                       |
 |VHS simulator                 |VHSsimulator.fx         |Simulates a damaged VHS tape                                                  |
-|Video trails                  |VideoTrails.fx          |Produces video trails up to three layers deep - simulates video feedback      |
 
 ## TRANSITIONS
 
