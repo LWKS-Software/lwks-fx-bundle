@@ -101,8 +101,8 @@ DeclareFloatParam (_Progress);
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
 
-#ifndef _LENGTH
-Wrong_Lightworks_version
+#ifdef WINDOWS
+#define PROFILE ps_3_0
 #endif
 
 #define SCALE 0.01
@@ -245,4 +245,5 @@ DeclareEntryPoint (BlendedGlitch)
 
    return lerp (video, glitch, tex2D (Mask, uv3).x);
 }
+
 
