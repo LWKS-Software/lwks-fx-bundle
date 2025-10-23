@@ -1,4 +1,4 @@
-# Lightworks user Fx library, October 22, 2025.
+# Lightworks user Fx library, October 23, 2025.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -218,7 +218,6 @@ If you need to use two effects that have the same name, simply open one of them 
 |Guides                        |Guides.fx               |A simple guide line and rule of thirds generator                              |
 |Highlight widgets             |HighlightWidgets.fx     |Used to highlight sections of video that you want to emphasize                |
 |Progress bar                  |ProgressBar.fx          |A simple progress bar generator with border                                   |
-|RGB registration              |RGBregistration.fx      |Adjusts the X-Y registration of the RGB channels of a video stream            |
 |Simple S curve                |SimpleS.fx              |This applies an S curve to the video levels to give an image that extra zing  |
 |Simple star                   |SimpleStar.fx           |Creates a single rotatable star glint, with 4, 5, 6, 7 or 8 arms              |
 |Tilt and mirror               |TiltMirror.fx           |Rotates a pair of rolls or image keys to scroll to a mid vanishing point      |
@@ -229,7 +228,6 @@ If you need to use two effects that have the same name, simply open one of them 
 |Binocular mask                |BinocularMask.fx        |Creates the classic binocular effect                                          |
 |Double vision                 |DoubleVision.fx         |Gives a blurry double vision effect suitable for impaired vision POVs         |
 |Fireballs                     |Fireballs.fx            |Produces a hot fireball and optionally blends it with a background image      |
-|Glitch                        |Glitch.fx               |Applies a glitch to titles or keys.  Just apply on top of your effect         |
 |Kaleido                       |Kaleido.fx              |Number of sides, centering, scaling and zoom can be set in this kaleidoscope  |
 |Kaleidoscope                  |Kaleidoscope.fx         |This kaleidoscope effect varies the number of sides, position and scale       |
 |Lightning flash               |LightningFlash.fx       |Simulates a high energy lightning flash at the cut point                      |
@@ -310,6 +308,8 @@ If you need to use two effects that have the same name, simply open one of them 
 |Camera distortion             |CameraDistortion.fx     |Simulates a range of digital camera distortion artefacts                      |
 |Camera shake                  |CameraShake.fx          |Adds simulated camera motion horizontally, vertically and/or rotationally     |
 |Chroma bleed                  |ChromaBleed.fx          |Gives the horizontal smeared colour look of early helical scan recorders      |
+|Glitch                        |Glitch.fx               |Applies a glitch to titles or keys.  Just apply on top of your effect         |
+|RGB registration              |RGBregistration.fx      |Adjusts the X-Y registration of the RGB channels of a video stream            |
 |Screen shake                  |Screenshake.fx          |Random screen shake, slightly zoomed in, no motion blur                       |
 |Video feedback                |VideoFeedback.fx        |Produces the classic video feedback effect                                    |
 |Video trails                  |VideoTrails.fx          |Produces video trails up to three layers deep - simulates video feedback      |
