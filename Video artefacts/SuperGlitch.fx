@@ -28,7 +28,7 @@
        [*] Mod centre:  Adjusts the modulation centring.
 
  This effect is designed to be extreme.  If you need subtle glitching this is not going
- to be your best choice.  Use Glitch instead  Also, when modulating mask boundaries it's
+ to be your best choice.  Use Glitch instead.  Also, when modulating mask boundaries it's
  a good idea to add a little softness to the mask.
 */
 
@@ -200,5 +200,6 @@ DeclareEntryPoint (SuperGlitchMask)
 
    return lerp (video, glitch, glitch.a * Visibility);
 }
+
 
 
