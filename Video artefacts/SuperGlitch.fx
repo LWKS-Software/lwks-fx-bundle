@@ -10,23 +10,26 @@
  designed for use with image keys or titles.  That's not to say that you can't use it
  that way, but you will need to use an external blend effect with it if you do.
 
-   [*] Visibility:  Fades the glitched area in and out of the video.
-   [*] Masking:  Switches whether the masking is affected by the glitch or not.
+   [*] Visibility:  Fades the glitched area in or out of the video.
+   [*] Masking:  Switches whether the masking boundaries are affected by the glitch
+       or not.
    [*] Glitch settings
        [*] Glitch channels:  Selects between red/cyan, green/magenta, blue/yellow
            or the full video input.
        [*] Glitch rate:  Sets the speed at which the glitch operates.
-       [*] Glitch spacing:  Sets the spacing between glitches.
+       [*] Glitch spacing:  Sets the spacing between glitches.  Effectively it
+           changes the height of each glitch line.
        [*] Glitch width:  Sets the amount of horizontal spread in the glitch.
    [*] Video settings
-       [*] Rotation:  The glitch video can be rotated through 360 degrees.
+       [*] Rotation:  The video displacement in the glitch can be rotated through
+           360 degrees.
        [*] Offset:  This offsets the video inside the glitch.
        [*] Modulation:  Sets the amount of glitched shading applied.
        [*] Mod centre:  Adjusts the modulation centring.
 
  This effect is designed to be extreme.  If you need subtle glitching this is not going
- to be your best choice.  Use Glitch instead.  Also, when using modulated mask edges it's
- a good idea to add a little softness to the mask. 
+ to be your best choice.  Use Glitch instead  Also, when modulating mask boundaries it's
+ a good idea to add a little softness to the mask.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -197,4 +200,5 @@ DeclareEntryPoint (SuperGlitchMask)
 
    return lerp (video, glitch, glitch.a * Visibility);
 }
+
 
