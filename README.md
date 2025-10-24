@@ -1,4 +1,4 @@
-# Lightworks user Fx library, October 23, 2025.
+# Lightworks user Fx library, October 24, 2025.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -311,6 +311,7 @@ If you need to use two effects that have the same name, simply open one of them 
 |Glitch                        |Glitch.fx               |Applies a glitch to titles or keys.  Just apply on top of your effect         |
 |RGB registration              |RGBregistration.fx      |Adjusts the X-Y registration of the RGB channels of a video stream            |
 |Screen shake                  |Screenshake.fx          |Random screen shake, slightly zoomed in, no motion blur                       |
+|Super glitch                  |SuperGlitch.fx          |Applies an extremely strong masked glitch to video                            |
 |Video feedback                |VideoFeedback.fx        |Produces the classic video feedback effect                                    |
 |Video trails                  |VideoTrails.fx          |Produces video trails up to three layers deep - simulates video feedback      |
 
