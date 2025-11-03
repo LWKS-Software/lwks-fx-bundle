@@ -1,4 +1,4 @@
-# Lightworks user Fx library, October 24, 2025.
+# Lightworks user Fx library, November 3, 2025.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -125,7 +125,7 @@ If you need to use two effects that have the same name, simply open one of them 
 |Fast perspective              |FastPerspective.fx      |Uses a 3D transform to give perspective to a 2D shape                         |
 |Flag wave                     |FlagWave.fx             |Simulates a waving flag (what a surprise)                                     |
 |Liquify                       |Liquify.fx              |Distorts the image in a soft liquid manner                                    |
-|Magnifying glass              |Magnify.fx              |Similar in operation to a bulge effect, but performs a flat linear zoom       |
+|Magnifying glass              |MagnifyingGlass.fx      |Similar in operation to a bulge effect, but performs a flat linear zoom       |
 |Perspective                   |Perspective.fx          |Warps one rectangle to another using a perspective transform                  |
 |Perspective with resize       |PerspectiveResize.fx    |Creates a blended perspective effect with resizing and position adjustment    |
 |Refraction                    |Refraction.fx           |Simulates the distortion effect of an image seen through textured glass       |
