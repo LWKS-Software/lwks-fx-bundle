@@ -1,6 +1,5 @@
 // @Maintainer jwrl
 // @Released 2025-11-03
-
 // @Author schrauber
 // @Author jwrl
 // @Created 2017-01-05
@@ -170,4 +169,5 @@ DeclareEntryPoint (MagnifyRectangle)
 
    return any (xy0 > Dimensions) ? Inp : MirrorEdge (Rectangle, xy1);
 }
+
 
