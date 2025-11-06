@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-15
+// @Released 2025-11-06
 // @Author khaver
 // @Created 2012-04-12
 
@@ -7,6 +7,25 @@
  Iris Bokeh is the well-known bokeh effect, and provides control of the iris (5 to 8
  segments or round).  It also controls the size, rotation, threshold and pretty much
  anything else that you're likely to need to adjust.
+
+   [*] Iris Shape:  The iris shape can range from five to eight sided, or be completely
+       round.
+   [*] Bokeh range
+      [*] Size: The size of the bokeh effect.
+      [*] Rotation: This is only meaningful if the iris shape isn't round.
+      [*] Threshold: Adjusts the threshold above which bokeh artefacts will be produced.
+      [*] Softness: Varies the sharpness of the bokeh artefact.
+      [*] Gamma: Varies the contrast of the bokeh.
+   [*] Bokeh mask
+      [*] Type: Sets the bokeh mask source and type. This should not be confused with
+          the Lightworks effect mask.
+      [*] Brightness: Adjusts the bokeh mask brightness.
+      [*] Contrast: Adjusts the bokeh mask contrast.
+      [*] Invert: Inverts the bokeh mask.
+      [*] Show: Displays the bokeh mask.
+   [*] Source
+      [*] Focus: Varies the amount of the bokeh artefacts.
+      [*] Mix: The strength of the bokeh artefacts that overlay the video.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -29,13 +48,18 @@
 //
 // Version history:
 //
+// Updated 2025-11-06 jwrl.
+// Changed group labels "Bokeh" to "Bokeh range" and "Mask" to "Bokeh mask".
+// Added setting descriptions to header block.
+//
+// Updated 2025-09-20 jwrl.
+// Added group labels.
+//
 // Updated 2023-05-15 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Iris bokeh", "Stylize", "Blurs and sharpens", "A bokeh effect with control of the iris (5 to 8 segments or round)", kNoFlags);
 
@@ -51,24 +75,22 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareIntParam (IrisShape, "Iris Shape", kNoGroup, 0, "Round|Eight|Seven|Six|Five");
+DeclareIntParam   (IrisShape,  "Iris shape", kNoGroup, 0, "Round|Eight sided|Seven sided|Six sided|Five sided");
 
-DeclareFloatParam (Size, "Size", "Bokeh", kNoFlags, 50.0, 0.0, 100.0);
-DeclareFloatParam (Rotation, "Bokeh Rotation", kNoGroup, kNoFlags, 0.0, 0.0, 360.0);
-DeclareFloatParam (Threshold, "Bokeh Threshold", kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (Softness, "Bokeh Softness", kNoGroup, kNoFlags, 0.25, 0.0, 1.0);
-DeclareFloatParam (Gamma, "Bokeh Gamma", kNoGroup, kNoFlags, 1.0, 0.0, 2.0);
+DeclareFloatParam (Size,       "Size",       "Bokeh range", kNoFlags, 50.0, 0.0, 100.0);
+DeclareFloatParam (Rotation,   "Rotation",   "Bokeh range", kNoFlags, 0.0, 0.0, 360.0);
+DeclareFloatParam (Threshold,  "Threshold",  "Bokeh range", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Softness,   "Softness",   "Bokeh range", kNoFlags, 0.25, 0.0, 1.0);
+DeclareFloatParam (Gamma,      "Gamma",      "Bokeh range", kNoFlags, 1.0, 0.0, 2.0);
 
-DeclareIntParam (Alpha, "Mask Type", kNoGroup, 0, "None|Source Alpha|Source Luma|Mask Alpha|Mask Luma");
+DeclareIntParam   (Alpha,      "Type",       "Bokeh mask",  0, "None|Source Alpha|Source Luma|Mask Alpha|Mask Luma");
+DeclareFloatParam (Brightness, "Brightness", "Bokeh mask",  kNoFlags, 1.0, 0.0, 2.0);
+DeclareFloatParam (Contrast,   "Contrast",   "Bokeh mask",  kNoFlags, 1.0, 0.0, 10.0);
+DeclareBoolParam  (Invert,     "Invert",     "Bokeh mask",  false);
+DeclareBoolParam  (ShowMask,   "Show",       "Bokeh mask",  false);
 
-DeclareFloatParam (Brightness, "Mask Brightness", kNoGroup, kNoFlags, 1.0, 0.0, 2.0);
-DeclareFloatParam (Contrast, "Mask Contrast", kNoGroup, kNoFlags, 1.0, 0.0, 10.0);
-
-DeclareBoolParam (Invert, "Invert Mask", kNoGroup, false);
-DeclareBoolParam (Show, "Show Mask", kNoGroup, false);
-
-DeclareFloatParam (Focus, "Source Focus", kNoGroup, kNoFlags, 50.0, 0.0, 100.0);
-DeclareFloatParam (SourceMix, "Source Mix", kNoGroup, kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (Focus,      "Focus",      "Source",      kNoFlags, 50.0, 0.0, 100.0);
+DeclareFloatParam (SourceMix,  "Mix",        "Source",      kNoFlags, 0.0, -1.0, 1.0);
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
@@ -187,8 +209,8 @@ DeclarePass (Dpt)
 
 DeclarePass (Bmask)
 {
-   float4 orig = ReadPixel (Inp, uv3);
-   float4 aff  = ReadPixel (Dpt, uv3);
+   float4 orig = tex2D (Inp, uv3);
+   float4 aff  = tex2D (Dpt, uv3);
 
    float ac = (Alpha == 1) ? orig.a
             : (Alpha == 2) ? dot (orig.rgb, float3 (0.33, 0.34, 0.33))
@@ -283,10 +305,14 @@ DeclareEntryPoint (IrisBokeh)
    float bomix = (SourceMix > 0.0) ? 1.0 : 1.0 + SourceMix;
    float blmix = (SourceMix < 0.0) ? 1.0 : 1.0 - SourceMix;
 
-   if (Show) return ac.xxxx;
+   float4 retval;
 
-   float4 retval = (Focus > 0.0) || (Size > 0.0)
-          ? 1.0 - ((1.0 - (bokeh * bomix)) * (1.0 - (blurred * blmix))) : orig;
+   if (ShowMask) {
+      retval = ac.xxxx;
+      orig = kTransparentBlack;
+   }
+   else if ((Focus <= 0.0) && (Size <= 0.0)) { retval = orig; }
+   else retval = 1.0 - ((1.0 - (bokeh * bomix)) * (1.0 - (blurred * blmix)));
 
    return lerp (orig, retval, tex2D (Mask, uv3).x);
 }
