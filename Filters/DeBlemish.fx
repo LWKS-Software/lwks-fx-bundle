@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2025-11-15
 // @Author jwrl
 // @Created 2019-01-30
 
@@ -8,6 +8,20 @@
  different technique than that effect to mask skin tones, which should make it easier
  to set up.  The default skin colour has been tested to work quite well with European
  and Asian flesh tones but will need adjustment with darker skins or poorly lit ones.
+
+
+   [*] Blur strength: Sets the blurriness strength to apply to the skin tone.
+   [*] Blur mix: Adjusts the amount of blurred skin tone to mix back over the
+       original.
+   [*] Skin tone masking
+      [*] Show mask: Shows the area that the skin mask covers.
+      [*] Skin colour: Selects the skin colour to detect.
+      [*] Mask clip: Adjusts skin colour detection range. Spreads or reduces
+          the mask area.
+      [*] Mask separation: Refines the mask detection.
+      [*] Mask linearity: Softens the mask edges.
+      [*] White clip: Flattens the mask peaks.
+      [*] Black crush: Erodes the mask boundaries.
 
  The blur technique used is a variant of my radial blur, which also differs from the
  skin smooth effect.  The mask produced can be quite hard edged, as the mask will be
@@ -20,6 +34,9 @@
 // Lightworks user effect DeBlemish.fx
 //
 // Version history:
+//
+// Updated 2025-11-15 jwrl.
+// Changed "Mask settings" to "Skin tone masking".
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with 0.0.xxxx for Linux fix.
@@ -44,18 +61,16 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Size, "Blur strength", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Amount, "Blur mix", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Size,   "Blur strength", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Amount, "Blur mix",      kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareBoolParam (ShowMask, "Show mask", "Mask settings", false);
-
-DeclareColourParam (MaskColour, "Skin colour", "Mask settings", kNoFlags, 0.945, 0.7765, 0.663);
-
-DeclareFloatParam (MaskClip, "Mask clip", "Mask settings", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (MaskSep, "Mask separation", "Mask settings", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (MaskGamma, "Mask linearity", "Mask settings", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (MaskWhite, "White clip", "Mask settings", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (MaskBlack, "Black crush", "Mask settings", kNoFlags, 0.0, 0.0, 1.0);
+DeclareBoolParam  (ShowMask,    "Show mask",       "Skin tone masking", false);
+DeclareColourParam (MaskColour, "Skin colour",     "Skin tone masking", kNoFlags, 0.945, 0.7765, 0.663);
+DeclareFloatParam (MaskClip,    "Mask clip",       "Skin tone masking", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (MaskSep,     "Mask separation", "Skin tone masking", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (MaskGamma,   "Mask linearity",  "Skin tone masking", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (MaskWhite,   "White clip",      "Skin tone masking", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (MaskBlack,   "Black crush",     "Skin tone masking", kNoFlags, 0.0, 0.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
