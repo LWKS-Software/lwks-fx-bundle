@@ -5,7 +5,7 @@
 
 /**
  This takes an image key or text effect and uses the alpha channel to invert the
- background image.  Both the the inverted image and the foreground can each be
+ background image.  Both the inverted image and the foreground can each be
  separately mixed over the background layer, resulting in a potentially vast
  range of visual effects.
 
@@ -28,8 +28,8 @@
    [*] Drop shadow
      [*] Opacity:  Self explanatory.
      [*] Feather:  Feathers the drop shadow.
-     [*] Displacement X:  Sets the horizontal displacement for the shadow.
-     [*] Displacement Y:  Sets the vertical displacement for the shadow.
+     [*] Offset X:  Sets the horizontal displacement for the shadow.
+     [*] Offset Y:  Sets the vertical displacement for the shadow.
      [*] Tint colour:  Sets the tint colour of the shadow.
 
  The default values of the effect are set to show the inverted background with a
@@ -356,3 +356,4 @@ DeclareEntryPoint (TextInversion)
 
    return lerp (Bgnd, comp, tex2D (Mask, uv3).x);
 }
+
