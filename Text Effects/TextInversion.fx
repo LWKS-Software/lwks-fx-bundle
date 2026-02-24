@@ -1,18 +1,20 @@
 // @Maintainer jwrl
-// @Released 2026-02-23
+// @Released 2026-02-24
 // @Author jwrl
 // @Created 2026-02-23
 
 /**
  This takes an image key or text effect and uses the alpha channel to invert the
- background image.  Both the inverted image and the foreground can each be
+ background image.  Both the the inverted image and the foreground can each be
  separately mixed over the background layer, resulting in a potentially vast
  range of visual effects.
 
- To apply it to a text or image key effect, make sure that any border and/or drop
- shadow has been disabled.  They can be replaced in this effect as needed.  Then
- apply this effect and open the routing display.  Disconnect the background video
- from the title or image key input and connect it to the Bg input of this effect.
+ To apply it to a text or image key effect, first make sure that any border and/or
+ drop shadow has been disabled.  They can be replaced in this effect as needed.
+ Then apply this effect and open the routing display.  Make sure that you disconnect
+ the background video from the title or image key input if you have chosen to use
+ "Extracted foreground" in "Source mode". In either source mode the background video
+ should be connected to the Bg input.
 
  The settings are shown below.
    [*] Opacity:  Allows fading in or out of the foreground image.
@@ -20,7 +22,8 @@
        foreground image (0%) then to the background as fill (-100%).
    [*] Tint level:  Adjusts the amount of the tint to be mixed with the foreground.
    [*] Tint colour:  Self explanatory.
-   [*] Source mode: Selects between video/image key/title or an extracted foreground.
+   [*] If not extracting disconnect title/image key input
+     [*] Source mode: Selects between video/image key/title or an extracted foreground.
    [*] Border
      [*] Opacity:  Self explanatory.
      [*] Thickness:  Self explanatory.
@@ -42,7 +45,8 @@
 //
 // Version history:
 //
-// Built 2026-02-23 by jwrl.
+// Modified 2026-02-24 by jwrl.
+// Clarified FG input disconnection message.
 //-----------------------------------------------------------------------------------------//
 
 DeclareLightworksEffect ("Text inversion", "Text", "Text Effects", "The text video is optionally replaced with negative background", CanSize);
@@ -64,7 +68,7 @@ DeclareFloatParam (Inversion,  "Inversion",   kNoGroup, kNoFlags, 1.0, -1.0, 1.0
 DeclareFloatParam (TintLevel,  "Tint level",  kNoGroup, kNoFlags, 0.25, 0.0, 1.0);
 DeclareColourParam (FgdTint,   "Tint colour", kNoGroup, kNoFlags, 0.2,  0.8, 1.0, 1.0);
 
-DeclareIntParam   (Source,     "Source mode", "Disconnect title and image key inputs", 0, "Video, image key or title|Extracted foreground");
+DeclareIntParam   (Source,     "Source mode", "If not extracting disconnect title/image key input", 0, "Video, image key or title|Extracted foreground");
 
 DeclareFloatParam (BdrOpacity, "Opacity",     "Border", kNoFlags, 1.00, 0.0, 1.0);
 DeclareFloatParam (Thickness,  "Thickness",   "Border", kNoFlags, 0.25, 0.0, 1.0);
@@ -356,4 +360,5 @@ DeclareEntryPoint (TextInversion)
 
    return lerp (Bgnd, comp, tex2D (Mask, uv3).x);
 }
+
 
