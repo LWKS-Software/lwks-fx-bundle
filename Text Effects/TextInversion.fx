@@ -22,7 +22,7 @@
        foreground image (0%) then to the background as fill (-100%).
    [*] Tint level:  Adjusts the amount of the tint to be mixed with the foreground.
    [*] Tint colour:  Self explanatory.
-   [*] If not extracting disconnect title/image key input
+   [*] If not extracting foreground disconnect title/image key input
      [*] Source mode: Selects between video/image key/title or an extracted foreground.
    [*] Border
      [*] Opacity:  Self explanatory.
@@ -46,7 +46,7 @@
 // Version history:
 //
 // Modified 2026-02-24 by jwrl.
-// Clarified FG input disconnection message.
+// Clarified Fg input disconnection message.
 //-----------------------------------------------------------------------------------------//
 
 DeclareLightworksEffect ("Text inversion", "Text", "Text Effects", "The text video is optionally replaced with negative background", CanSize);
@@ -68,7 +68,7 @@ DeclareFloatParam (Inversion,  "Inversion",   kNoGroup, kNoFlags, 1.0, -1.0, 1.0
 DeclareFloatParam (TintLevel,  "Tint level",  kNoGroup, kNoFlags, 0.25, 0.0, 1.0);
 DeclareColourParam (FgdTint,   "Tint colour", kNoGroup, kNoFlags, 0.2,  0.8, 1.0, 1.0);
 
-DeclareIntParam   (Source,     "Source mode", "If not extracting disconnect title/image key input", 0, "Video, image key or title|Extracted foreground");
+DeclareIntParam   (Source,     "Source mode", "If not extracting foreground disconnect title/image key input", 0, "Video, image key or title|Extracted foreground");
 
 DeclareFloatParam (BdrOpacity, "Opacity",     "Border", kNoFlags, 1.00, 0.0, 1.0);
 DeclareFloatParam (Thickness,  "Thickness",   "Border", kNoFlags, 0.25, 0.0, 1.0);
@@ -360,5 +360,6 @@ DeclareEntryPoint (TextInversion)
 
    return lerp (Bgnd, comp, tex2D (Mask, uv3).x);
 }
+
 
 
