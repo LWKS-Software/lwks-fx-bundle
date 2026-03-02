@@ -1,4 +1,4 @@
-# Lightworks user Fx library, February 23, 2026.
+# Lightworks user Fx library, March 2, 2026.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -204,6 +204,7 @@ If you need to use two effects that have the same name, simply open one of them 
 |:---------------------------- |:---------------------- |:---------------------------------------------------------------------------- |
 |Chromatic aberration fixer    |ChromaticAbFixer.fx     |Generates or removes chromatic aberration                                     |
 |Clone stamp                   |CloneStamp.fx           |Clones sections of the image into other sections similarly to art software    |
+|Colour repair                 |ColourRepair.fx         |Repairs minor colour blemishes.                                               |
 |Cubic lens distortion         |CubicLensDistortion.fx  |Can be used for reducing fish-eye distortion with wide angle lenses           |
 |Noise reduction               |NoiseReduction.fx       |This uses a median filter to reduce video noise                               |
 |Pixel fixer                   |PixelFixer.fx           |Pixel Fixer repairs dead pixels based on adjacent pixel content               |
