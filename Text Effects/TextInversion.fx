@@ -1,13 +1,13 @@
 // @Maintainer jwrl
-// @Released 2026-02-24
+// @Released 2026-03-03
 // @Author jwrl
 // @Created 2026-02-23
 
 /**
- This takes an image key or text effect and uses the alpha channel to invert the
- background image.  Both the the inverted image and the foreground can each be
- separately mixed over the background layer, resulting in a potentially vast
- range of visual effects.
+ This takes an image key or text effect and uses the alpha channel to replace the
+ foreground with an inversion of the background image.  Both the the inverted image
+ and the foreground can each be separately mixed over the background layer, resulting
+ in a potentially vast range of visual effects.
 
  To apply it to a text or image key effect, first make sure that any border and/or
  drop shadow has been disabled.  They can be replaced in this effect as needed.
@@ -37,13 +37,18 @@
 
  The default values of the effect are set to show the inverted background with a
  black border and a faint drop shadow.  The best results are usually obtained if
- the foreground text has no border or drop shadow.
+ the foreground text has no border or drop shadow.  Adjusting the inversion
+ setting beyond 100% changes the gamma of the inversion.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect TextInversion.fx 
 //
 // Version history:
+//
+// Modified 2026-03-03 by jwrl.
+// Increased the range of the inversion setting to run from -200% to 200%.
+// Added gamma control to inversion settings above 100% or below -100%.
 //
 // Modified 2026-02-24 by jwrl.
 // Clarified title/image key input disconnection.
@@ -64,7 +69,7 @@ DeclareMask;
 //-----------------------------------------------------------------------------------------//
 
 DeclareFloatParam (Opacity,    "Opacity",     kNoGroup, kNoFlags, 1.0,  0.0, 1.0);
-DeclareFloatParam (Inversion,  "Inversion",   kNoGroup, kNoFlags, 1.0, -1.0, 1.0);
+DeclareFloatParam (Inversion,  "Inversion",   kNoGroup, "DisplayAsPercentage", 1.0, -2.0, 2.0);
 DeclareFloatParam (TintLevel,  "Tint level",  kNoGroup, kNoFlags, 0.25, 0.0, 1.0);
 DeclareColourParam (FgdTint,   "Tint colour", kNoGroup, kNoFlags, 0.2,  0.8, 1.0, 1.0);
 
@@ -152,7 +157,15 @@ DeclarePass (KeyFg)
 
    retval.rgb = lerp (retval.rgb, tint.rgb, TintLevel);     // Mix the foreground tint into retval.
 
-   return lerp (Fgnd, retval, abs (Inversion));             // Return the modified Bg as the Fg (KeyFg).
+   // Calculate the gamma adjustment parameter to run from 100% to 1000% and limit the mix amount
+   // range to run from 0% to 100%.
+
+   float ImageAmount = abs (Inversion);
+   float ImageGamma  = clamp (ImageAmount, 1.0, 10.0);      // Gamma can be manually overridden.
+
+   retval.rgb = pow (retval.rgb, 1.0 / ImageGamma);
+
+   return lerp (Fgnd, retval, saturate (ImageAmount));      // Return the modified Bg as the Fg (KeyFg).
 }
 
 DeclarePass (RawBorder)
@@ -360,7 +373,3 @@ DeclareEntryPoint (TextInversion)
 
    return lerp (Bgnd, comp, tex2D (Mask, uv3).x);
 }
-
-
-
-
