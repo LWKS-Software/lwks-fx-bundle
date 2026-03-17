@@ -1,4 +1,4 @@
-# Lightworks user Fx library, March 2, 2026.
+# Lightworks user Fx library, March 17, 2026.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -187,6 +187,7 @@ If you need to use two effects that have the same name, simply open one of them 
 ## CATEGORY FOLDER: Multiscreen Effects
 |EFFECT                          |FILE NAME             |DESCRIPTION                                                                   |
 |:------------------------------ |:-------------------- |:---------------------------------------------------------------------------- |
+|Multisplit plus                 |MultisplitPlus.fx     |Two and three way splits with angled dividers                                 |
 |Quad split screen, simply       |QuadScreenS.fx        |This is a fast simple single effect with 4 inputs                             |
 |Quad split screen, dynamic zoom |QuadScreenZ.fx        |This is an advanced dynamic effect with 4 inputs                              |
 |Quad split plus                 |QuadSplitPlus.fx      |Creates four split screen images with borders over a daisy-chained background |
