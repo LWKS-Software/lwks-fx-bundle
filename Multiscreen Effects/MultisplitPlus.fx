@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-03-17
+// @Released 2026-03-19
 // @Author jwrl
 // @Created 2026-03-17
 
@@ -22,16 +22,8 @@
        [*] Position Y:  Sets the vertical position of the video 1 input.
        [*] Size:  Increases the size of the video 1 input.
        [*] Monochrome:  Dissolves video 1 to monochrome.
-    [*] V2 settings.
-       [*] Position X:  As for video 1.
-       [*] Position Y:  As for video 1.
-       [*] Size:  As for video 1.
-       [*] Monochrome:  As for video 1.
-    [*] V3 settings.
-       [*] Position X:  As for video 1.
-       [*] Position Y:  As for video 1.
-       [*] Size:  As for video 1.
-       [*] Monochrome:  As for video 1.
+    [*] V2 settings.  Identical to V1 settings.
+    [*] V3 settings.  Identical to V1 settings.
     [*] Border settings.
        [*] Position:  Trims border position horizontally.  This is a limited range
            adjustment, and is symmetrical when adjusting triple video parameters.
@@ -55,7 +47,8 @@
 //
 // Version history:
 //
-// Built 2026-03-17 jwrl.
+// Modified 2026-03-19 jwrl.
+// Added simple antialiassing to the border generation.
 //-----------------------------------------------------------------------------------------//
 
 DeclareLightworksEffect ("Multisplit plus", "DVE", "Multiscreen Effects", "Two and three way splits with angled dividers", CanSize);
@@ -104,9 +97,23 @@ DeclareFloatParam (_OutputAspectRatio);
 
 #define SLOPE (BorderAngle / 5.0)
 
+#define _TransparentBlack 0.0.xxxx
+
+#define LOOP    30         // The blur loop size used for antialiassing
+#define DIVISOR 60.0       // The blur divisor is twice loop size because we offset twice
+#define RADIUS  0.00125    // Blur sample radius
+#define ANGLE   0.10472    // Six degrees expressed in radians.
+
 //-----------------------------------------------------------------------------------------//
 // Functions
 //-----------------------------------------------------------------------------------------//
+
+float4 mirror2D (sampler Mir, float2 xy)
+{
+   float2 uv = (0.5 - abs (abs (frac (xy / 2.0)) - 0.5.xx)) * 2.0;
+
+   return tex2D (Mir, uv);
+}
 
 float4 getVideo (sampler V, float2 xy, float amount)
 {
@@ -115,6 +122,31 @@ float4 getVideo (sampler V, float2 xy, float amount)
    float luma = dot (retval, float4 (0.25, 0.64, 0.11, 0.0));
 
    return float4 (lerp (retval.rgb, luma.xxx, amount), retval.a);
+}
+
+float4 Antialias (sampler Bdr, float2 uv)
+{
+   float4 retval = _TransparentBlack;
+
+   if (BorderWidth > 0.0) {
+      float4 Fgd = tex2D (Bdr, uv);
+
+      float2 xy, radius = float2 (1.0, _OutputAspectRatio) * RADIUS;
+
+      float angle = 0.0;
+
+      for (int i = 0; i < LOOP; i++) {
+         sincos (angle, xy.x, xy.y);
+         xy *= radius;
+         retval += mirror2D (Bdr, uv + xy);
+         retval += mirror2D (Bdr, uv - xy);
+         angle  += ANGLE;
+      }
+
+      retval /= DIVISOR;
+   }
+
+   return retval;
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -161,7 +193,7 @@ DeclarePass (Fg2)
    return ReadPixel (F2, xy);
 }
 
-DeclareEntryPoint (DoubleSplit)
+DeclarePass (Bd1)
 {
    // Calculate the border position and slope.
 
@@ -172,9 +204,26 @@ DeclareEntryPoint (DoubleSplit)
    if ((uv3.x > border - BorderWidth) && (uv3.x < border + BorderWidth))
       return BorderColour;
 
-   // Otherwise return the video halves.
+   // If the border test fails, return transparent black.
 
-   return uv3.x < border ? tex2D (Fg1, uv3) : tex2D (Fg2, uv3);
+   return _TransparentBlack;
+}
+
+DeclareEntryPoint (DoubleSplit)
+{
+   // Calculate the border position and slope.
+
+   float border = ((0.5 - uv3.y) * SLOPE) + BorderPosn + 0.5;
+
+   // Recover the antialiassed border and the mixed V1 and V2
+
+   float4 retbdr = Antialias (Bd1, uv3);
+   float4 retval = uv3.x < border ? tex2D (Fg1, uv3) : tex2D (Fg2, uv3);
+
+   // Return the video halves with BorderColour overlaid using the alpha component
+   // derived from retbdr.
+
+   return lerp (retval, BorderColour, retbdr.a);
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -237,7 +286,7 @@ DeclarePass (Right)
    return ReadPixel (Rgt, xy);
 }
 
-DeclareEntryPoint (TripleSplit)
+DeclarePass (Bd2)
 {
    // Calculate the border position and angle.  Note that the right border is the
    // reciprocal of the left.
@@ -250,12 +299,30 @@ DeclareEntryPoint (TripleSplit)
    // border colour.
 
    if (((uv4.x > border1 - BorderWidth) && (uv4.x < border1 + BorderWidth))  ||
-       ((uv4.x > border2 - BorderWidth) && (uv4.x < border2 + BorderWidth)))
-      return BorderColour;
+       ((uv4.x > border2 - BorderWidth) && (uv4.x < border2 + BorderWidth))) return BorderColour;
 
-   // Otherwise return the three video components.
+   // If the above fails, fall through to transparent black.
 
-   return uv4.x < border1 ? tex2D (Left, uv4) :
-          uv4.x < border2 ? tex2D (Centre, uv4) : tex2D (Right, uv4);
+   return _TransparentBlack;
 }
 
+DeclareEntryPoint (TripleSplit)
+{
+   // Calculate the border position and angle.  Note that the right border is the
+   // reciprocal of the left.
+
+   float border0 = ((uv4.y - 0.5) * SLOPE) - BorderPosn;
+   float border1 = 0.33333333 - border0;
+   float border2 = 0.66666667 + border0;
+
+   // Recover the antialiassed borders and the combined V1, V2 and V3.
+
+   float4 retbdr = Antialias (Bd2, uv4);
+   float4 retval = uv4.x < border1 ? tex2D (Left, uv4) :
+                   uv4.x < border2 ? tex2D (Centre, uv4) : tex2D (Right, uv4);
+
+   // Return the three combined video segments with BorderColour overlaid using the alpha
+   // component derived from retbdr.
+
+   return lerp (retval, BorderColour, retbdr.a);
+}
