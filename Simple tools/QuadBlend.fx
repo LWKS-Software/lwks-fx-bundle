@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-05-25
+// @Released 2026-05-26
 // @Author jwrl
 // @Created 2026-05-25
 
@@ -16,6 +16,7 @@
       [*]B opacity:  Fades B input in or out.
       [*]C opacity:  Fades C input in or out.
       [*]D opacity:  Fades D input in or out.
+   [*]Mask fade:  Allows masking to be faded in.
 
  Any scaling, colourgrading or other image processing must be done externally to
  this effect.  As stated earlier, this is designed to be just a very simple
@@ -25,7 +26,8 @@
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect QuadBlend.fx
 //
-// Created 2026-05-25 by jwrl.
+// Updated 2026-05-26 by jwrl.
+// Added ability to fade mask out to reveal unmasked video.
 //-----------------------------------------------------------------------------------------//
 
 DeclareLightworksEffect ("Quad blend", "Mix", "Simple tools", "Provides a simple blend for four inputs and a background", CanSize);
@@ -49,6 +51,8 @@ DeclareFloatParam (Bopacity, "B opacity",  "Individual inputs", kNoFlags, 1.0, 0
 DeclareFloatParam (Copacity, "C opacity",  "Individual inputs", kNoFlags, 1.0, 0.0, 1.0);
 DeclareFloatParam (Dopacity, "D opacity",  "Individual inputs", kNoFlags, 1.0, 0.0, 1.0);
 
+DeclareFloatParam (MaskFade, "Mask fade",  kNoGroup,            kNoFlags, 1.0, 0.0, 1.0);
+
 //-----------------------------------------------------------------------------------------//
 // Code
 //-----------------------------------------------------------------------------------------//
@@ -62,10 +66,12 @@ DeclareEntryPoint (QuadBlend)
    float4 Bgd = ReadPixel (X, uv5);
    float4 ret = lerp (Bgd, FgD, FgD.a * Dopacity);
 
+   float msk = lerp (1.0, tex2D (Mask, uv6).x, MaskFade);
+
    ret = lerp (ret, FgC, FgC.a * Copacity);
    ret = lerp (ret, FgB, FgB.a * Bopacity);
    ret = lerp (ret, FgA, FgA.a * Aopacity);
    ret = lerp (Bgd, ret, Amount);
 
-   return lerp (Bgd, ret, tex2D (Mask, uv6).x);
+   return lerp (Bgd, ret, msk);
 }
