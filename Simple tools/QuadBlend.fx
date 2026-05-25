@@ -65,6 +65,7 @@ DeclareEntryPoint (QuadBlend)
    ret = lerp (ret, FgC, FgC.a * Copacity);
    ret = lerp (ret, FgB, FgB.a * Bopacity);
    ret = lerp (ret, FgA, FgA.a * Aopacity);
+   ret = lerp (Bgd, ret, Amount);
 
-   return lerp (Bgd, ret, ReadPixel (Mask, uv6).a * Amount);
+   return lerp (Bgd, ret, tex2D (Mask, uv6).x);
 }
