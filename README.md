@@ -1,4 +1,4 @@
-# Lightworks user Fx library, March 17, 2026.
+# Lightworks user Fx library, May 25, 2026.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -220,6 +220,7 @@ If you need to use two effects that have the same name, simply open one of them 
 |Guides                        |Guides.fx               |A simple guide line and rule of thirds generator                              |
 |Highlight widgets             |HighlightWidgets.fx     |Used to highlight sections of video that you want to emphasize                |
 |Progress bar                  |ProgressBar.fx          |A simple progress bar generator with border                                   |
+|Quad blend                    |QuadBlend.fx            |Provides a simple blend for four inputs and a background                      |
 |Simple S curve                |SimpleS.fx              |This applies an S curve to the video levels to give an image that extra zing  |
 |Simple star                   |SimpleStar.fx           |Creates a single rotatable star glint, with 4, 5, 6, 7 or 8 arms              |
 |Tilt and mirror               |TiltMirror.fx           |Rotates a pair of rolls or image keys to scroll to a mid vanishing point      |
