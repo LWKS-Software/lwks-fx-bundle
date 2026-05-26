@@ -16,11 +16,15 @@
       [*]B opacity:  Fades B input in or out.
       [*]C opacity:  Fades C input in or out.
       [*]D opacity:  Fades D input in or out.
-   [*]Mask fade:  Allows masking to be faded in.
+   [*]Mask fade:  Allows masking to be faded in or out.
 
  Any scaling, colourgrading or other image processing must be done externally to
- this effect.  As stated earlier, this is designed to be just a very simple
- compositing tool.
+ this effect. As stated earlier, it's designed to be just a very simple compositing
+ tool.
+
+ The May 26 2026 version also adds the ability to fade masking out to reveal the
+ unmasked blended video. This behaviour is different to the opacity setting in the
+ Lightworks mask, which fades the video inside the mask in or out.
 */
 
 //-----------------------------------------------------------------------------------------//
