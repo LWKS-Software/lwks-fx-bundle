@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-07-24
+// @Released 2026-06-09
 // @Author idealsceneprod (Val Gameiro)
 // @Created 2014-12-24
 
@@ -9,17 +9,18 @@
  threshold and colour values are all adjustable.  The settings are the same as the
  Lightworks two tone and tri-tone effects, there's just more of them.
 
-   * Threshold One:  The lowest threshold.  Video under this will get the dark colour.
-   * Threshold Two:  The next level up.  Video under this will get the mid dark colour.
-   * Threshold Three:  Mid level.  Video below will get the mid colour, above the mid
-     light colour.
-   * Threshold Four:  Level below peak white.  Video above it gets the light colour.
-   * Blend Tones:  Blends the five tones with the input video.
-   * Dark Colour:  Self explanatory.  The darkest of the colours that will be assigned.
-   * Mid Dark Colour:  Self explanatory.
-   * Mid Colour:  Self explanatory.
-   * Mid Light Colour:  Self explanatory.
-   * Light Colour:  Self explanatory.
+   [*]Threshold 1:  The lowest threshold.  Video under this will get the dark colour.
+   [*]Threshold 2:  TThe next level up.  Video under this will get the mid dark colour.
+   [*]Threshold 3:  Mid level.  Video below will get the mid colour, above the mid light
+      colour.
+   [*]Threshold 4:  Level below peak white.  Video above it gets the light colour.
+   [*]Blend Tones:  Blends the five tones with the input video.
+   [*]Colours
+      [*]Darkest:  Self explanatory.  The darkest of the colours that will be assigned.
+      [*]Mid dark:  Self explanatory.
+      [*]Mid tones:  Self explanatory.
+      [*]Mid light:  Self explanatory.
+      [*]Lightest:  Self explanatory.
 
  The colours used for the tonal values are set to grey scale levels by default, but can
  in fact be any colour that you wish.  They do not have to be in luminance order.
@@ -38,6 +39,11 @@
 // earlier versions - jwrl.
 //
 // Version history:
+//
+// Updated 2026-06-09 jwrl.
+// Changed masking to full RGBA.
+// Renamed the threshold settings to use numerals to fit 2026.1 effect formats.
+// Grouped the colour settings into the "Colours" group.
 //
 // Updated 2025-07-24 jwrl.
 // Removed redundant alpha channel assignment in DeclareEntryPoint().
@@ -66,17 +72,17 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Threshold1, "Threshold One",   kNoGroup, kNoFlags, 0.2, 0.0, 1.0);
-DeclareFloatParam (Threshold2, "Threshold Two",   kNoGroup, kNoFlags, 0.4, 0.0, 1.0);
-DeclareFloatParam (Threshold3, "Threshold Three", kNoGroup, kNoFlags, 0.6, 0.0, 1.0);
-DeclareFloatParam (Threshold4, "Threshold Four",  kNoGroup, kNoFlags, 0.8, 0.0, 1.0);
-DeclareFloatParam (BlendTones, "Blend Tones",     kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Threshold1, "Threshold 1", kNoGroup, kNoFlags, 0.2, 0.0, 1.0);
+DeclareFloatParam (Threshold2, "Threshold 2", kNoGroup, kNoFlags, 0.4, 0.0, 1.0);
+DeclareFloatParam (Threshold3, "Threshold 3", kNoGroup, kNoFlags, 0.6, 0.0, 1.0);
+DeclareFloatParam (Threshold4, "Threshold 4", kNoGroup, kNoFlags, 0.8, 0.0, 1.0);
+DeclareFloatParam (BlendTones, "Blend Tones", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareColourParam (DarkColour,  "Dark Colour",      kNoGroup, kNoFlags, 0.0, 0.0, 0.0, 1.0);
-DeclareColourParam (MidColour,   "Mid Dark Colour",  kNoGroup, kNoFlags, 0.2, 0.2, 0.2, 1.0);
-DeclareColourParam (MidColour2,  "Mid Colour",       kNoGroup, kNoFlags, 0.5, 0.5, 0.5, 1.0);
-DeclareColourParam (MidColour3,  "Mid Light Colour", kNoGroup, kNoFlags, 0.8, 0.8, 0.8, 1.0);
-DeclareColourParam (LightColour, "Light Colour",     kNoGroup, kNoFlags, 1.0, 1.0, 1.0, 1.0);
+DeclareColourParam (DarkColour,  "Darkest",   "Colours", kNoFlags, 0.0, 0.0, 0.0, 1.0);
+DeclareColourParam (MidColour,   "Mid dark",  "Colours", kNoFlags, 0.2, 0.2, 0.2, 1.0);
+DeclareColourParam (MidColour2,  "Mid tones", "Colours", kNoFlags, 0.5, 0.5, 0.5, 1.0);
+DeclareColourParam (MidColour3,  "Mid light", "Colours", kNoFlags, 0.8, 0.8, 0.8, 1.0);
+DeclareColourParam (LightColour, "Lightest",  "Colours", kNoFlags, 1.0, 1.0, 1.0, 1.0);
 
 DeclareFloatParam (_OutputHeight);
 DeclareFloatParam (_OutputWidth);
@@ -156,5 +162,5 @@ DeclareEntryPoint (FiveTone)
 
    result = lerp (source, result, result.a * BlendTones);
 
-   return lerp (source, result, tex2D (Mask, uv1).x);
+   return lerp (source, result, tex2D (Mask, uv1));
 }
