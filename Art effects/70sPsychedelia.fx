@@ -1,23 +1,42 @@
 // @Maintainer jwrl
-// @Released 2023-05-14
+// @Released 2026-06-10
 // @Author jwrl
 // @Created 2016-05-11
 
 /**
- 70s Psychedelia (70sPsychedelia.fx) creates a wide range of contouring effects from your
- original image.  Mixing over the original image can be adjusted from 0% to 100%, and the
- hue, saturation, and contour pattern can be tweaked.  The contours can also be smudged
- by a variable amount.
+ 70s Psychedelia (70sPsychedelia.fx) creates a wide range of colourful contouring effects
+ from your original image.  Mixing over the original image can be adjusted from 0% to
+ 100%, and the hue, saturation, and contour pattern can be tweaked.  The contours can also
+ be smudged by a variable amount.
 
  This is an entirely original effect, but feel free to do what you will with it.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+   [*]Pattern mix:  This mixes the final pattern over the original media.
+   [*]Contour level:  This is similar in behaviour to a key clip, but is set up to
+      deliberately overflow and wrap around levels as you adjust it. This enhances
+      the contouring of the generated pattern.
+   [*]Smudger:  This is really just a blur applied to the contour pattern as a
+      finishing touch.
+   [*]Colours
+      [*]Highlights:  This is used for the pattern highlights, not the source highlights.
+      [*]Midtones:  This colour is used for the pattern mid tones.
+      [*]Base colour:  Otherwise known as the background pattern colour.
+      [*]Hue:  Fine tunes the hue of the final contour pattern.
+      [*]Saturation:  Adjusts the saturation of the contour pattern.
+      [*]Gain:  Trims the video level of the pattern.
+
+NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect 70sPsychedelia.fx
 //
 // Version history:
+//
+// Updated 2026-06-10 jwrl.
+// Added command descriptions to header text.
+// Changed masking to full RGBA.
+// Renamed "Colour one" to "Highlights" and "Colour two" to "Midtones".
 //
 // Updated 2023-05-14 jwrl.
 // Header reformatted.
@@ -45,8 +64,8 @@ DeclareFloatParam (Amount, "Pattern mix", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
 DeclareFloatParam (Contouring, "Contour level", kNoGroup, kNoFlags, 12.0, 0.0, 12.0);
 DeclareFloatParam (Smudge, "Smudger", kNoGroup, kNoFlags, 0.2, 0.0, 1.0);
 
-DeclareColourParam (ColourOne, "Colour one", "Colours", kNoFlags, 1.0, 0.0, 1.0, 1.0);
-DeclareColourParam (ColourTwo, "Colour two", "Colours", kNoFlags, 1.0, 1.0, 0.0, 1.0);
+DeclareColourParam (ColourOne, "Highlights", "Colours", kNoFlags, 1.0, 0.0, 1.0, 1.0);
+DeclareColourParam (ColourTwo, "Midtones", "Colours", kNoFlags, 1.0, 1.0, 0.0, 1.0);
 DeclareColourParam (ColourBase, "Base colour", "Colours", kNoFlags, 1.0, 0.0, 0.5, 1.0);
 
 DeclareFloatParam (HueShift, "Hue", "Colours", kNoFlags, 0.0, -180.0, 180.0);
@@ -71,9 +90,6 @@ DeclareFloatParam (_OutputWidth);
 // Code
 //-----------------------------------------------------------------------------------------//
 
-DeclarePass (Video)
-{ return ReadPixel (Inp, uv1); }
-
 DeclarePass (Contours)
 {
    if (IsOutOfBounds (uv1)) return kTransparentBlack;
@@ -85,14 +101,14 @@ DeclarePass (Contours)
 
    float2 halftex = float2 (1.0, _OutputAspectRatio) / (_OutputWidth + _OutputWidth);
    float2 scale   = halftex * 4.25;
-   float2 xy, xy1 = uv2 + halftex;
+   float2 xy, xy1 = uv1 + halftex;
 
-   float4 retval = tex2D (Video, uv2);
+   float4 retval = tex2D (Inp, uv1);
 
    for (int i = 0; i < 12; i++) {
       sincos (angle, xy.y, xy.x);
       xy *= scale;
-      retval += tex2D (Video, xy + xy1);
+      retval += tex2D (Inp, xy + xy1);
       angle += 30.0;
    }
 
@@ -146,8 +162,8 @@ DeclareEntryPoint (SeventiesPsychedelia)
 {
    if (IsOutOfBounds (uv1)) return kTransparentBlack;
 
-   float4 Fgnd   = tex2D (Video, uv2);
-   float4 retval = tex2D (Contours, uv2);
+   float4 Fgnd   = tex2D (Inp, uv1);
+   float4 retval = tex2D (Contours, uv1);
    float4 source = Fgnd;
 
    // The smudger is implemented as a variation on a radial blur first.  The range
@@ -161,13 +177,13 @@ DeclareEntryPoint (SeventiesPsychedelia)
       sincos (angle, xy1.x, xy1.y);    // Put sin into x component, cos into y.
       xy1 *= xy2;                      // Scale xy1 by aspect ratio and smudge amount.
 
-      retval += tex2D (Contours, uv2 + xy1);   // Sample at 0 radians first, then
-      retval += tex2D (Contours, uv2 - xy1);   // at Pi radians (180 degrees).
+      retval += tex2D (Contours, uv1 + xy1);   // Sample at 0 radians first, then
+      retval += tex2D (Contours, uv1 - xy1);   // at Pi radians (180 degrees).
 
       xy1 *= 1.5;                      // Offset xy1 by 50% for a second sample pass.
 
-      retval += tex2D (Contours, uv2 + xy1);
-      retval += tex2D (Contours, uv2 - xy1);
+      retval += tex2D (Contours, uv1 + xy1);
+      retval += tex2D (Contours, uv1 - xy1);
 
       angle += 12.0;                   // Add 12 radians to the angle and go again.
    }
@@ -182,5 +198,5 @@ DeclareEntryPoint (SeventiesPsychedelia)
    retval = lerp (Fgnd, retval, Fgnd.a * Amount);
    retval.a = Fgnd.a;
 
-   return lerp (source, retval, tex2D (Mask, uv2).x);
+   return lerp (source, retval, tex2D (Mask, uv1));
 }
