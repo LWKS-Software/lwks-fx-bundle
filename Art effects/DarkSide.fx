@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-14
+// @Released 2026-06-10
 // @Author jwrl
 // @Created 2017-02-25
 
@@ -8,6 +8,15 @@
  All parameters are minimum range limited to prevent manual entry of illegal or
  negative values.  There is no such limit to the maximum values possible.  The alpha
  channel is fully preserved throughout.
+
+   [*]Source:  Selects the source channel to generate the "glow" from luminance,
+      red, green or blue, or the maximum value of red, green or blue.
+   [*]Tolerance:  Sets the level below which the "glow" will be generated.
+   [*]Feather:  Feathers, i.e., softens the edges of the "glow".
+   [*]Size:  Sets the spread of the "glow".
+   [*]Strength:  Adjusts the strength or opacity of the "glow".
+   [*]Colour difference:  The colour offset to add to the RGB prior to the edge
+      detection.
 
  It's sort of based on the Lightworks Glow effect, but only slightly.  The code under
  the hood differs from the code in their effect, and "Size" scales from 0% to 100%,
@@ -19,6 +28,13 @@
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect DarkSide.fx
+//
+// Version history:
+//
+// Updated 2026-06-10 jwrl.
+// Added command descriptions to header text.
+// Added an extra source setting, "Full video" which uses the maximum of R, G or B.
+// Changed masking to full RGBA.
 //
 // Updated 2023-05-14 jwrl.
 // Header reformatted.
@@ -42,7 +58,7 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareIntParam (Source, "Source", kNoGroup, 0, "Luminance|Red|Green|Blue");
+DeclareIntParam (Source, "Source", kNoGroup, 0, "Luminance|Red|Green|Blue|Full video");
 
 DeclareFloatParam (glowKnee, "Tolerance", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
 DeclareFloatParam (glowFeather, "Feather", kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
@@ -70,19 +86,16 @@ DeclareFloatParam (_OutputAspectRatio);
 // Code
 //-----------------------------------------------------------------------------------------//
 
-DeclarePass (Video)
-{ return ReadPixel (Inp, uv1); }
-
 DeclarePass (Glow_1)
 {
    if (IsOutOfBounds (uv1)) return kTransparentBlack;
 
-   float4 retval = tex2D (Video, uv2);
+   float4 retval = tex2D (Inp, uv1);
 
    float feather = max (glowFeather, 0.0) * F_SCALE;
    float knee = max (glowKnee, 0.0);
-   float vid = Source == 1 ? retval.r : Source == 2 ? retval.g :
-               Source == 3 ? retval.b : dot (retval.rgb, LUMA);
+   float vid = Source == 1 ? retval.r : Source == 2 ? retval.g : Source == 3 ? retval.b :
+               Source == 4 ? dot (retval.rgb, LUMA) : max (retval.r, max (retval.g, retval.b));
 
    vid *= retval.a;
 
@@ -97,7 +110,7 @@ DeclarePass (Glow_2)
 {
    if (IsOutOfBounds (uv1)) return kTransparentBlack;
 
-   float2 xy = uv2;
+   float2 xy = uv1;
    float2 offset = float2 (max (glowSpread, P_SCALE) * P_SCALE, 0.0);
 
    float4 retval = tex2D (Glow_1, xy);
@@ -110,7 +123,7 @@ DeclarePass (Glow_2)
    xy += offset; retval += tex2D (Glow_1, xy);
    xy += offset; retval += tex2D (Glow_1, xy);
 
-   xy = uv2 - offset;
+   xy = uv1 - offset;
    retval += tex2D (Glow_1, xy);
 
    xy -= offset; retval += tex2D (Glow_1, xy);
@@ -127,12 +140,12 @@ DeclareEntryPoint (DarkSide)
 {
    if (IsOutOfBounds (uv1)) return kTransparentBlack;
 
-   float4 retval = tex2D (Video, uv2);
-   float4 gloVal = tex2D (Glow_2, uv2);
+   float4 retval = tex2D (Inp, uv1);
+   float4 gloVal = tex2D (Glow_2, uv1);
    float4 source = retval;
 
    float2 offset = float2 (0.0, max (glowSpread, P_SCALE) * _OutputAspectRatio * P_SCALE);
-   float2 xy = uv2;
+   float2 xy = uv1;
 
    xy += offset; gloVal += tex2D (Glow_2, xy);
    xy += offset; gloVal += tex2D (Glow_2, xy);
@@ -142,7 +155,7 @@ DeclareEntryPoint (DarkSide)
    xy += offset; gloVal += tex2D (Glow_2, xy);
    xy += offset; gloVal += tex2D (Glow_2, xy);
 
-   xy = uv2 - offset;
+   xy = uv1 - offset;
    gloVal += tex2D (Glow_2, xy);
 
    xy -= offset; gloVal += tex2D (Glow_2, xy);
@@ -158,5 +171,5 @@ DeclareEntryPoint (DarkSide)
 
    retval.rgb = lerp (retval, gloVal, amount).rgb;
 
-   return lerp (source, retval, tex2D (Mask, uv2).x);
+   return lerp (source, retval, tex2D (Mask, uv1));
 }
