@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-14
+// @Released 2026-06-10
 // @Author khaver
 // @Created 2011-07-08
 
@@ -7,6 +7,22 @@
  Edge (EdgeFx.fx) detects edges to give a similar result to the well known art program
  effect.  The edge detection is fully adjustable.  Invert and add a little blur over it
  to make the video look as if it's been sketched.
+
+   [*]Threshold:  The level at which the edge is detected.   Similar in behaviour to
+      a luminance key clip, it adjusts the level at which an edge will be detected.
+      It and the kernel settings interact, so for best effect you may find that you
+      need to go back and forth between them a little.
+   [*]Kernel
+      [*]Kernel 0:  The three kernel settings are used to derive the edges, using a
+         convolution algorithm.  See the comment about threshold interaction, above.
+      [*]Kernel 1:  See Kernel 0.
+      [*]Kernel 2:  See Kernel 0.
+   [*]Size X:  Adjusts the width of the edge lines produced.
+   [*]Size Y:  Adjusts the height of the edge lines produced.
+   [*]Invert:  Inverts the lines from black on white to white on black.
+   [*]Edge to alpha:  Generates the edges as opaque over a transparent background,
+      meaning that you can blend the edges over other video or over the same video
+      processed by other effects.
 
  It also provides a checkbox to move the generated edge to the alpha channel to allow
  the effect to be overlaid over the video and only affect the edges.  This allows masking
@@ -20,6 +36,10 @@
 // Lightworks user effect Edge.fx
 //
 // Version history:
+//
+// Updated 2026-06-10 jwrl.
+// Added expanded command descriptions to header text.
+// Changed masking to full RGBA.
 //
 // Updated 2023-05-14 jwrl.
 // Header reformatted.
@@ -108,5 +128,5 @@ DeclareEntryPoint (Edge)
       edge = float4 (org.rgb, alpha);
       }
 
-   return lerp (org, edge, tex2D (Mask, uv1).x);
+   return lerp (org, edge, tex2D (Mask, uv1));
 }
