@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-09
 // @Author jwrl
 // @Created 2020-10-16
 
@@ -10,6 +10,36 @@
  or video with transparency by first disconnecting any input or blend effect, or the
  foreground video can be extracted.  In that case it is separated from the background
  by means of a delta or difference key.
+
+   [*]Blend glow using:  Selects from the blend modes available, which are lighten,
+      screen, add and lighter colour.
+   [*]Glow
+      [*]Mode:  Uses the glow derived from Fg luminance, reds, greens or blues, or
+         sets up a delta key derived from the difference between Fg and Bg inputs.
+      [*]Tolerance:  Sets the white level at which the glow starts to generate.
+      [*]Feather:  Adjusts glow softness or feathering.
+      [*]Size:  Sets the spread of the glow.
+      [*]Strength:  Adjust the glow opacity.
+      [*]Colour:  Chooses the glow colour.
+   [*]Blend mode
+      [*]Source:  The source choices are:
+         [*]Extracted foreground: Generates the glow source by obtaining the
+            difference between the foreground video and the background. This
+            is useful where you don't wish to separate a blended image from the
+            background, and is usually the easiest option.
+         [*]Image key/Title pre LW 2023.2: This is the best mode for titles and
+            image keys when using 2023.1, since that had a bug which meant that
+            using external blends gave poor results.
+         [*]Video, image key or title: This is provided to handle transparent
+            video, graphics, titles and image keys in the cases where foreground
+            extraction isn't good enough due to poor separation from the background.
+      [*]Trim key:  Allows fine tuning of the delta key and the title and image key.
+         Inactive when video / external image is chosen.
+   [*]Extras
+      [*]Fg overlay:  Used when you only want the glow outside the foreground image,
+         or when you want to reduce it inside the image.
+      [*]Luminance uses glow colour:  When calculating the key used to apply the Fg
+         over the Bg whether the glow is taken into account or not.
 
  In this version the blur used to create the glow has been considerably improved, so
  that the range has been much enhanced.  Also two new parameters have been added.
@@ -25,6 +55,11 @@
 // Lightworks user effect FgndGlow.fx
 //
 // Version history:
+//
+// Updated 2026-06-09 jwrl.
+// Added command descriptions to header text.
+// Changed masking to full RGBA.  Since masks aren't needed while setting up they have
+// been disabled when that's being done.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack.
@@ -54,18 +89,18 @@ DeclareMask;
 
 DeclareIntParam (Blend, "Blend glow using", kNoGroup, 1, "Lighten|Screen|Add|Lighter Colour");
 
-DeclareIntParam (SetTechnique, "Mode", "Glow", 0, "Glow from luminance|Glow from reds|Glow from greens|Glow from blues|Set up delta key");
-DeclareFloatParam (Tolerance, "Tolerance", "Glow", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Feather, "Feather", "Glow", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (Size, "Size", "Glow", kNoFlags, 4.0, 1.0, 10.0);
-DeclareFloatParam (Strength, "Strength", "Glow", kNoFlags, 0.5, 0.0, 1.0);
-DeclareColourParam (Colour, "Colour", "Glow", kNoFlags, 1.0, 1.0, 1.0, 1.0);
+DeclareIntParam (SetTechnique, "Mode",      "Glow", 0, "Glow from luminance|Glow from reds|Glow from greens|Glow from blues|Set up delta key");
+DeclareFloatParam (Tolerance,  "Tolerance", "Glow", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Feather,    "Feather",   "Glow", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Size,       "Size",      "Glow", kNoFlags, 4.0, 1.0, 10.0);
+DeclareFloatParam (Strength,   "Strength",  "Glow", kNoFlags, 0.5, 0.0, 1.0);
+DeclareColourParam (Colour,    "Colour",    "Glow", kNoFlags, 1.0, 1.0, 1.0, 1.0);
 
-DeclareIntParam (Source, "Source selection (disconnect title and image key inputs)", "Blend mode", 1, "Extracted foreground|Image key/Title pre LW 2023.2|Video, image key or title");
+DeclareIntParam   (Source,  "Source (disconnect title or key inputs)", "Blend mode", 2, "Extracted foreground|Image key/Title pre LW 2023.2|Video, image key or title");
 DeclareFloatParam (KeyGain, "Trim key", "Blend mode", kNoFlags, 0.25, 0.0, 1.0);
 
-DeclareFloatParam (FgOverlay, "Fg overlay", "Extras", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam (UseColour, "Luminance uses glow colour", "Extras", false);
+DeclareFloatParam (FgOverlay, "Fg overlay",                 "Extras", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (UseColour, "Luminance uses glow colour", "Extras", false);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -185,6 +220,8 @@ float4 fn_main (sampler G, sampler K, float2 uv, sampler F, float2 xy1, sampler 
 // Code
 //-----------------------------------------------------------------------------------------//
 
+// FgndGlowLuminance
+
 DeclarePass (KeyL)
 { return fn_keygen (Fg, uv1, Bg, uv2); }
 
@@ -214,10 +251,12 @@ DeclareEntryPoint (FgndGlowLuminance)
    float4 retval = fn_main (GlowL, KeyL, uv3, Fg, uv1, Bg, uv2);
    float4 video  = fn_comp (Fg, uv1, Bg, uv2);
 
-   return lerp (video, retval, tex2D (Mask, uv1).x);
+   return lerp (video, retval, tex2D (Mask, uv1));
 }
 
 //-----------------------------------------------------------------------------------------//
+
+// FgndGlowReds
 
 DeclarePass (KeyR)
 { return fn_keygen (Fg, uv1, Bg, uv2); }
@@ -240,10 +279,12 @@ DeclareEntryPoint (FgndGlowReds)
    float4 retval = fn_main (GlowR, KeyR, uv3, Fg, uv1, Bg, uv2);
    float4 video  = fn_comp (Fg, uv1, Bg, uv2);
 
-   return lerp (video, retval, tex2D (Mask, uv1).x);
+   return lerp (video, retval, tex2D (Mask, uv1));
 }
 
 //-----------------------------------------------------------------------------------------//
+
+// FgndGlowGreens
 
 DeclarePass (KeyG)
 { return fn_keygen (Fg, uv1, Bg, uv2); }
@@ -266,10 +307,12 @@ DeclareEntryPoint (FgndGlowGreens)
    float4 retval = fn_main (GlowG, KeyG, uv3, Fg, uv1, Bg, uv2);
    float4 video  = fn_comp (Fg, uv1, Bg, uv2);
 
-   return lerp (video, retval, tex2D (Mask, uv1).x);
+   return lerp (video, retval, tex2D (Mask, uv1));
 }
 
 //-----------------------------------------------------------------------------------------//
+
+// FgndGlowBlues
 
 DeclarePass (KeyB)
 { return fn_keygen (Fg, uv1, Bg, uv2); }
@@ -292,14 +335,15 @@ DeclareEntryPoint (FgndGlowBlues)
    float4 retval = fn_main (GlowB, KeyB, uv3, Fg, uv1, Bg, uv2);
    float4 video  = fn_comp (Fg, uv1, Bg, uv2);
 
-   return lerp (video, retval, tex2D (Mask, uv1).x);
+   return lerp (video, retval, tex2D (Mask, uv1));
 }
 
 //-----------------------------------------------------------------------------------------//
 
+// FgndGlowKeySetup.
+// Note that masking isn't required while in setup mode.
+
 DeclareEntryPoint (FgndGlowKeySetup)
 {
-   float4 retval = fn_keygen (Fg, uv1, Bg, uv2);
-
-   return lerp (_TransparentBlack, retval, tex2D (Mask, uv1).x);
+   return fn_keygen (Fg, uv1, Bg, uv2);
 }
