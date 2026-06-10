@@ -15,7 +15,7 @@
    [*]Feather:  Feathers, i.e., softens the edges of the "glow".
    [*]Size:  Sets the spread of the "glow".
    [*]Strength:  Adjusts the strength or opacity of the "glow".
-   [*]Colour difference:  The colour offset to add to the RGB prior to the edge
+   [*]Colour diff.:  The colour offset to add to the RGB prior to the edge
       detection.
 
  It's sort of based on the Lightworks Glow effect, but only slightly.  The code under
@@ -34,6 +34,7 @@
 // Updated 2026-06-10 jwrl.
 // Added command descriptions to header text.
 // Added an extra source setting, "Full video" which uses the maximum of R, G or B.
+// Changed "Colour difference" to "Colour diff." to fit in version 2026.1.
 // Changed masking to full RGBA.
 //
 // Updated 2023-05-14 jwrl.
