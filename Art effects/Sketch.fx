@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-14
+// @Released 2026-06-11
 // @Author khaver
 // @Created 2012-08-21
 
@@ -7,8 +7,23 @@
  Sketch (Sketch_2022.fx) simulates a sketch from a standard video source.  An extremely
  wide range of adjustment parameters have been provided which should meet most needs.
  Border line colour is adjustable, as are the individual thresholds for each RGB channel.
-
  Shadow area colour can also be adjusted for best effect.
+
+   [*]Invert All:  Inverts everything after processing to produce a negative result.
+   [*]Lines
+      [*]Colour:  Sets the colour of the lines generated from the edges.
+      [*]Strength:  Sets the line density.
+      [*]Invert:  Inverts the line colour.
+   [*]Background threshold
+      [*]Red:  Adjusts the threshold at which the red channel will detect an edge.
+      [*]Green:  Adjusts the threshold at which the green channel will detect an edge.
+      [*]Blue:  Adjusts the threshold at which the blue channel will detect an edge.
+   [*]Shadows
+      [*]Amount:  Sets the amount of shadow colour to be mixed into the background.
+      [*]Shade:  Sets the shadow colour to be mixed into the background.
+      [*]Highlight:  Sets the highlight colour to be mixed into the background.
+      [*]Swap colours:  Swaps shadow and highlight colours.
+      [*]Invert:  Inverts the shadow and highlight colours, i.e., makes them negative.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -18,13 +33,19 @@
 //
 // Version history:
 //
+// Updated 2026-06-11 jwrl.
+// Added command descriptions to header text.
+// Renamed the group "Background" to "Background threshold".
+// Removed the word "Threshold" from "Red", "Green" and "Blue".
+// Added separate "Shadows" group
+// Changed masking to full RGBA.
+
+//
 // Updated 2023-05-14 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Sketch", "Stylize", "Art Effects", "Converts any standard video source or graphic to a simple sketch", kNoFlags);
 
@@ -42,21 +63,21 @@ DeclareMask;
 
 DeclareBoolParam (Invert, "Invert All", kNoGroup, false);
 
-DeclareColourParam (BorderLineColor, "Color", "Lines", kNoFlags, 0.0, 0.0, 0.0, 1.0);
-DeclareFloatParam (Strength, "Strength", "Lines", kNoFlags, 1.0, 0.0, 20.0);
+DeclareColourParam (BorderLineColor, "Colour",   "Lines", kNoFlags, 0.0,  0.0, 0.0, 1.0);
+DeclareFloatParam (Strength,         "Strength", "Lines", kNoFlags, 10.0, 0.0, 20.0);
 
-DeclareBoolParam (InvLines, "Invert", "Lines", false);
+DeclareBoolParam (InvLines,          "Invert",   "Lines", false);
 
-DeclareFloatParam (RLevel, "Red Threshold", "Background", kNoFlags, 0.3, 0.0, 1.0);
-DeclareFloatParam (GLevel, "Green Threshold", "Background", kNoFlags, 0.59, 0.0, 1.0);
-DeclareFloatParam (BLevel, "Blue Threshold", "Background", kNoFlags, 0.11, 0.0, 1.0);
-DeclareFloatParam (Level, "Shadow Amount", "Background", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (RLevel, "Red",   "Background threshold", kNoFlags, 0.3,  0.0, 1.0);
+DeclareFloatParam (GLevel, "Green", "Background threshold", kNoFlags, 0.59, 0.0, 1.0);
+DeclareFloatParam (BLevel, "Blue",  "Background threshold", kNoFlags, 0.11, 0.0, 1.0);
 
-DeclareColourParam (DarkColor, "Shadow Color", "Background", kNoFlags, 0.5, 0.5, 0.5, 1.0);
-DeclareColourParam (LightColor, "Highlight Color", "Background", kNoFlags, 1.0, 1.0, 1.0, 1.0);
+DeclareFloatParam (Level,       "Amount",       "Shadows", kNoFlags, 0.5, 0.0, 1.0);
+DeclareColourParam (DarkColor,  "Shade",        "Shadows", kNoFlags, 0.5, 0.5, 0.5, 1.0);
+DeclareColourParam (LightColor, "Highlight",    "Shadows", kNoFlags, 1.0, 1.0, 1.0, 1.0);
 
-DeclareBoolParam (Swap, "Swap", "Background", false);
-DeclareBoolParam (InvBack, "Invert", "Background", false);
+DeclareBoolParam (Swap,         "Swap colours", "Shadows", false);
+DeclareBoolParam (InvBack,      "Invert",       "Shadows", false);
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
@@ -174,5 +195,5 @@ DeclareEntryPoint (Sketch)
    color = lerp (color, back, color.a);
    color.a = alpha;
 
-   return lerp (src1, color, tex2D (Mask, uv1).x);
+   return lerp (src1, color, tex2D (Mask, uv1));
 }
