@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-14
+// @Released 2026-06-11
 // @Author jwrl
 // @Created 2018-11-28
 
@@ -7,8 +7,25 @@
  Poster paint (PosterPaintFx) is an effect that posterizes the image.  The adjustment runs
  from 2 to 16, with two providing two steps of posterization (black and white) and sixteen
  giving almost normal video.  The input video can be graded before the posterization process.
- The input image can be used as-is giving the posterisation a hard edge, or blurred to allow
- it to blend more smoothly.
+ The graded input image can be used as-is giving the posterisation a hard edge, or blurred
+ to allow it to blend more smoothly.
+
+ The settings are broken into major and minor groups.  The major adjustments have the most
+ significant effect on the final result in my opinion.  Finally, Lightworks masking has
+ been added, which can be used to adjust opacity, allowing mixing of the posterized image
+ with the unmodified input.
+
+   [*]Posterize amount:  Sets the number of steps in the posterization process. The range
+      is from 2 (Black and white) to 16 (almost natural colour).
+   [*]Major input adjustment
+      [*]Preblur:  Reduces the effect of noise in the input video.
+      [*]Saturation:  Adjusts the saturation of the posterized colours.
+      [*]Gamma:  Adjusts the gamma of the posterized colours.
+   [*]Minor input adjustment
+      [*]Brightness:  Adjusts the brightness of the input video.
+      [*]Contrast:  Adjusts the contrast of the input video.
+      [*]Gain:  Adjusts the gain of the input video.
+      [*]Hue:  Adjusts the hue of the input video.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -17,6 +34,10 @@
 // Lightworks user effect PosterPaint.fx
 //
 // Version history:
+//
+// Updated 2026-06-11 jwrl.
+// Added command descriptions to header text.
+// Changed masking to full RGBA.
 //
 // Updated 2023-05-14 jwrl.
 // Header reformatted.
@@ -40,15 +61,16 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareIntParam (Amount, "Posterize amount", kNoGroup, 3, "2|3|4|5|6|7|8|9|10|11|12|13|14|15|16");
+DeclareIntParam   (Amount, "Posterize amount", kNoGroup, 3, "2|3|4|5|6|7|8|9|10|11|12|13|14|15|16");
 
-DeclareFloatParam (Smoothness, "Preblur", "Major input adjustment", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (Saturation, "Saturation", "Major input adjustment", "DisplayAsPercentage", 1.0, 0.0, 4.0);
-DeclareFloatParam (Gamma, "Gamma", "Major input adjustment", kNoFlags, 1.0, 0.1, 4.0);
-DeclareFloatParam (Brightness, "Brightness", "Minor input adjustment", "DisplayAsPercentage", 0.0, -1.0, 1.0);
-DeclareFloatParam (Contrast, "Contrast", "Minor input adjustment", "DisplayAsPercentage", 1.0, 0.0, 5.0);
-DeclareFloatParam (Gain, "Gain", "Minor input adjustment", "DisplayAsPercentage", 1.0, 0.0, 4.0);
-DeclareFloatParam (HueAngle, "Hue (degrees)", "Minor input adjustment", kNoFlags, 0.0, -180.0, 180.0);
+DeclareFloatParam (Smoothness, "Preblur",      "Major input adjustment", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Saturation, "Saturation",   "Major input adjustment", "DisplayAsPercentage", 1.0, 0.0, 4.0);
+DeclareFloatParam (Gamma,      "Gamma",        "Major input adjustment", kNoFlags, 1.0, 0.1, 4.0);
+
+DeclareFloatParam (Brightness, "Brightness",   "Minor input adjustment", "DisplayAsPercentage", 0.0, -1.0, 1.0);
+DeclareFloatParam (Contrast,   "Contrast",     "Minor input adjustment", "DisplayAsPercentage", 1.0, 0.0, 5.0);
+DeclareFloatParam (Gain,       "Gain",         "Minor input adjustment", "DisplayAsPercentage", 1.0, 0.0, 4.0);
+DeclareFloatParam (HueAngle,   "Hue",          "Minor input adjustment", kNoFlags,              0.0, -180.0, 180.0);
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
@@ -125,14 +147,11 @@ float3 fn_RGBtoHSL (float3 RGB)
 // Code
 //-----------------------------------------------------------------------------------------//
 
-DeclarePass (Video)
-{ return ReadPixel (Inp, uv1); }
-
 DeclarePass (PreBlur)
 {
    if (IsOutOfBounds (uv1)) return kTransparentBlack;
 
-   float4 retval = tex2D (Video, uv2);
+   float4 retval = tex2D (Inp, uv1);
 
    // What follows is the horizontal component of a standard box blur.  The maths used
    // takes advantage of the fact that the shader language can do float2 operations as
@@ -140,21 +159,21 @@ DeclarePass (PreBlur)
    // every time that we need a new address for the next tap.
 
    float2 xy0 = float2 (Smoothness / _OutputWidth, 0.0);
-   float2 xy1 = uv2 + xy0;
-   float2 xy2 = uv2 - xy0;
+   float2 xy1 = uv1 + xy0;
+   float2 xy2 = uv1 - xy0;
 
-   retval += tex2D (Video, xy1); xy1 += xy0;
-   retval += tex2D (Video, xy1); xy1 += xy0;
-   retval += tex2D (Video, xy1); xy1 += xy0;
-   retval += tex2D (Video, xy1); xy1 += xy0;
-   retval += tex2D (Video, xy1); xy1 += xy0;
-   retval += tex2D (Video, xy1);
-   retval += tex2D (Video, xy2); xy2 -= xy0;
-   retval += tex2D (Video, xy2); xy2 -= xy0;
-   retval += tex2D (Video, xy2); xy2 -= xy0;
-   retval += tex2D (Video, xy2); xy2 -= xy0;
-   retval += tex2D (Video, xy2); xy2 -= xy0;
-   retval += tex2D (Video, xy2);
+   retval += tex2D (Inp, xy1); xy1 += xy0;
+   retval += tex2D (Inp, xy1); xy1 += xy0;
+   retval += tex2D (Inp, xy1); xy1 += xy0;
+   retval += tex2D (Inp, xy1); xy1 += xy0;
+   retval += tex2D (Inp, xy1); xy1 += xy0;
+   retval += tex2D (Inp, xy1);
+   retval += tex2D (Inp, xy2); xy2 -= xy0;
+   retval += tex2D (Inp, xy2); xy2 -= xy0;
+   retval += tex2D (Inp, xy2); xy2 -= xy0;
+   retval += tex2D (Inp, xy2); xy2 -= xy0;
+   retval += tex2D (Inp, xy2); xy2 -= xy0;
+   retval += tex2D (Inp, xy2);
 
    // Divide retval by 13 because there are 12 sampling taps plus the original image
 
@@ -165,16 +184,16 @@ DeclareEntryPoint (PosterPaint)
 {
    if (IsOutOfBounds (uv1)) return kTransparentBlack;
 
-   float4 retval = tex2D (Video, uv2);
-   float4 RGB = tex2D (PreBlur, uv2);
+   float4 retval = tex2D (Inp, uv1);
+   float4 RGB = tex2D (PreBlur, uv1);
 
    float alpha = RGB.a;
 
    // This is the vertical component of the box blur.
 
    float2 xy0 = float2 (0.0, Smoothness / _OutputHeight);
-   float2 xy1 = uv2 + xy0;
-   float2 xy2 = uv2 - xy0;
+   float2 xy1 = uv1 + xy0;
+   float2 xy2 = uv1 - xy0;
 
    RGB += tex2D (PreBlur, xy1); xy1 += xy0;
    RGB += tex2D (PreBlur, xy1); xy1 += xy0;
@@ -218,5 +237,5 @@ DeclareEntryPoint (PosterPaint)
 
    RGB = float4 (fn_HSLtoRGB (HSL), alpha);
 
-   return lerp (retval, RGB, tex2D (Mask, uv2).x);
+   return lerp (retval, RGB, tex2D (Mask, uv1));
 }
