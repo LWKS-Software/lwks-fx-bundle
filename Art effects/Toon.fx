@@ -1,12 +1,18 @@
 // @Maintainer jwrl
-// @Released 2023-08-04
+// @Released 2026-06-11
 // @Author khaver
 // @Created 2011-04-18
 
 /**
  In Toon (Toon_2022.fx) the image is posterized, then outlines are developed from the
  image edges.  These are then applied on top of the already posterized image to give
- the final result.
+ the final result.  Settings are extremely straightforward.
+
+   [*]Master strength
+      [*]Red:  Adjusts the red posterization.
+      [*]Green:  Adjusts the green posterization.
+      [*]Blue:  Adjusts the blue posterization.
+   [*]Threshold:  Sets the edge detection threshold.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -15,6 +21,13 @@
 // Lightworks user effect Toon.fx
 //
 // Version history:
+//
+// Updated 2026-06-11 jwrl.
+// Added command descriptions to header text.
+// Changed "Master" group to "Master strength".
+// Removed the word "Strength" from "Red", "Green" and "Blues".
+// Ungrouped "Threshold".
+// Changed masking to full RGBA.
 //
 // Updated 2023-08-04 jwrl.
 // User parameters reformatted.
@@ -41,10 +54,11 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (RedStrength, "Red strength", "Master", "DisplayAsPercentage", 4.0, 1.0, 100.0);
-DeclareFloatParam (GreenStrength, "Green strength", "Master", "DisplayAsPercentage", 4.0, 1.0, 100.0);
-DeclareFloatParam (BlueStrength, "Blues strength", "Master", "DisplayAsPercentage", 4.0, 1.0, 100.0);
-DeclareFloatParam (Threshold, "Threshold", "Master", kNoFlags, 0.1, 0.0, 10.0);
+DeclareFloatParam (RedStrength,   "Red",   "Master strength", "DisplayAsPercentage", 4.0, 1.0, 100.0);
+DeclareFloatParam (GreenStrength, "Green", "Master strength", "DisplayAsPercentage", 4.0, 1.0, 100.0);
+DeclareFloatParam (BlueStrength,  "Blue",  "Master strength", "DisplayAsPercentage", 4.0, 1.0, 100.0);
+
+DeclareFloatParam (Threshold, "Threshold", kNoGroup, kNoFlags, 0.1, 0.0, 10.0);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -99,5 +113,5 @@ DeclareEntryPoint (Toon)
 
    color.rgb *= edge;
 
-   return lerp (src1, color, tex2D (Mask, uv1).x);
+   return lerp (src1, color, tex2D (Mask, uv1));
 }
