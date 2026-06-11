@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-01-02
+// @Released 2026-06-12
 // @Author jwrl
 // @Created 2024-01-02
 
@@ -8,6 +8,21 @@
  be used as semi-abstract backgrounds, or mixed over the background input.  Masking
  can also be used to reveal the background.  In actual work it has been masked and used
  with lower thirds to very effectively add interest to the graphic.
+
+   [*]Opacity:  Mixes the generated pattern over the input video.
+   [*]Geometry
+      [*]Position X:  Self explanatory.
+      [*]Position Y:  Self explanatory.
+      [*]Angle:  Rotates the pattern between plus and minus 180 degrees.
+      [*]Offset:   Adjusts the start point of the pattern animation.
+      [*]Speed:  Adjusts the rate of the pattern animation.
+      [*]Depth:  Can be set between 10 and 100 pattern depth.
+   [*]Colour
+      [*]Gain:  Adjusts the level of the generated pattern between fully black and fully white.
+      [*]Hue:  Self explanatory.
+      [*]Saturation:  Self explanatory.
+      [*]Tint amount:  Self explanatory.
+      [*]Tint colour:  Self explanatory.
 
  The core of this effect is based on code at https://glslsandbox.com/e#109156.0.
  If I knew who wrote that part I would credit them.  The bulk of the code - speed,
@@ -21,6 +36,10 @@
 // Lightworks user effect ColourSwirls.fx
 //
 // Version history:
+//
+// Updated 2026-06-12 jwrl.
+// Added settings to header.
+// Masking now uses RGBA instead of R.
 //
 // Created 2024-01-02 jwrl based on code at https://glslsandbox.com/e#109156.0.
 //-----------------------------------------------------------------------------------------//
@@ -175,6 +194,5 @@ DeclareEntryPoint (Colour_swirls)
    retval.rgb = lerp (luma, retval.rgb, Satn * 2.0);
    retval = lerp (Bgnd, lerp (retval, Tint, TintAmt), Opacity);
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1));
 }
-
