@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-11
 // @Author khaver
 // @Author Daniel Taylor
 // @Created 2018-05-24
@@ -8,6 +8,23 @@
  Pencil Sketch (PencilSketchFx.fx) is a really nice effect that creates a pencil sketch
  from your image.  As well as the ability to adjust saturation, gamma, brightness and
  gain, it's possible to overlay the result over a background layer.
+
+   [*]Colour:  Fades the colour fill in and out.
+   [*]Filling
+      [*]Saturation:  Adjusts the colour fill saturation.
+      [*]Gamma:  Adjusts the processed image gamma.
+      [*]Contrast:  Adjusts the processed image contrast.
+      [*]Brightness:  Adjusts the processed image brightness
+      [*]Gain:  Adjusts the processed image gamma.
+   [*]Outline
+      [*]Range:  Sets the range over which the outlines will be generated.
+      [*]Stroke:  Sets the stroke weight.
+      [*]Gradient:  Sets the gradient threshold.  Controls the rate at which lines
+         are generated.
+      [*]Sensitivity:  Sets the level over which the outlines will be generated.
+   [*]Add Alpha:  Adds transparency to the lines so that they can be blended with
+      other video.
+   [*]Greyscale: Uses greyscale fill instead of colour.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -27,10 +44,17 @@
 // This adaptation retains the same Creative Commons license shown above.  It cannot be
 // used for commercial purposes.
 //
-// note: code comments are from the original author(s).
+// Note: code comments are from the original author(s).
 //-----------------------------------------------------------------------------------------//
 //
 // Version history:
+//
+// Updated 2026-06-11 jwrl.
+// Added command descriptions to header text.
+// Grouped "Saturation", "Gamma", "Contrast", "Brightness" and "Gain" into new group "Filling".
+// Renamed "Gradient Threshold" to "Gradient".
+// Grouped "Range", "Stroke", "Gradient" and "Sensitivity" into new group "Outline".
+// Changed masking to full RGBA.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack.
@@ -55,20 +79,21 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Amount, "Color", kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (Saturation, "Saturation", kNoGroup, kNoFlags, 1.0, 0.0, 5.0);
-DeclareFloatParam (Gamma, "Gamma", kNoGroup, kNoFlags, 1.0, 0.1, 4.0);
-DeclareFloatParam (Contrast, "Contrast", kNoGroup, kNoFlags, 1.0, 0.0, 5.0);
-DeclareFloatParam (Brightness, "Brightness", kNoGroup, kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (Gain, "Gain", kNoGroup, kNoFlags, 1.0, 0.0, 4.0);
-DeclareFloatParam (Range, "Range", kNoGroup, kNoFlags, 10.0, 0.0, 20.0);
-DeclareFloatParam (EPS, "Stroke", kNoGroup, kNoFlags, 1.0, 1e-10, 5.0);
-DeclareFloatParam (Threshold, "Gradient Threshold", kNoGroup, kNoFlags, 0.01, 0.0, 0.1);
-DeclareFloatParam (Sensitivity, "Sensitivity", kNoGroup, kNoFlags, 1.0, 0.0, 50.0);
+DeclareFloatParam (Amount,      "Colour",      kNoGroup,  kNoFlags, 0.0, 0.0, 1.0);
 
-DeclareBoolParam (AddAlpha, "Add Alpha", kNoGroup, false);
+DeclareFloatParam (Saturation,  "Saturation",  "Filling", kNoFlags, 1.0, 0.0, 5.0);
+DeclareFloatParam (Gamma,       "Gamma",       "Filling", kNoFlags, 1.0, 0.1, 4.0);
+DeclareFloatParam (Contrast,    "Contrast",    "Filling", kNoFlags, 1.0, 0.0, 5.0);
+DeclareFloatParam (Brightness,  "Brightness",  "Filling", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (Gain,        "Gain",        "Filling", kNoFlags, 1.0, 0.0, 4.0);
 
-DeclareBoolParam (Greyscale, "Greyscale", "Source Video", false);
+DeclareFloatParam (Range,       "Range" ,      "Outline", kNoFlags, 10.0, 0.0, 20.0);
+DeclareFloatParam (EPS,         "Stroke",      "Outline", kNoFlags, 1.0, 1e-10, 5.0);
+DeclareFloatParam (Threshold,   "Gradient",    "Outline", kNoFlags, 0.01, 0.0, 0.1);
+DeclareFloatParam (Sensitivity, "Sensitivity", "Outline", kNoFlags, 1.0, 0.0, 50.0);
+
+DeclareBoolParam (AddAlpha,     "Add Alpha",   kNoGroup,  false);
+DeclareBoolParam (Greyscale,    "Greyscale",   kNoGroup,  false);
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
@@ -166,5 +191,5 @@ DeclareEntryPoint (PencilSketch)
    result.a = AddAlpha ? 1.0 - avg : fg.a;
    result.rgb = avg.xxx + ((result.rgb - avg.xxx) * Saturation);
 
-   return lerp (fg, result, tex2D (Mask, uv1).x);
+   return lerp (fg, result, tex2D (Mask, uv1));
 }
