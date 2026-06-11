@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-14
+// @Released 2026-06-12
 // @Author jwrl
 // @Author trirop
 // @Created 2016-05-08
@@ -9,17 +9,43 @@
  development is adjustable, and in patterns 1 and 2 position and scaling are also.
  A flat colour can be mixed with each pattern to vary the appearance even more.
 
+   [*]Fractal type:  Gives a choice of Pattern 1, 2 or 3, which correspond to the
+      three original fractal effects.
+   [*]Fractal offset:  Sets the fractal pattern at the starting point.
+   [*]Fractal rate:  Sets the rate of change of the fractal pattern.
+   [*]Colour
+      [*]Mix colour:  Sets the colour to be mixed with the fractal.
+      [*]Mix level:  Self explanatory.
+      [*]Hue:  Self explanatory.
+      [*]Saturation:  Self explanatory.
+   [*]Luminance
+      [*]Gain:  Adjusts the overall video gain.
+      [*]Gamma:  Self explanatory.
+      [*]Brightness:  Self explanatory.
+      [*]Contrast:  Self explanatory.
+   [*]Pattern 1 and 2
+      [*]Centre X:  Sets the horizontal centering for patterns 1 and 2.
+      [*]Centre Y:  Sets the vertical centering for patterns 1 and 2.
+      [*]Centre Z:  Adjusts the size of patterns 1 and 2.
+   [*]Pattern 2 only
+      [*]Distortion:  Only distorts pattern 2. Does nothing for 1 or 3.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect FractalMattes.fx
 //
-// The fractal generation components were posted by Robert Sch�tze (trirop) in GLSL
+// The fractal generation components were posted by Robert Schï¿½tze (trirop) in GLSL
 // sandbox (http://glslsandbox.com/e#29611.0).  They have been somewhat modified to
 // better suit their use in this effect.
 //
 // Version history:
+//
+// Updated 2026-06-12 jwrl.
+// Added settings to header.
+// Masking now uses RGBA instead of R.
+// Changed "Effect centre" parameters to "Centre".
 //
 // Updated 2023-05-14 jwrl.
 // Header reformatted.
@@ -59,9 +85,9 @@ DeclareFloatParam (Gamma, "Gamma", "Luminance", kNoFlags, 1.0, 0.0, 4.0);
 DeclareFloatParam (Brightness, "Brightness", "Luminance", kNoFlags, 0.0, -1.0, 1.0);
 DeclareFloatParam (Contrast, "Contrast", "Luminance", kNoFlags, 1.0, 0.0, 4.0);
 
-DeclareFloatParam (Xcentre, "Effect centre", "Pattern 1 and 2", "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (Ycentre, "Effect centre", "Pattern 1 and 2", "SpecifiesPointY", 0.5, 0.0, 1.0);
-DeclareFloatParam (Size, "Effect centre", "Pattern 1 and 2", "SpecifiesPointZ", 0.0, 0.0, 1.0);
+DeclareFloatParam (Xcentre, "Centre", "Pattern 1 and 2", "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (Ycentre, "Centre", "Pattern 1 and 2", "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (Size,    "Centre", "Pattern 1 and 2", "SpecifiesPointZ", 0.0, 0.0, 1.0);
 
 DeclareFloatParam (Distortion, "Distortion", "Pattern 2 only", kNoFlags, 0.5, 0.0, 1.0);
 
@@ -176,7 +202,7 @@ DeclareEntryPoint (Pattern_1)
    retval = (((pow (retval, 1.0 / GammVal) * Gain) + (Brightness - 0.5).xxxx) * Contrast) + 0.5.xxxx;
    retval.a = 1.0;
 
-   return lerp (Fgd, retval, tex2D (Mask, uv2).x);
+   return lerp (Fgd, retval, tex2D (Mask, uv2));
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -232,7 +258,7 @@ DeclareEntryPoint (Pattern_2)
    retval = (((pow (retval, 1.0 / GammVal) * Gain) + (Brightness - 0.5).xxxx) * Contrast) + 0.5.xxxx;
    retval.a = 1.0;
 
-   return lerp (Fgd, retval, tex2D (Mask, uv2).x);
+   return lerp (Fgd, retval, tex2D (Mask, uv2));
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -296,5 +322,5 @@ DeclareEntryPoint (Pattern_3)
    retval = (((pow (retval, 1.0 / GammVal) * Gain) + (Brightness - 0.5).xxxx) * Contrast) + 0.5.xxxx;
    retval.a = 1.0;
 
-   return lerp (Fgd, retval, tex2D (Mask, uv2).x);
+   return lerp (Fgd, retval, tex2D (Mask, uv2));
 }
