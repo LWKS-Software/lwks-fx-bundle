@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-02-12
+// @Released 2026-06-12
 // @Author jwrl
 // @Created 2025-02-12
 
@@ -19,6 +19,9 @@
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect Starfield.fx
+//
+// Updated 2026-06-12 jwrl.
+// Masking now uses RGBA instead of R.
 //
 // Created 2025-02-12 jwrl.
 //-----------------------------------------------------------------------------------------//
@@ -162,6 +165,5 @@ DeclareEntryPoint (Starfield)
 
    Fgnd.rgb = min (Fgnd.rgb + Bgnd.rgb, 1.0.xxx);     // Add
 
-   return lerp (Input, Fgnd, tex2D (Mask, uv1).x);
+   return lerp (Input, Fgnd, tex2D (Mask, uv1));
 }
-
