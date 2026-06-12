@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-02-12
+// @Released 2026-06-12
 // @Author jwrl
 // @Created 2025-02-12
 
@@ -12,7 +12,7 @@
    [*] Centre shape:  The gradient shape can be vertical, horizontal, rectangular or
        ellipsoid.
    [*] Shape size:  Adjusts the size of the on-screen area of the centre shape.
-   [*] Shape softness:  Sets the softness of the blend between the background (outer)
+   [*] Soften shape:  Sets the softness of the blend between the background (outer)
        and foreground (inner) colours.
    [*] Colour:  Sets the background outer colour.  This is used as the basis of both
        the centre and particle colours as well.
@@ -39,6 +39,10 @@
 //
 // Version history:
 //
+// Updated 2026-06-12 jwrl.
+// Changed "Shape softness" to "Soften shape".
+// Masking now uses RGBA instead of R.
+//
 // Created 2025-02-12 by jwrl.
 //-----------------------------------------------------------------------------------------//
 
@@ -59,7 +63,7 @@ DeclareMask;
 DeclareIntParam (Shape, "Centre shape", kNoGroup, 3, "Vertical|Horizontal|Rectangle|Ellipse");
 
 DeclareFloatParam (sSize, "Shape size",     kNoGroup, kNoFlags, 0.4, 0.0, 1.0);
-DeclareFloatParam (sSoft, "Shape softness", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (sSoft, "Soften shape",   kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
 
 DeclareColourParam (Colour, "Colour", kNoGroup, kNoFlags, 0.631, 0.831, 0.894, 1.0);
 
@@ -274,6 +278,5 @@ DeclareEntryPoint (TextureGradient)
    float4 Bgd    = ReadPixel (Inp, uv1);
    float4 retval = lerp (Fgd, p_Colour, granules.x * pMix);
 
-   return lerp (Bgd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgd, retval, tex2D (Mask, uv1));
 }
-
