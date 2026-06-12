@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-14
+// @Released 2026-06-12
 // @Author jwrl
 // @Created 2016-07-31
 
@@ -11,6 +11,15 @@
  If the gradient blends to the centre, the position of the centre point can be adjusted.
  All gradieants are produced at the sequence resolution and are opaque.
 
+   [*]Gradient:  Chooses between a flat colour or a range of colour gradients.
+   [*]Centre X:  Sets the horizontal centre point of the gradient.
+   [*]Centre Y:  Sets the vertical centre point of the gradient.
+   [*]Colour setup
+      [*]Top left:  Sets the top left colour.
+      [*]Top right:  Sets the top right colour.
+      [*]Bottom left:  Sets the bottom left colour.
+      [*]Bottom right:  Sets the bottom right colour.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -18,6 +27,11 @@
 // Lightworks user effect MultiGradient.fx
 //
 // Version history:
+//
+// Updated 2026-06-12 jwrl.
+// Added settings to header.
+// Changed "Gradient centre" to "Centre".
+// Masking now uses RGBA instead of R.
 //
 // Updated 2023-05-14 jwrl.
 // Header reformatted.
@@ -43,8 +57,8 @@ DeclareMask;
 
 DeclareIntParam (SetTechnique, "Gradient", kNoGroup, 5, "Flat, uses top left colour|Horizontal blend, top left > top right|Horizontal blend to centre, TL > TR > TL|Vertical blend, top left > bottom left|Vertical blend to centre, TL > BL > TL|Four way gradient|Four way gradient to centre|Four way gradient to centre, horizontal|Four way gradient to centre, vertical|Radial, TL outer > TR centre");
 
-DeclareFloatParam (OffsX, "Gradient centre", kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (OffsY, "Gradient centre", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (OffsX, "Centre", kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (OffsY, "Centre", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
 
 DeclareColourParam (topLeft, "Top left", "Colour setup", kNoFlags, 0.25, 0.12, 0.74);
 DeclareColourParam (topRight, "Top right", "Colour setup", kNoFlags, 0.38, 0.12, 0.97);
@@ -86,8 +100,10 @@ DeclareEntryPoint (MultiGradientFlat)
    float4 retval = float4 (topLeft.rgb, 1.0);
    float4 Fgd = ReadPixel (Inp, uv1);
 
-   return lerp (Fgd, retval, tex2D (Mask, uv1).x);
+   return lerp (Fgd, retval, tex2D (Mask, uv1));
 }
+
+//-----------------------------------------------------------------------------------------//
 
 // Horizontal left > right
 
@@ -109,8 +125,10 @@ DeclareEntryPoint (MultiGradientHoriz_LR)
    float4 retval = float4 (lerp (topLeft, topRight, horiz).rgb, 1.0);
    float4 Fgd = ReadPixel (Inp, uv1);
 
-   return lerp (Fgd, retval, tex2D (Mask, uv1).x);
+   return lerp (Fgd, retval, tex2D (Mask, uv1));
 }
+
+//-----------------------------------------------------------------------------------------//
 
 // Horizontal to centre
 
@@ -134,8 +152,10 @@ DeclareEntryPoint (MultiGradientHoriz_C)
    float4 Fgd = ReadPixel (Inp, uv1);
 
 
-   return lerp (Fgd, retval, tex2D (Mask, uv1).x);
+   return lerp (Fgd, retval, tex2D (Mask, uv1));
 }
+
+//-----------------------------------------------------------------------------------------//
 
 // Vertical top > bottom
 
@@ -161,8 +181,10 @@ DeclareEntryPoint (MultiGradientVert_TB)
    float4 retval = float4 (lerp (topLeft, botLeft, vert).rgb, 1.0);
    float4 Fgd = ReadPixel (Inp, uv1);
 
-   return lerp (Fgd, retval, tex2D (Mask, uv1).x);
+   return lerp (Fgd, retval, tex2D (Mask, uv1));
 }
+
+//-----------------------------------------------------------------------------------------//
 
 // Vertical to centre
 
@@ -187,8 +209,10 @@ DeclareEntryPoint (MultiGradientVert_C)
    float4 retval = float4 (lerp (topLeft, botLeft, vert).rgb, 1.0);
    float4 Fgd = ReadPixel (Inp, uv1);
 
-   return lerp (Fgd, retval, tex2D (Mask, uv1).x);
+   return lerp (Fgd, retval, tex2D (Mask, uv1));
 }
+
+//-----------------------------------------------------------------------------------------//
 
 // Four way
 
@@ -217,8 +241,10 @@ DeclareEntryPoint (MultiGradientFourWay)
    float4 retval = float4 (lerp (gradient, botRow, vert).rgb, 1.0);
    float4 Fgd = ReadPixel (Inp, uv1);
 
-   return lerp (Fgd, retval, tex2D (Mask, uv1).x);
+   return lerp (Fgd, retval, tex2D (Mask, uv1));
 }
+
+//-----------------------------------------------------------------------------------------//
 
 // Four way to centre
 
@@ -242,8 +268,10 @@ DeclareEntryPoint (MultiGradientFourWay_C)
    float4 retval = float4 (lerp (gradient, botRow, vert).rgb, 1.0);
    float4 Fgd = ReadPixel (Inp, uv1);
 
-   return lerp (Fgd, retval, tex2D (Mask, uv1).x);
+   return lerp (Fgd, retval, tex2D (Mask, uv1));
 }
+
+//-----------------------------------------------------------------------------------------//
 
 // Four way to horizontal centre
 
@@ -270,8 +298,10 @@ DeclareEntryPoint (MultiGradientFourWay_HC)
    float4 retval = float4 (lerp (gradient, botRow, vert).rgb, 1.0);
    float4 Fgd = ReadPixel (Inp, uv1);
 
-   return lerp (Fgd, retval, tex2D (Mask, uv1).x);
+   return lerp (Fgd, retval, tex2D (Mask, uv1));
 }
+
+//-----------------------------------------------------------------------------------------//
 
 // Four way to vertical centre
 
@@ -297,8 +327,10 @@ DeclareEntryPoint (MultiGradientFourWay_VC)
    float4 retval = float4 (lerp (gradient, botRow, vert).rgb, 1.0);
    float4 Fgd = ReadPixel (Inp, uv1);
 
-   return lerp (Fgd, retval, tex2D (Mask, uv1).x);
+   return lerp (Fgd, retval, tex2D (Mask, uv1));
 }
+
+//-----------------------------------------------------------------------------------------//
 
 // Radial
 
@@ -321,5 +353,5 @@ DeclareEntryPoint (MultiGradientRadial)
    float4 retval = float4 (lerp (topLeft, gradient, vert).rgb, 1.0);
    float4 Fgd = ReadPixel (Inp, uv1);
 
-   return lerp (Fgd, retval, tex2D (Mask, uv1).x);
+   return lerp (Fgd, retval, tex2D (Mask, uv1));
 }
