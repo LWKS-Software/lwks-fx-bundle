@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-14
+// @Released 2026-06-12
 // @Author baopao
 // @Author jwrl
 // @Created 2016-05-12
@@ -11,7 +11,27 @@
  type of some parameters have been altered from baopao's originals, and now provide
  the ability to interactively adjust parameters by dragging in the sequence viewer.
 
- This effect is based on the Lissajou code at http://glslsandbox.com/e#9996.0.  The
+   [*]Pattern
+      [*]Star number:  Sets the number of stars in the pattern. Has a dramatic effect
+         on the look of the effect.
+      [*]Speed:  Sets the speed at which the pattern changes.
+      [*]Scale:  Scales the over all pattern size.
+      [*]Glow:  Adjusts the glow amount around the stars.
+      [*]Position X:   Adjusts the horizontal position of the star pattern.
+      [*]Position Y:   Adjusts the vertical position of the star pattern.
+      [*]Size X:  Adjusts the width of the star pattern.
+      [*]Size Y:  Adjusts the height of the star pattern.
+      [*]Frequency X:  Sets the horizontal frequency.
+      [*]Frequency Y:  Sets the vertical frequency.
+      [*]Colour:  Sets the colour of the stars.
+   [*]Background
+      [*]Video mix:  Mixes the external video into the background.
+      [*]Top left:  Sets the top left colour of the background.
+      [*]Top right:  Sets the top right colour of the background.
+      [*]Bottom left:  Sets the bottom left colour of the background.
+      [*]Bottom right:  Sets the bottom right colour of the background.
+
+This effect is based on the Lissajou code at http://glslsandbox.com/e#9996.0.  The
  conversion was originally done by baopao with subsequent work by jwrl.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
@@ -21,6 +41,12 @@
 // Lightworks user effect SinusoidalLights.fx
 //
 // Version history:
+//
+// Updated 2026-06-12 jwrl.
+// Added settings to header.
+// Changed "Glow Intensity" to "Glow".
+// Changed "External Video" to "Video mix".
+// Masking now uses RGBA instead of R.
 //
 // Updated 2023-05-14 jwrl.
 // Header reformatted.
@@ -47,7 +73,7 @@ DeclareMask;
 DeclareFloatParam (StarNumber, "Star number", "Pattern", kNoFlags, 200.0, 0.0, 400.0);
 DeclareFloatParam (Speed, "Speed", "Pattern", kNoFlags, 0.5, 0.0, 1.0);
 DeclareFloatParam (Scale, "Scale", "Pattern", kNoFlags, 0.33, 0.0, 1.0);
-DeclareFloatParam (Level, "Glow intensity", "Pattern", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Level, "Glow", "Pattern", kNoFlags, 0.5, 0.0, 1.0);
 
 DeclareFloatParam (CentreX, "Position", "Pattern", "SpecifiesPointX", 0.5, 0.0, 1.0);
 DeclareFloatParam (CentreY, "Position", "Pattern", "SpecifiesPointY", 0.5, 0.0, 1.0);
@@ -60,12 +86,12 @@ DeclareFloatParam (SineY, "Frequency", "Pattern", "SpecifiesPointY", 8.0, 0.0, 1
 
 DeclareColourParam (fgdColour, "Colour", "Pattern", kNoFlags, 0.85, 0.75, 0.0);
 
-DeclareFloatParam (extBgd, "External Video", "Background", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (extBgd, "Video mix", "Background", kNoFlags, 0.0, 0.0, 1.0);
 
-DeclareColourParam (topLeft, "Top Left", "Background", kNoFlags, 0.375, 0.5, 0.75);
-DeclareColourParam (topRight, "Top Right", "Background", kNoFlags, 0.375, 0.375, 0.75);
-DeclareColourParam (botLeft, "Bottom Left", "Background", kNoFlags, 0.375, 0.625, 0.75);
-DeclareColourParam (botRight, "Bottom Right", "Background", kNoFlags, 0.375, 0.5625, 0.75);
+DeclareColourParam (topLeft, "Top left", "Background", kNoFlags, 0.375, 0.5, 0.75);
+DeclareColourParam (topRight, "Top right", "Background", kNoFlags, 0.375, 0.375, 0.75);
+DeclareColourParam (botLeft, "Bottom left", "Background", kNoFlags, 0.375, 0.625, 0.75);
+DeclareColourParam (botRight, "Bottom right", "Background", kNoFlags, 0.375, 0.5625, 0.75);
 
 DeclareFloatParam (_Progress);
 DeclareFloatParam (_Length);
