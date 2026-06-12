@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-14
+// @Released 2026-06-12
 // @Author jwrl
 // @Created 2018-09-01
 
@@ -7,13 +7,25 @@
  This effect generates soft plasma-like cloud patterns.  Hue, level, saturation, and rate
  of change of the pattern are all adjustable, and the pattern is also adjustable.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+   [*]Rate:  Sets the rate of change of the pattern.
+   [*]Pattern style:  Adjusts the pattern style.
+   [*]Scale:  Adjusts the scale of the plasma matte.
+   [*]Pattern gain:  Adjusts the video gain of the pattern.
+   [*]Level:  Adjusts the video level.
+   [*]Hue:  Adjusts the video hue.
+   [*]Saturation:  Adjusts the video saturation.
+
+NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect PlasmaMatte.fx
 //
 // Version history:
+//
+// Updated 2026-06-12 jwrl.
+// Added settings to header.
+// Masking now uses RGBA instead of R.
 //
 // Updated 2023-05-14 jwrl.
 // Header reformatted.
@@ -127,5 +139,5 @@ DeclareEntryPoint (PlasmaMatte)
    float4 Fgd = ReadPixel (Inp, uv1);
    float4 retval = float4 (lerp (luma.xxx, ret, Saturation), Fgd.a);
 
-   return lerp (Fgd, retval, tex2D (Mask, uv1).x);
+   return lerp (Fgd, retval, tex2D (Mask, uv1));
 }
