@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-02-12
+// @Released 2026-06-12
 // @Author jwrl
 // @Created 2025-02-12
 
@@ -23,6 +23,9 @@
 // Lightworks user effect Underwater.fx
 //
 // Version history:
+//
+// Updated 2026-06-12 jwrl.
+// Masking now uses RGBA instead of R.
 //
 // Created 2025-02-12 jwrl.
 //-----------------------------------------------------------------------------------------//
@@ -95,6 +98,5 @@ DeclareEntryPoint (Underwater)
    float4 retval = float4 (Colour.rgb * p, Colour.a);
    float4 Bgnd   = ReadPixel (Inp, uv1);
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1));
 }
-
