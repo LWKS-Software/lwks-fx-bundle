@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2026-06-13
 // @Author jwrl
 // @Created 2016-11-11
 
@@ -8,6 +8,19 @@
  image.  The foreground may have an alpha channel, a bad alpha channel or no alpha
  channel at all, the effect will still work.  The position, size and density of the
  floating images are fully adjustable.
+
+   [*]Disconnect title and image key inputs
+      [*]Source selection:  Selects between crawl, roll, title or image key,
+         transparent video or graphic, or extracting the foreground by subtracting
+         the background from it.
+   [*]Overlay 1
+      [*]Opacity:  Sets the transparency of border 1.
+      [*]Scale:  Sets the size of border 1.
+      [*]Position X:  Sets the horizontal position of border 1.
+      [*]Position Y:  Sets the vertical position of border 1.
+   [*]Overlay 2:  Same four settings as overlay 1 with the addition of an Enable switch.
+   [*]Overlay 3:  Same four settings as overlay 1 with the addition of an Enable switch.
+   [*]Overlay 4:  Same four settings as overlay 1 with the addition of an Enable switch.
 
  Unlike other scalable effects, the size adjustment follows a square law.  The reason
  for this is simple: a square law scale gives a linear increase in size, removing the
@@ -23,6 +36,10 @@
 // Lightworks user effect FloatingImages.fx
 //
 // Version history:
+//
+// Updated 2026-06-13 jwrl.
+// Changed masking from R to RGBA.
+// Added settings description to header.
 //
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
@@ -133,6 +150,5 @@ DeclareEntryPoint (FloatingImages)
 
    Bgnd = lerp (Bgnd, Fgnd, Fgnd.a * A_Opac);
 
-   return lerp (ret, Bgnd, tex2D (Mask, uv1).x);
+   return lerp (ret, Bgnd, tex2D (Mask, uv1));
 }
-
