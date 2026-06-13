@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-08-12
+// @Released 2026-06-13
 // @Author baopao
 // @Author jwrl
 // @Created 2024-01-21
@@ -29,6 +29,9 @@
 // This effect is all original work and does NOT use any Lightworks code.
 //
 // Version history:
+//
+// Updated 2026-06-13 jwrl.
+// Changed masking from R to RGBA.
 //
 // Updated 2025-08-12 jwrl.
 // Corrected Soft light, Colour, Luminosity and Dodge.  Did not fully match LW versions.
@@ -125,7 +128,7 @@ float burnSub (float B, float F)
 }
 
 float4 initMedia (sampler F, float2 xy1, sampler B, float2 xy2, sampler M,
-                  out float4 Bgd, inout float A)
+                  out float4 Bgd, inout float4 A)
 {
    Bgd = ReadPixel (B, xy2);
 
@@ -141,7 +144,7 @@ float4 initMedia (sampler F, float2 xy1, sampler B, float2 xy2, sampler M,
    if (Unpremultiply == 1) { Fgd.rgb /= Fgd.a; }
    else if (Unpremultiply == 2) Fgd.rgb *= Fgd.a;
 
-   A = ReadPixel (M, xy1).x * Fgd.a * Ammount;
+   A = ReadPixel (M, xy1) * Fgd.a * Ammount;
 
    return Fgd;
 }
@@ -157,7 +160,7 @@ float4 exitVFX (float4 Bgd, float4 Fgd, float amt)
 
 DeclareEntryPoint (InFront)
 {
-   float alpha = 0.0;
+   float4 alpha = 0.0.xxxx;
 
    float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
@@ -166,7 +169,7 @@ DeclareEntryPoint (InFront)
 
 DeclareEntryPoint (Add)
 {
-   float alpha = 0.0;
+   float4 alpha = 0.0.xxxx;
 
    float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
@@ -177,7 +180,7 @@ DeclareEntryPoint (Add)
 
 DeclareEntryPoint (Subtract)
 {
-   float alpha = 0.0;
+   float4 alpha = 0.0.xxxx;
 
    float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
@@ -188,7 +191,7 @@ DeclareEntryPoint (Subtract)
 
 DeclareEntryPoint (Multiply)
 {
-   float alpha = 0.0;
+   float4 alpha = 0.0.xxxx;
 
    float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
@@ -199,7 +202,7 @@ DeclareEntryPoint (Multiply)
 
 DeclareEntryPoint (Screen)
 {
-   float alpha = 0.0;
+   float4 alpha = 0.0.xxxx;
 
    float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
@@ -210,7 +213,7 @@ DeclareEntryPoint (Screen)
 
 DeclareEntryPoint (Overlay)
 {
-   float alpha = 0.0;
+   float4 alpha = 0.0.xxxx;
 
    float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
@@ -223,7 +226,7 @@ DeclareEntryPoint (Overlay)
 
 DeclareEntryPoint (SoftLight)
 {
-   float alpha = 0.0;
+   float4 alpha = 0.0.xxxx;
 
    float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
@@ -236,7 +239,7 @@ DeclareEntryPoint (SoftLight)
 
 DeclareEntryPoint (HardLight)
 {
-   float alpha = 0.0;
+   float4 alpha = 0.0.xxxx;
 
    float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
@@ -249,7 +252,7 @@ DeclareEntryPoint (HardLight)
 
 DeclareEntryPoint (Exclusion)
 {
-   float alpha = 0.0;
+   float4 alpha = 0.0.xxxx;
 
    float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
@@ -260,7 +263,7 @@ DeclareEntryPoint (Exclusion)
 
 DeclareEntryPoint (Lighten)
 {
-   float alpha = 0.0;
+   float4 alpha = 0.0.xxxx;
 
    float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
@@ -271,7 +274,7 @@ DeclareEntryPoint (Lighten)
 
 DeclareEntryPoint (Darken)
 {
-   float alpha = 0.0;
+   float4 alpha = 0.0.xxxx;
 
    float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
@@ -282,7 +285,7 @@ DeclareEntryPoint (Darken)
 
 DeclareEntryPoint (Average)
 {
-   float alpha = 0.0;
+   float4 alpha = 0.0.xxxx;
 
    float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
@@ -293,7 +296,7 @@ DeclareEntryPoint (Average)
 
 DeclareEntryPoint (Difference)
 {
-   float alpha = 0.0;
+   float4 alpha = 0.0.xxxx;
 
    float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
@@ -304,7 +307,7 @@ DeclareEntryPoint (Difference)
 
 DeclareEntryPoint (Colour)
 {
-   float alpha = 0.0;
+   float4 alpha = 0.0.xxxx;
 
    float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
@@ -315,7 +318,7 @@ DeclareEntryPoint (Colour)
 
 DeclareEntryPoint (Luminosity)
 {
-   float alpha = 0.0;
+   float4 alpha = 0.0.xxxx;
 
    float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
@@ -326,7 +329,7 @@ DeclareEntryPoint (Luminosity)
 
 DeclareEntryPoint (Dodge)
 {
-   float alpha = 0.0;
+   float4 alpha = 0.0.xxxx;
 
    float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
@@ -339,7 +342,7 @@ DeclareEntryPoint (Dodge)
 
 DeclareEntryPoint (Burn)
 {
-   float alpha = 0.0;
+   float4 alpha = 0.0.xxxx;
 
    float4 Bgnd, Fgnd = initMedia (Fg, uv1, Bg, uv2, Mask, Bgnd, alpha);
 
