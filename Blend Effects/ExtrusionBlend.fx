@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-13
 // @Author jwrl
 // @Created 2016-04-02
 
@@ -10,6 +10,24 @@
  inverted if desired. It is also possible to export the alpha channel for use in
  downstream effects.
 
+   [*]Edge type:  Selects the edge to either a radial extrusion or a linear, and
+      also sets the edge shading.
+   [*]Opacity:  Adjusts the foreground transparency over the background.
+   [*]Strength:  Sets the shading density of the extruded edge.
+   [*]Length:  Sets the extrusion length.
+   [*]Extrusion
+      [*]Centre X:  Sets the horizontal extrusion direction.
+      [*]Centre Y:  Sets the vertical extrusion direction.
+      [*]Colour:  Sets the colour to use for the extrusion.
+   [*]Invert shading:  Inverts the shading of the extruded edge.
+   [*]Export alpha channel:  Exports the extruded image with an
+      alpha channel to enable downstream blending.
+   [*]Disconnect title and image key inputs
+      [*]Source selection:  Selects between internal transparent
+         images like titles and such, external transparent images,
+         or extracting the foreground by subtracting the
+         background from it.
+
  Masking is applied to the foreground before the extrusion process.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
@@ -19,6 +37,16 @@
 // Lightworks user effect ExtrusionBlend.fx
 //
 // Version history:
+//
+// Updated 2026-06-13 jwrl.
+// Changed masking from R to RGBA.
+// Changed "Master opacity" to "Opacity".
+// Created "Extrusion" group.
+// Deleted "Colour setup" group.
+// Changed "Effect centre" to "Centre".
+// Changed "Edge colour" to "Colour".
+// Put "Centre X", "Centre Y" and "Colour" into "Extrusion" group.
+// Added settings description to header.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
@@ -48,16 +76,16 @@ DeclareMask;
 
 DeclareIntParam (Mode, "Edge type", kNoGroup, 0, "Radial|Radial shaded|Radial coloured|Linear|Linear shaded|Linear coloured");
 
-DeclareFloatParam (Opacity, "Master opacity", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Strength, "Strength", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (zoomAmount, "Length", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Opacity,    "Opacity",  kNoGroup,    kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Strength,   "Strength", kNoGroup,    kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (zoomAmount, "Length",   kNoGroup,    kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareFloatParam (Xcentre, "Effect centre", kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (Ycentre, "Effect centre", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (Xcentre,    "Centre",   "Extrusion", "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (Ycentre,    "Centre",   "Extrusion", "SpecifiesPointY", 0.5, 0.0, 1.0);
 
-DeclareColourParam (Colour, "Edge colour", "Colour setup", kNoFlags, 1.0, 0.3804, 1.0, 1.0));
+DeclareColourParam (Colour,    "Colour",   "Extrusion", kNoFlags, 1.0, 0.3804, 1.0, 1.0));
 
-DeclareBoolParam (invShade, "Invert shading", kNoGroup, true);
+DeclareBoolParam (invShade, "Invert shading",       kNoGroup, true);
 DeclareBoolParam (expAlpha, "Export alpha channel", kNoGroup, false);
 
 DeclareIntParam (Source, "Source selection", "Disconnect title and image key inputs", 1, "Image key/Title pre LW 2023.2|Video, image key or title|Extracted foreground");
@@ -290,5 +318,5 @@ DeclareEntryPoint (ExtrusionBlend)
 
    retval = lerp (Bgnd, retval, Opacity);
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1));
 }
