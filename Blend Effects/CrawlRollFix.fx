@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-15
+// @Released 2026-06-13
 // @Author jwrl
 // @Created 2020-07-19
 
@@ -7,6 +7,11 @@
  This effect provides a simple means of smoothing the movement of a credit roll or crawl.
  It does this by applying a small amount of directional blur to the title.  It then blends
  the result with the background video.
+
+   [*]Title mode:  Selects between roll and crawl modes.
+   [*]Blur settings
+      [*]Smoothing:  Adjusts the amount of directional blur applied to the text to help
+         subjectively smooth the text movement.
 
  To use it, add this effect after your roll or crawl and disconnect the input to any title
  effect used.  Select whether you're smoothing a roll or crawl then adjust the smoothing
@@ -20,6 +25,9 @@
 // Lightworks user effect CrawlRollFix.fx
 //
 // Version history:
+//
+// Udated 2026-06-13 jwrl.
+// Added settings description to header.
 //
 // Updated 2023-05-15 jwrl.
 // Header reformatted.
@@ -106,6 +114,7 @@ DeclareEntryPoint (SmoothRoll)
    return lerp (Bgnd, Fgnd, Fgnd.a);
 }
 
+//-----------------------------------------------------------------------------------------//
 
 // technique SmoothCrawl
 
