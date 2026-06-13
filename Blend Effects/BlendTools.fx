@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-15
+// @Released 2026-06-13
 // @Author jwrl
 // @Created 2018-07-02
 
@@ -17,6 +17,22 @@
  after level adjustment regardless of the actual point selected.  It's impossible to do it
  before because there is no alpha channel available at that stage.
 
+   [*]Key mode:   The standard key setting gives a normal blend and key from black is a
+      luminance key. Inverted versions of both are available.
+   [*]Opacity:  Mixes the foreground over the background.
+   [*]Alpha fine tuning
+      [*]Unpremultiply:  Cleans up the edges of premultiplied artwork.
+      [*]Key cleanup:  Improves edge separation.
+      [*]Gamma:  Adjusts the gamma of the alpha channel which will vary the blend
+         softness.
+      [*]Contrast:  Adjusts the contrast of the alpha channel which will also vary
+         the blend softness.
+      [*]Brightness:  Self explanatory.
+      [*]Gain:  Self explanatory.
+      [*]Feather:  Self explanatory.
+   [*]Output mode:  Chooses between a standard blend, just transparent foreground,
+      or the alpha channel.
+
  The effect has been placed in the "Mix" category because it's felt to be closer to the
  blend effect supplied with Lightworks than it is to any of the key effects.  That said,
  it is possible to export just the foreground with the processed alpha.
@@ -28,6 +44,12 @@
 // Lightworks user effect BlendTools.fx
 //
 // Version history:
+//
+// Updated 2026-06-13 jwrl.
+// Changed "Transparency" to "Key cleanup".
+// Removed "Alpha" prefix from the settings in the "Alpha fine tuning" group.
+// Added settings to header section.
+// Changed masking from R to RGBA.
 //
 // Updated 2023-05-15 jwrl.
 // Header reformatted.
@@ -57,12 +79,12 @@ DeclareFloatParam (Opacity, "Opacity", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
 
 DeclareIntParam (Premultiply, "Unpremultiply", "Alpha fine tuning", 0, "None|Before level adjustment|After level adjustment|After feathering");
 
-DeclareFloatParam (Transparency, "Transparency", "Alpha fine tuning", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Gamma, "Alpha gamma", "Alpha fine tuning", kNoFlags, 1.0, 0.1, 4.0);
-DeclareFloatParam (Contrast, "Alpha contrast", "Alpha fine tuning", kNoFlags, 1.0, 0.0, 5.0);
-DeclareFloatParam (Brightness, "Alpha brightness", "Alpha fine tuning", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (Gain, "Alpha gain", "Alpha fine tuning", kNoFlags, 1.0, 0.0, 4.0);
-DeclareFloatParam (Feather, "Alpha feather", "Alpha fine tuning", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Transparency, "Key cleanup", "Alpha fine tuning", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Gamma, "Gamma", "Alpha fine tuning", kNoFlags, 1.0, 0.1, 4.0);
+DeclareFloatParam (Contrast, "Contrast", "Alpha fine tuning", kNoFlags, 1.0, 0.0, 5.0);
+DeclareFloatParam (Brightness, "Brightness", "Alpha fine tuning", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (Gain, "Gain", "Alpha fine tuning", kNoFlags, 1.0, 0.0, 4.0);
+DeclareFloatParam (Feather, "Feather", "Alpha fine tuning", kNoFlags, 0.0, 0.0, 1.0);
 
 DeclareIntParam (OutputMode, "Output mode", kNoGroup, 0, "Blend foreground over background|Export foreground with alpha|Show alpha channel");
 
@@ -145,5 +167,5 @@ DeclareEntryPoint (BlendTools)
    }
    else if (OutputMode == 2) Fgd = float4 (Fgd.a.xxx, 1.0);
 
-   return lerp (Bgd, Fgd, tex2D (Mask, uv3).x);
+   return lerp (Bgd, Fgd, tex2D (Mask, uv3));
 }
