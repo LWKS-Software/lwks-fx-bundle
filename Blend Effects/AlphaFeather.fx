@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-15
+// @Released 2026-06-13
 // @Author khaver
 // @Created 2012-12-10
 
@@ -11,6 +11,14 @@
  both in the blend region.  The blurring is a true gaussian blur and provides controls to
  allow you to change the blur radius and threshold.
 
+ The settings and what they do are:
+
+   [*]Opacity:  Adjust the amount of foreground over the background.
+   [*]Threshold:  Adjusts the clip level of the alpha (transparency) channel.
+   [*]Radius:  Sets the sample radius for the blur applied to the alpha channel.
+   [*]Mix:  Mixes the processed alpha back into the original version.
+   [*]Show alpha:  Shows the processed alpha channel instead of the blended result.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -18,6 +26,10 @@
 // Lightworks user effect AlphaFeather.fx
 //
 // Version history:
+//
+// Updated 2026-06-13 jwrl.
+// Added settings to header section.
+// Changed masking from R to RGBA.
 //
 // Updated 2023-05-15 jwrl.
 // Header reformatted.
@@ -139,5 +151,5 @@ DeclareEntryPoint (AlphaFeather)
 
    float4 retval = Show ? check.xxxx : lerp (orig, color, Mix);
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1));
 }
