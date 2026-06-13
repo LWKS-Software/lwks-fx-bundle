@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2026-06-13
 // @Author jwrl
 // @Created 2018-10-21
 
@@ -14,6 +14,33 @@
  appropriate alpha channel.  When doing so any background input to the effect will not
  be displayed.  This allows it to be used with downstream blending effects.
 
+   [*]Opacity:  Adjusts the amount of foreground, border and drop shadow visible over the
+      background.
+   [*]Foreground:  Sets the foreground transparency.  Border and drop shadow will remain
+      untouched.
+   [*]Border
+      [*]Border mode:  Sets the border style. Fully sampled gives a round edged border.
+      [*]Lock height to width:   If this is set the width adjustment will control the
+         entire border size.
+      [*]Opacity:  Sets the border transparency.
+      [*]Width:  Adjusts the border width and optionally the border height.
+      [*]Height:  Allows independent border height adjustment if the height lock isn't set.
+      [*]Centre X:  Adjusts the horizontal border symmetry.
+      [*]Centre Y:  Adjusts the vertical border symmetry.
+      [*]Colour:  Sets the border colour.
+   [*]Shadow
+      [*]Opacity:  Sets the drop shadow transparency.
+      [*]Feather:  Sets the drop shadow softness.
+      [*]Offset X:  Displaces the drop shadow horizontally.
+      [*]Offset Y:  Displaces the drop shadow vertically.
+      [*]Colour:  Sets the drop shadow colour.
+   [*]Output mode:  The output mode may be a normal blend or the foreground with border
+      and drop shadow for use in other effects.
+   [*]Disconnect title and image key inputs
+      [*]Source selection:  Selects between internal transparent images like titles
+         and such, external transparent images, or extracting the foreground by
+         subtracting the background from it.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -21,6 +48,11 @@
 // Lightworks effect DropShadowBdr.fx
 //
 // Version history:
+//
+// Updated 2026-06-13 jwrl.
+// Changed masking from R to RGBA.
+// Changed "Border centre" settings to "Centre".
+// Added settings description to header.
 //
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
@@ -56,8 +88,8 @@ DeclareBoolParam (Lock, "Lock height to width", "Border", true);
 DeclareFloatParam (Bopacity, "Opacity", "Border", kNoFlags, 1.00, 0.0, 1.0);
 DeclareFloatParam (Width, "Width", "Border", kNoFlags, 0.25, 0.0, 1.0);
 DeclareFloatParam (Height, "Height", "Border", kNoFlags, 0.25, 0.0, 1.0);
-DeclareFloatParam (CentreX, "Border centre", "Border", "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (CentreY, "Border centre", "Border", "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (CentreX, "Centre", "Border", "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (CentreY, "Centre", "Border", "SpecifiesPointY", 0.5, 0.0, 1.0);
 DeclareColourParam (Bcolour, "Colour", "Border", kNoFlags, 0.4784, 0.3961, 1.0, 1.0);
 
 DeclareFloatParam (Sopacity, "Opacity", "Shadow", kNoFlags, 0.50, 0.0, 1.0);
@@ -336,6 +368,5 @@ DeclareEntryPoint (DropShadowBdr)
 
    float4 comp = float4 (lerp (Bgnd, retval, retval.a).rgb, max (Bgnd.a, retval.a));
 
-   return lerp (Bgnd, comp, tex2D (Mask, uv3).x);
+   return lerp (Bgnd, comp, tex2D (Mask, uv3));
 }
-
