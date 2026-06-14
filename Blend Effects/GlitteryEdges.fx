@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2026-06-14
 // @Author jwrl
 // @Created 2016-05-10
 
@@ -8,6 +8,25 @@
  adds noise generated four pointed stars to that border to create a sparkle/glitter
  effect to the edges of the title or graphic.  Star colour, density, length and rotation
  are adjustable.
+
+   [*]Master opacity:  Adjusts the amount of foreground and edges visible over the
+      background.
+   [*]Fgd opacity: Sets the foreground transparency.
+   [*]Edges
+      [*]Opacity:  Sets the edge transparency.
+      [*]Width: Adjusts the edge width.
+   [*]Stars
+      [*]Threshold:  Adjusts the threshold of the noise that will generate stars.
+         This varies the number of them.
+      [*]Strength:  Sets the strength or line weight of the stars.
+      [*]Length:  Sets the length of the star points.
+      [*]Rotation:  Sets the star point angle.
+   [*]Speed:  Sets the rate at which the stars change.
+   [*]Noise seed:  Changes the random noise generator, which directly affects the
+      star creation.
+
+Colour: Sets the colour of the stars.
+Source selection: Selects between crawl, roll, title or image key, transparent video or graphic, or extracting the foreground by subtracting the background from it.
 
  The star point component is similar to khaver's Glint.fx, but modified to create four
  star points in one loop, to have no blur component, no choice of number of points, and
@@ -23,6 +42,10 @@
 // Lightworks user effect GlitteryEdges.fx
 //
 // Version history:
+//
+// Updated 2026-06-14 jwrl.
+// Changed masking from R to RGBA.
+// Added settings description to header.
 //
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
@@ -266,6 +289,5 @@ DeclareEntryPoint (GlitteryEdges)
 
    retval = lerp (Bgd, retval, Amount);
 
-   return lerp (Bgd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgd, retval, tex2D (Mask, uv1));
 }
-
