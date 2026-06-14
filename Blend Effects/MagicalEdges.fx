@@ -1,7 +1,7 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2026-06-14
 // @Author jwrl
-// @Author Robert Schütze
+// @Author Robert SchÃ¼tze
 // @Created 2016-05-08
 
 /**
@@ -10,7 +10,33 @@
  the edges of the title or graphic.  The fractal speed, scaling and offset is adjustable as
  well as star colour, density, length and rotation.
 
- Masking is applied to the foreground before the main effect creation.
+   [*]Opacity:  Adjusts the amount of foreground and edges visible over the background.
+   [*]Edge width:  Adjusts the edge thickness.
+   [*]Speed:  Sets the rate at which the edge pattern changes.
+   [*]Start point:  Sets the point at which the edge pattern starts.
+   [*]Stars
+      [*]Threshold:  Adjusts the threshold of the noise that will generate stars. This
+         varies the number of them.
+      [*]Brightness:  Sets the brightness of the stars.
+      [*]Length:  Sets the length of the star points.
+      [*]Rotation:  Sets the star point angle.
+      [*]Strength:  Sets the strength or line weight of the stars.
+   [*]Effect centre X:  Adjusts the horizontal position of the edge pattern.
+   [*]Effect centre Y:  Adjusts the vertical position of the edge pattern.
+   [*]Size:  Adjusts the scale of the edge pattern.
+   [*]Fractal
+      [*]Modulation:  Sets the amount of colour that will be mixed (modulated) into
+         the pattern.
+      [*]Colour:  This is the colour that will be used to modulate the pattern.
+      [*]Show pattern:  This shows the pattern that will be used to fill the edges.
+   [*]Disconnect title and image key inputs
+      [*]Source selection:  Selects between crawl, roll, title or image key, transparent
+         video or graphic, or extracting the foreground by subtracting the background
+            from it.
+
+ Masking is applied to the foreground before the main effect creation. You will also need
+ to set the blend mode to "Crawl/Roll/Title/Image key" for a Lightworks title or image
+ effect, or "Video/External image" for any transparent image.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -19,6 +45,14 @@
 // Lightworks user effect MagicalEdges.fx
 //
 // Version history:
+//
+// Updated 2026-06-14 jwrl.
+// Changed masking from R to RGBA.
+// Added "Fractal" group.
+// Changed "Colour modulation" to "Modulation" and moved it to "Fractal".
+// Changed "Modulation value" to "Colour" and moved it to "Fractal".
+// Moved "Show pattern" to "Fractal".
+// Added settings description to header.
 //
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
@@ -43,28 +77,26 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Amount, "Opacity", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (EdgeWidth, "Edge width", kNoGroup, kNoFlags, 0.25, 0.0, 1.0);
-DeclareFloatParam (Rate, "Speed", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (StartPoint, "Start point", kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam  (Amount,     "Opacity",       kNoGroup,  kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam  (EdgeWidth,  "Edge width",    kNoGroup,  kNoFlags, 0.25, 0.0, 1.0);
+DeclareFloatParam  (Rate,       "Speed",         kNoGroup,  kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam  (StartPoint, "Start point",   kNoGroup,  kNoFlags, 0.0, 0.0, 1.0);
 
-DeclareFloatParam (Threshold, "Threshold", "Stars", kNoFlags, 0.25, 0.0, 1.0);
-DeclareFloatParam (Brightness, "Brightness", "Stars", kNoFlags, 1.0, 1.0, 10.0);
-DeclareFloatParam (StarLen, "Length", "Stars", kNoFlags, 5.0, 0.0, 20.0);
-DeclareFloatParam (Rotation, "Rotation", "Stars", kNoFlags, 45.0, 0.0, 180.0);
-DeclareFloatParam (Strength, "Strength", "Stars", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam  (Threshold,  "Threshold",     "Stars",   kNoFlags, 0.25, 0.0, 1.0);
+DeclareFloatParam  (Brightness, "Brightness",    "Stars",   kNoFlags, 1.0, 1.0, 10.0);
+DeclareFloatParam  (StarLen,    "Length",        "Stars",   kNoFlags, 5.0, 0.0, 20.0);
+DeclareFloatParam  (Rotation,   "Rotation",      "Stars",   kNoFlags, 45.0, 0.0, 180.0);
+DeclareFloatParam  (Strength,   "Strength",      "Stars",   kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareFloatParam (Xcentre, "Effect centre", kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (Ycentre, "Effect centre", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
-DeclareFloatParam (Size, "Effect centre", kNoGroup, "SpecifiesPointZ", 0.0, 0.0, 1.0);
+DeclareFloatParam  (Xcentre,    "Effect centre", kNoGroup,  "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam  (Ycentre,    "Effect centre", kNoGroup,  "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam  (Size,       "Effect centre", kNoGroup,  "SpecifiesPointZ", 0.0, 0.0, 1.0);
 
-DeclareFloatParam (ColourMix, "Colour modulation", kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam  (ColourMix,   "Modulation",   "Fractal", kNoFlags, 0.0, 0.0, 1.0);
+DeclareColourParam (Colour,      "Colour",       "Fractal", kNoFlags, 0.69, 0.26, 1.0, 1.0);
+DeclareBoolParam   (ShowFractal, "Show pattern", "Fractal", false);
 
-DeclareColourParam (Colour, "Modulation value", kNoGroup, kNoFlags, 0.69, 0.26, 1.0, 1.0);
-
-DeclareBoolParam (ShowFractal, "Show pattern", kNoGroup, false);
-
-DeclareIntParam (Source, "Source selection", "Disconnect title and image key inputs", 1, "Image key/Title pre LW 2023.2|Video, image key or title|Extracted foreground");
+DeclareIntParam    (Source,      "Source selection", "Disconnect title and image key inputs", 1, "Image key/Title pre LW 2023.2|Video, image key or title|Extracted foreground");
 
 DeclareFloatParam (_Progress);
 
@@ -289,6 +321,5 @@ DeclareEntryPoint (MagicalEdges)
 
    retval = lerp (retval, comb, Strength);
 
-   return lerp (Bgd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgd, retval, tex2D (Mask, uv1));
 }
-
