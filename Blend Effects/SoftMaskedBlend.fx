@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-07-17
+// @Released 2026-06-14
 // @Author jwrl
 // @Created 2024-07-17
 
@@ -10,6 +10,18 @@
  but can be switched to make use of the mask's alpha channel if one is available.  Unlike
  the Lightworks masked blend the only blending mode provided is the one that Lightworks
  calls "In Front".
+
+   [*]Fg Opacity:  Self explanatory. Fades the masked foreground in and out.
+   [*]Use alpha from external mask:  By default white on black mask shapes are used,
+      but this allows the mask transparency to be used if required.
+   [*]Invert external mask:  Normally the white area of the mask governs where the
+      foreground will be visible. This swaps that to the black area instead.
+   [*]External mask edge
+      [*]Softness:  Blurs the mask shape to allow softening of the mask edges.
+      [*]Border width:  Adjust the width and sharpness of the border colour blends.
+      [*]Colour 1:  Sets the outer colour used by the border.
+      [*]Colour 2:  Sets the inner colour used by the border.
+
 
  The foreground alpha channel is honoured so that where the Fg input is transparent Bg
  will show through even though it's inside the mask area.  Where that blend happens both
@@ -22,6 +34,10 @@
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect SoftMaskedBlend.fx
+//
+// Updated 2026-06-14 jwrl.
+// Changed masking from R to RGBA.
+// Added settings description to header.
 //
 // Version history:
 //
@@ -174,6 +190,5 @@ DeclareEntryPoint (SoftMaskedBlend)
       retval = lerp (retval, Colour, saturate (BorderWidth * 40.0));
    }
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Opacity);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1) * Opacity);
 }
-
