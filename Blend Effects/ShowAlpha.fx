@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-09-10
+// @Released 2026-06-14
 // @Author jwrl
 // @Created 2024-09-08
 
@@ -21,6 +21,10 @@
 // Lightworks user effect ShowAlpha.fx
 //
 // Version history:
+//
+// Updated 2026-06-14 jwrl.
+// Changed masking from R to RGBA.
+// Corrected GLSL bug causing monochrome display in non-Windows systems.
 //
 // Modified 2024-09-10 by jwrl.
 // Changed mask behaviour so that it registers as part of alpha in every display mode.
@@ -64,25 +68,20 @@ DeclareFloatParam (_OutputHeight);
 #define FG_ONLY 1
 #define ALPHA   3
 
+#define _TransparentBlack 0.0.xxxx
+
 //-----------------------------------------------------------------------------------------//
 // Code
 //-----------------------------------------------------------------------------------------//
 
-DeclarePass (Fgd)
-{ return ReadPixel (Fg, uv1); }
-
-DeclarePass (Bgd)
-{ return ReadPixel (Bg, uv2); }
-
 DeclareEntryPoint (ShowAlpha)
 {
-   float msk = tex2D (Mask, uv3).x;
-
    // Masking happens AS WE LOAD THE FOREGROUND, because we need the composite alpha
    // to be available so that true alpha values can be shown.
 
-   float4 Fgnd = lerp (kTransparentBlack, tex2D (Fgd, uv3), msk);
-   float4 Bgnd = tex2D (Bgd, uv3);
+   float4 msk  = tex2D (Mask, uv1);
+   float4 Fgnd = lerp (_TransparentBlack, ReadPixel (Fg, uv1), msk);
+   float4 Bgnd = ReadPixel (Bg, uv2);
    float4 Foreground, Background;
 
    // After the next conditionals are executed Foreground contains the chosen composite.
