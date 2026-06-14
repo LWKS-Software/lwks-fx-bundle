@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-14
 // @Author jwrl
 // @Created 2016-03-04
 
@@ -8,6 +8,22 @@
  default is to apply a radial blur away from the effect centre.  That centre can be put
  up to one frame height and/or frame width outside the frame.  Optionally it can  also
  produce a blur that points to the centre, or a linear directional blur.
+
+   [*]Blur type:  Sets the blur and ray direction to radial or linear.
+   [*]Foreground blend:  Sets the foreground blend mode to add, screen, darken,
+      subtract, solid or none.
+   [*]Rays:  Sets the ray blend mode to add, screen, darken or subtract.
+   [*]Length:  Adjusts the length of the rays produced.
+   [*]Master opacity:  Sets the visibility of the foreground plus rays.
+   [*]Opacity
+      [*]Foreground:  Sets the foreground transparency only.
+      [*]Rays:  Sets the ray transparency only.
+   [*]Effect centre X:  Sets the horizontal direction of the rays.
+   [*]Effect centre Y:  Sets the vertical direction of the rays.
+   [*]Disconnect title and image key inputs
+      [*]Source selection:  Selects between crawl, roll, title or image key,
+         transparent video or graphic, or extracting the foreground by
+         subtracting the background from it.
 
  The angle of the linear (directional) blur is set by dragging the effect centre away
  from the frame centre.  The angle of displacement is all that's used in this mode, and
@@ -25,6 +41,10 @@
 // Lightworks user effect LightRayBlend.fx
 //
 // Version history:
+//
+// Updated 2026-06-14 jwrl.
+// Changed masking from R to RGBA.
+// Added settings description to header.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
@@ -157,7 +177,7 @@ float4 main (sampler F, float2 xy1, sampler B, float2 xy2, float4 blurred)
    retval  = lerp (retval, FxImage, fgImage.a);
    retval  = lerp (bgImage, retval, Opacity);
 
-   return lerp (bgImage, float4 (retval.rgb, bgImage.a), tex2D (Mask, xy1).x);
+   return lerp (bgImage, float4 (retval.rgb, bgImage.a), tex2D (Mask, xy1));
 }
 
 //-----------------------------------------------------------------------------------------//
