@@ -23,7 +23,7 @@
       [*]Strength:  Sets the strength or line weight of the stars.
    [*]Effect centre X:  Adjusts the horizontal position of the edge pattern.
    [*]Effect centre Y:  Adjusts the vertical position of the edge pattern.
-   [*]Size:  Adjusts the scale of the edge pattern.
+   [*]Effect centre Z:  Adjusts the scale of the edge pattern.
    [*]Fractal
       [*]Modulation:  Sets the amount of colour that will be mixed (modulated) into
          the pattern.
@@ -45,6 +45,9 @@
 // Lightworks user effect MagicalEdges.fx
 //
 // Version history:
+//
+// Updated 2026-06-14 jwrl.
+// Corrected typo.
 //
 // Updated 2026-06-14 jwrl.
 // Changed masking from R to RGBA.
