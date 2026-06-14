@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-14
 // @Author baopao
 // @Created 2015-11-30
 
@@ -14,6 +14,9 @@
 // Lightworks user effect Unpremultiply.fx
 //
 // Version history:
+//
+// Updated 2026-06-14 jwrl.
+// Changed masking from R to RGBA.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with explicit value.
@@ -35,12 +38,22 @@ DeclareInput (Inp);
 DeclareMask;
 
 //-----------------------------------------------------------------------------------------//
+// Definitions and declarations
+//-----------------------------------------------------------------------------------------//
+
+#ifdef WINDOWS
+#define PROFILE ps_3_0
+#endif
+
+#define _TransparentBlack 0.0.xxxx
+
+//-----------------------------------------------------------------------------------------//
 // Code
 //-----------------------------------------------------------------------------------------//
 
 DeclareEntryPoint (Unpremultiply)
 {
-   float4 color = lerp (0.0.xxxx, ReadPixel (Inp, uv1), tex2D (Mask, uv1).x);
+   float4 color = lerp (_TransparentBlack, ReadPixel (Inp, uv1), tex2D (Mask, uv1));
 
    return float4 (color.rgb /= color.a, color.a);
 }
