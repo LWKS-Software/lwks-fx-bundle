@@ -1,12 +1,47 @@
 // @Maintainer jwrl
-// @Released 2023-05-20
+// @Released 2026-06-15
 // @Author jwrl
 // @Created 2017-06-01
 
 /**
- This blur effect is similar to the Lightworks radial blur effect, but is very much
- softer in the result that it can produce.  The blur length range is also much greater
- than that provided by the Lightworks effect.
+ This effect is a combination of four previous soft blur effects.  They are soft foggy
+ blur, soft motion blur, soft spin blur, and soft zoom blur.  Each is selectable from
+ the effect menu, as shown below.
+
+   [*]Blur type:  Selects between the four blurs shown in the screen grab above. They
+      are as follows:
+      >> Foggy rays: A blur made that emulates the effect of fog.
+      >> Motion blur: A directional blur that emulate motion.
+      >> Spin: A rotary blur.
+      >> Zoom blur: A radial blur that either zooms in or out.
+
+   [*]Opacity:  The amount of blur to be mixed over the input.
+   [*]Blur rotation:  Rotates the blur where possible.
+   [*]Aspect ratio:  Adjusts the symmetry of the blur.
+   [*]Blur centre X:  Sets the horizontal centring of the blur.
+   [*]Blur centre Y:  Sets the vertical centring of the blur.
+
+ Foggy rays (previously soft foggy blur) mimics the classic "petroleum jelly on the
+ lens" look.  It does this by combining a radial and a spin blur effect.  The spin
+ component has an adjustable aspect ratio which can have significant effect on the
+ final look.
+
+ Motion blur (previously soft motion blur) uses the same basic soft blur engine as
+ is used in foggy rays, but is a simple directional blur.  The direction of the blur
+ can be rotated between plus and minus 180 degrees.  The weighting and softness of
+ the blur gives a convincing camera pan blur effect.
+
+ The blur arc method used in the spin setting (previously soft spin blur) is
+ bi-directional and produces a symmetrical blur. For example, a 30 degree arc is
+ produced by applying dual 15 degree clockwise and anti-clockwise blurs.  A level
+ tracking parameter has been included to compensate for the inevitable upward drift
+ in blacks and downward drift in whites that such a strong blur can cause.
+
+ Finally, the zoom blur effect is similar to the Lightworks radial blur effect, but
+ is very much softer in the result that it can produce.  The blur length range is
+ also much greater than that provided by the Lightworks effect.  Superficially it
+ may seem similar to foggy rays, but the burriness is quite different when you
+ compare the two side by side.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -15,6 +50,10 @@
 // Lightworks user effect SoftBlurs.fx
 //
 // Version history:
+//
+// Updated 2026-06-15 jwrl.
+// Changed masking from R to RGBA.
+// Added settings description to header text and increased the explanations.
 //
 // Updated 2023-05-20 jwrl.
 // Minor user interface change.
@@ -82,6 +121,8 @@ DeclareFloatParam (_OutputAspectRatio);
 
 #define PI       3.1415927
 
+#define _TransparentBlack 0.0.xxxx
+
 //-----------------------------------------------------------------------------------------//
 // Functions
 //-----------------------------------------------------------------------------------------//
@@ -95,7 +136,7 @@ float4 mirror2D (sampler S, float2 xy)
 
 float4 fn_zoomblur (sampler I, sampler B, float2 uv, int scale)
 {
-   float4 retval = kTransparentBlack;
+   float4 retval = _TransparentBlack;
 
    if (IsOutOfBounds (uv)) return retval;
 
@@ -120,7 +161,7 @@ float4 fn_zoomblur (sampler I, sampler B, float2 uv, int scale)
 
 float4 fn_spinblur (sampler I, sampler B, float2 uv, int scale)
 {
-   float4 retval = kTransparentBlack;
+   float4 retval = _TransparentBlack;
 
    float Arc = Angle + 45.0;
 
@@ -157,7 +198,7 @@ float4 fn_spinblur (sampler I, sampler B, float2 uv, int scale)
 
 float4 fn_motionblur (sampler B, float2 uv, int scale)
 {
-   if (IsOutOfBounds (uv)) return kTransparentBlack;
+   if (IsOutOfBounds (uv)) return _TransparentBlack;
 
    if (Strength == 0.0) return ReadPixel (B, uv);
 
@@ -168,7 +209,7 @@ float4 fn_motionblur (sampler B, float2 uv, int scale)
    float2 xy1 = uv;
    float2 xy2 = float2 (-C, -S * _OutputAspectRatio) * (Strength / scale);
 
-   float4 retval = kTransparentBlack;
+   float4 retval = _TransparentBlack;
 
    for (int i = 0; i < 36; i++) {
       retval += mirror2D (B, xy1) * weight;
@@ -187,7 +228,7 @@ float4 fn_motionblur (sampler B, float2 uv, int scale)
 
 DeclarePass (Blur_1)
 {
-   float4 retval = kTransparentBlack;
+   float4 retval = _TransparentBlack;
 
    if (IsOutOfBounds (uv1)) return retval;
 
@@ -212,7 +253,7 @@ DeclarePass (Blur_1)
 
 DeclarePass (Blur_2)
 {
-   float4 retval = kTransparentBlack;
+   float4 retval = _TransparentBlack;
 
    if (IsOutOfBounds (uv1)) return retval;
 
@@ -237,7 +278,7 @@ DeclarePass (Blur_2)
 
 DeclarePass (FogBlur)
 {
-   float4 retval = kTransparentBlack;
+   float4 retval = _TransparentBlack;
 
    if (IsOutOfBounds (uv1)) return retval;
 
@@ -273,7 +314,7 @@ DeclarePass (FogBlur)
 
 DeclareEntryPoint (SoftFoggyBlur)
 {
-   if (IsOutOfBounds (uv1)) return kTransparentBlack;
+   if (IsOutOfBounds (uv1)) return _TransparentBlack;
 
    float offset = 0.7 - (Strength / 2.7777778);
    float adjust = 1.0 + (Strength / 1.5);
@@ -281,7 +322,7 @@ DeclareEntryPoint (SoftFoggyBlur)
    float4 blurry = tex2D (FogBlur, uv1);
    float4 retval = lerp (blurry, float4 (((blurry.rgb - offset.xxx) * adjust) + offset.xxx, blurry.a), 0.1);
 
-   return lerp (tex2D (Inp, uv1), retval, tex2D (Mask, uv1).x);
+   return lerp (tex2D (Inp, uv1), retval, tex2D (Mask, uv1));
 }
 
 //----------------------------------- Soft Motion Blur ------------------------------------//
@@ -297,7 +338,7 @@ DeclarePass (MotionBlur)
 
 DeclareEntryPoint (SoftMotionBlur)
 {
-   if (IsOutOfBounds (uv1)) return kTransparentBlack;
+   if (IsOutOfBounds (uv1)) return _TransparentBlack;
 
    float offset = 0.7 - (Strength / 2.7777778);
    float adjust = 1.0 + (Strength / 1.5);
@@ -305,7 +346,7 @@ DeclareEntryPoint (SoftMotionBlur)
    float4 blurry = tex2D (MotionBlur, uv1);
    float4 retval = lerp (blurry, float4 (((blurry.rgb - offset.xxx) * adjust) + offset.xxx, blurry.a), 0.1);
 
-   return lerp (tex2D (Inp, uv1), retval, tex2D (Mask, uv1).x);
+   return lerp (tex2D (Inp, uv1), retval, tex2D (Mask, uv1));
 }
 
 //------------------------------------- Soft Spin Blur ------------------------------------//
@@ -321,7 +362,7 @@ DeclarePass (SpinBlur)
 
 DeclareEntryPoint (SoftSpinBlur)
 {
-   if (IsOutOfBounds (uv1)) return kTransparentBlack;
+   if (IsOutOfBounds (uv1)) return _TransparentBlack;
 
    float offset = 0.625 - (Angle / 600);
    float adjust = 1.16666667 + (Angle / 270.0);
@@ -331,7 +372,7 @@ DeclareEntryPoint (SoftSpinBlur)
 
    retval = lerp (retval, repair, Strength);
 
-   return lerp (tex2D (Inp, uv1), retval, tex2D (Mask, uv1).x);
+   return lerp (tex2D (Inp, uv1), retval, tex2D (Mask, uv1));
 }
 
 //------------------------------------- Soft Zoom Blur ------------------------------------//
@@ -347,7 +388,7 @@ DeclarePass (zBlur_3)
 
 DeclareEntryPoint (SoftZoomBlur)
 {
-   if (IsOutOfBounds (uv1)) return kTransparentBlack;
+   if (IsOutOfBounds (uv1)) return _TransparentBlack;
 
    float offset = 0.7 - (Strength / 2.7777778);
    float adjust = 1.0 + (Strength / 1.5);
@@ -355,6 +396,5 @@ DeclareEntryPoint (SoftZoomBlur)
    float4 blurry = tex2D (zBlur_3, uv1);
    float4 retval = lerp (blurry, float4 (((blurry.rgb - offset.xxx) * adjust) + offset.xxx, blurry.a), 0.1);
 
-   return lerp (tex2D (Inp, uv1), retval, tex2D (Mask, uv1).x);
+   return lerp (tex2D (Inp, uv1), retval, tex2D (Mask, uv1));
 }
-
