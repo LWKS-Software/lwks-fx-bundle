@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-09-05
+// @Released 2026-06-15
 // @Author jwrl
 // @Created 2019-11-06
 
@@ -8,6 +8,29 @@
  adjusted in intensity, and the lighting angle can be changed.  Fill lighting is also
  included to soften the shaded areas of the bevel.  A hard-edged drop shadow is provided
  which simply shades the background by an adjustable amount.
+
+   [*]Crop
+      [*]High left X:  Foreground left crop.
+      [*]High left Y:  Foreground top crop.
+      [*]Low right X:  Foreground right crop.
+      [*]Low right Y:  Foreground bottom crop.
+   [*]Size:  Sets the foreground size.
+   [*]Position X:  Sets the horizontal foreground position.
+   [*]Position Y:  Sets the vertical foreground position.
+   [*]Border
+      [*]Width:  Sets the border width.
+      [*]Colour:  Sets the border colour.
+   [*]Bevel
+      [*]Percent size:  Sets the bevel width as a percentage of the border width.
+      [*]Light level:  Sets the simulated bevel light level.
+      [*]Light angle:  Sets the simulated bevel light angle.
+      [*]Fill light:  Sets the simulated bevel fill light level.
+      [*]Colour:  Sets the simulated bevel light colour.
+   [*]Drop shadow
+      [*]Strength:  Sets the opacity of the drop shadow.
+      [*]Offset X:  Sets the horizontal drop shadow position.
+      [*]Offset Y:  Sets the vertical drop shadow position.
+      [*]Colour:  Sets the simulated drop shadow colour.
 
  X-Y positioning of the border and its contents has been included, but since this is not
  intended as a comprehensive transform effect replacement that's as far as it goes.  There
@@ -25,6 +48,13 @@
 // Lightworks user effect BevelCrop.fx
 //
 // Version history:
+//
+// Updated 2026-06-15 jwrl.
+// Changed masking from R to RGBA.
+// Changed X and Y "Top left" to "High left".
+// Changed X and Y "Bottom right" to "Low right"
+// Changed "Percent width" to "Percent size".
+// Added settings to header text.
 //
 // Updated 2023-09-05 jwrl.
 // Corrected Linux/Mac bug.
@@ -54,28 +84,28 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (CropLeft, "Top left", "Crop", "SpecifiesPointX", 0.1, 0.0, 1.0);
-DeclareFloatParam (CropTop, "Top left", "Crop", "SpecifiesPointY", 0.9, 0.0, 1.0);
-DeclareFloatParam (CropRight, "Bottom right", "Crop", "SpecifiesPointX", 0.9, 0.0, 1.0);
-DeclareFloatParam (CropBottom, "Bottom right", "Crop", "SpecifiesPointY", 0.1, 0.0, 1.0);
+DeclareFloatParam (CropLeft,   "High left",    "Crop",        "SpecifiesPointX", 0.1, 0.0, 1.0);
+DeclareFloatParam (CropTop,    "High left",    "Crop",        "SpecifiesPointY", 0.9, 0.0, 1.0);
+DeclareFloatParam (CropRight,  "Low right",    "Crop",        "SpecifiesPointX", 0.9, 0.0, 1.0);
+DeclareFloatParam (CropBottom, "Low right",    "Crop",        "SpecifiesPointY", 0.1, 0.0, 1.0);
 
-DeclareFloatParam (Scale, "Size", kNoGroup, "DisplayAsPercentage", 1.0, 0.1, 5.0);
-DeclareFloatParam (PosX, "Position", kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (PosY, "Position", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (Scale,      "Size",         kNoGroup,      "DisplayAsPercentage", 1.0, 0.1, 5.0);
+DeclareFloatParam (PosX,       "Position",     kNoGroup,      "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (PosY,       "Position",     kNoGroup,      "SpecifiesPointY", 0.5, 0.0, 1.0);
 
-DeclareFloatParam (Border, "Width", "Border", kNoFlags, 0.25, 0.0, 1.0);
-DeclareColourParam (Colour, "Colour", "Border", kNoFlags, 0.375, 0.625, 0.75, 1.0);
+DeclareFloatParam (Border,     "Width",        "Border",      kNoFlags, 0.25, 0.0, 1.0);
+DeclareColourParam (Colour,    "Colour",       "Border",      kNoFlags, 0.375, 0.625, 0.75, 1.0);
 
-DeclareFloatParam (Bevel, "Percent width", "Bevel", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Intensity, "Light level", "Bevel", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Angle, "Light angle", "Bevel", kNoFlags, 80.0, -180.0, 180.0);
-DeclareFloatParam (Fill, "Fill light", "Bevel", kNoFlags, 0.4, 0.0, 1.0);
-DeclareColourParam (Light, "Colour", "Bevel", kNoFlags, 0.375, 0.625, 0.75, 1.0);
+DeclareFloatParam (Bevel,      "Percent size", "Bevel",       kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Intensity,  "Light level",  "Bevel",       kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Angle,      "Light angle",  "Bevel",       kNoFlags, 80.0, -180.0, 180.0);
+DeclareFloatParam (Fill,       "Fill light",   "Bevel",       kNoFlags, 0.4, 0.0, 1.0);
+DeclareColourParam (Light,     "Colour",       "Bevel",       kNoFlags, 0.375, 0.625, 0.75, 1.0);
 
-DeclareFloatParam (Strength, "Strength", "Drop shadow", kNoFlags, 0.25, 0.0, 1.0);
-DeclareFloatParam (ShadowX, "Offset", "Drop shadow", "SpecifiesPointX", -0.25, -1.0, 1.0);
-DeclareFloatParam (ShadowY, "Offset", "Drop shadow", "SpecifiesPointY", -0.25, -1.0, 1.0);
-DeclareColourParam (Shade, "Colour", "Drop shadow", kNoFlags, 0.125, 0.2, 0.25, 1.0);
+DeclareFloatParam (Strength,   "Strength",     "Drop shadow", kNoFlags, 0.25, 0.0, 1.0);
+DeclareFloatParam (ShadowX,    "Offset",       "Drop shadow", "SpecifiesPointX", -0.25, -1.0, 1.0);
+DeclareFloatParam (ShadowY,    "Offset",       "Drop shadow", "SpecifiesPointY", -0.25, -1.0, 1.0);
+DeclareColourParam (Shade,     "Colour",       "Drop shadow", kNoFlags, 0.125, 0.2, 0.25, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -285,6 +315,5 @@ DeclareEntryPoint (BevelCrop)
 
    float4 retval = lerp (Bgnd, Fgnd, Fgnd.a);
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv3).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv3));
 }
-
