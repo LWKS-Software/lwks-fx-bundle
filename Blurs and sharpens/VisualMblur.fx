@@ -1,5 +1,5 @@
-// @Maintainer jwrl
-// @Released 2023-05-15
+// @Maintainer jwrl// @Maintainer jwrl
+// @Released 2026-06-15
 // @Author jwrl
 // @Created 2020-07-09
 
@@ -9,6 +9,12 @@
  point in the record viewer to adjust the angle and strength of the blur.  This effect will
  break LW resolution independence.
 
+   [*]Blur amount:  What it says.
+   [*]Blur X:  Specifies the horizontal direction which the blur will point towards from
+      the screen centre.
+   [*]Blur Y:  Specifies the vertical direction which the blur will point towards from the
+      screen centre.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -16,6 +22,10 @@
 // Lightworks user effect VisualMblur.fx
 //
 // Version history:
+//
+// Updated 2026-06-15 jwrl.
+// Changed masking from R to RGBA.
+// Added setting descriptions to header block.
 //
 // Updated 2023-05-15 jwrl.
 // Header reformatted.
@@ -103,5 +113,5 @@ DeclareEntryPoint (VisualMblur)
 
    // Finally mix the blur back into the original foreground video.
 
-   return lerp (Fgnd, Blur, tex2D (Mask, uv1).x * Fgnd.a);
+   return lerp (Fgnd, Blur, tex2D (Mask, uv1) * Fgnd.a);
 }
