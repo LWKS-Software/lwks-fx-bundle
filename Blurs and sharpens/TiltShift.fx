@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-09-06
+// @Released 2026-06-15
 // @Author Evan Wallace (evanw/glfx.js https://github.com/evanw/glfx.js)
 // @Created 2012-07-30
 
@@ -12,6 +12,13 @@
  scene). An example of a planar scene might be looking at a road from above at a
  downward angle. The image is then blurred with a blur radius that starts at zero
  on the line and increases further from the line.
+
+   [*]Start X:  Sets the horizontal start point where focus is sharp.
+   [*]Start Y:  Sets the vertical start point where focus is sharp.
+   [*]End X:  Sets the horizontal end point where the image is out of focus.
+   [*]End Y:  Sets the vertical end point where the image is out of focus.
+   [*]Blur radius:  The amount of blurriness to apply to the out of focus area.
+   [*]Gradient Size:  The smoothness of the transition between sharp and soft.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -43,6 +50,11 @@
 //
 // Version history:
 //
+// Updated 2026-06-15 jwrl.
+// Changed masking from R to RGBA.
+// Changed "Gradient Radius" to "Gradient size".
+// Added setting descriptions to header block.
+//
 // Updated 2023-09-06 jwrl.
 // Optimised the code to resolve a Linux/Mac compatibility issue.
 //
@@ -68,12 +80,12 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (startX, "start", kNoGroup, "SpecifiesPointX", 0.2, 0.0, 1.0);
-DeclareFloatParam (startY, "start", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
-DeclareFloatParam (endX, "end", kNoGroup, "SpecifiesPointX", 0.8, 0.0, 1.0);
-DeclareFloatParam (endY, "end", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
-DeclareFloatParam (blurRadius, "Blur Radius", kNoGroup, kNoFlags, 15.0, 0.0, 50.0);
-DeclareFloatParam (gradientRadius, "Gradient Radius", kNoGroup, kNoFlags, 200.0, 0.0, 500.0);
+DeclareFloatParam (startX,         "Start",         kNoGroup, "SpecifiesPointX", 0.2,  0.0, 1.0);
+DeclareFloatParam (startY,         "Start",         kNoGroup, "SpecifiesPointY", 0.5,  0.0, 1.0);
+DeclareFloatParam (endX,           "End",           kNoGroup, "SpecifiesPointX", 0.8,  0.0, 1.0);
+DeclareFloatParam (endY,           "End",           kNoGroup, "SpecifiesPointY", 0.5,  0.0, 1.0);
+DeclareFloatParam (blurRadius,     "Blur radius",   kNoGroup, kNoFlags,          15.0, 0.0, 50.0);
+DeclareFloatParam (gradientRadius, "Gradient size", kNoGroup, kNoFlags,         200.0, 0.0, 500.0);
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
@@ -172,6 +184,5 @@ DeclareEntryPoint (TiltShift)
    float4 video  = ReadPixel (Inp, uv1);
    float4 retval = tiltShift (Pass1, start, end, float2 (-dxy.y, dxy.x) / d, texSize, uv2);
 
-   return lerp (video, retval, tex2D (Mask, uv1).x);
+   return lerp (video, retval, tex2D (Mask, uv1));
 }
-
