@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-01-10
+// @Released 2026-06-15
 // @Author jwrl
 // @Created 2023-02-14
 
@@ -16,7 +16,7 @@
    * Mask background:  Chooses between the video background, a background colour, and
         a fully transparent background.
    * Bg colour:  Sets the background colour.
-   * Fade background:  Fades the background into the foreground.
+   * Fade bg:  Fades the background into the foreground.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -25,6 +25,10 @@
 // Lightworks user effect Polymask.fx
 //
 // Version history:
+//
+// Updated 2026-06-15 jwrl.
+// Changed masking from R to RGBA.
+// Changed "Fade background" to "Fade bg".
 //
 // Updated 2025-01-10 jwrl.
 // Added "Hard transparency" to mask background menu.
@@ -49,11 +53,9 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareIntParam (Mode, "Mask background", kNoGroup, 1, "Bg input|Colour|Hard transparency");
-
-DeclareColourParam (BgColour, "Bg colour", kNoGroup, kNoFlags, 0.0, 0.5, 0.0, 1.0);
-
-DeclareFloatParam (FadeBg, "Fade background", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareIntParam    (Mode,     "Mask background", kNoGroup, 1, "Bg input|Colour|Hard transparency");
+DeclareColourParam (BgColour, "Bg colour",       kNoGroup, kNoFlags, 0.0, 0.5, 0.0, 1.0);
+DeclareFloatParam  (FadeBg,   "Fade bg",         kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
 
 //-----------------------------------------------------------------------------------------//
 // Code
@@ -68,5 +70,5 @@ DeclareEntryPoint (PolyMask)
 
    // We derive the mask from sequence coordinates, not from foreground nor background.
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3));
 }
