@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-15
+// @Released 2026-06-15
 // @Author khaver
 // @Created 2015-12-08
 
@@ -8,6 +8,26 @@
  alpha channel or luma value of the source video or another video track.  It uses a depth
  map for the blur mask for faux depth of field, and is refocusable.
 
+   [*]Swap inputs:  Swap the video tracks to be used for source and mask.
+   [*]De-Focus:  Blur strength.
+   [*]x10:  Multiplies blur strength by 10.
+   [*]Mask type:  Set the focal blur mask source. This should not be confused with the
+      Lightworks effect mask.
+   [*]Focus
+      [*]Focus type:  Selects the focus interpolation method.
+      [*]DoF:  Adjusts the depth of field.
+      [*]Point X, Y:  The location of the focus point - not to be confused with the
+         point focus type.
+   [*]Mask Adjustment
+      [*] Show:  Show the mask.
+      [*]Invert:  Negate the mask.
+      [*]Blur:  Blur the mask.
+      [*]Blur strength:  Adjust the strength of the blur. Interacts with DoF.
+      [*]Brightness:  Adjust the mask brightness.
+      [*]Contrast:  Adjust the mask contrast.
+      [*]Threshold:  Adjust mask threshold.
+
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -15,6 +35,12 @@
 // Lightworks user effect FocalBlur.fx
 //
 // Version history:
+//
+// Updated 2026-06-15 jwrl.
+// Changed masking from R to RGBA.
+// Change "Blur Strength" to "Blur size".
+// Removed "Mask" group.
+// Added settings description to header text.
 //
 // Updated 2023-05-15 jwrl.
 // Header reformatted.
@@ -38,30 +64,30 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareBoolParam (swap, "Swap Inputs", kNoGroup, false);
+DeclareBoolParam (swap,        "Swap inputs", kNoGroup, false);
 
-DeclareFloatParam (blurry, "De-Focus", kNoGroup, kNoFlags, 0.0, 0.0, 100.0);
+DeclareFloatParam (blurry,     "De-focus",    kNoGroup, kNoFlags, 0.0, 0.0, 100.0);
 
-DeclareBoolParam (big, "x10", kNoGroup, false);
+DeclareBoolParam (big,         "x10",         kNoGroup, false);
 
-DeclareIntParam (alpha, "Mask Type", "Mask", 0, "None|Source Alpha,Source Luma|Mask Alpha|Mask Luma");
+DeclareIntParam (alpha,        "Mask type",   kNoGroup, 0, "None|Source Alpha,Source Luma|Mask Alpha|Mask Luma");
 
-DeclareIntParam (focust, "Focus Type", "Focus", 0, "None|Linear|Point");
+DeclareIntParam (focust,       "Focus type",  "Focus", 0, "None|Linear|Point");
 
-DeclareFloatParam (linfocus, "Distance", "Focus", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (DoF, "DoF", "Focus", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (FocusX, "Point", "Focus", "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (FocusY, "Point", "Focus", "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (linfocus,   "Distance",    "Focus", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (DoF,        "DoF",         "Focus", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (FocusX,     "Point",       "Focus", "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (FocusY,     "Point",       "Focus", "SpecifiesPointY", 0.5, 0.0, 1.0);
 
-DeclareBoolParam (show, "Show", "Mask Adjustment", false);
-DeclareBoolParam (invert, "Invert", "Mask Adjustment", false);
+DeclareBoolParam (show,        "Show",        "Mask adjustment", false);
+DeclareBoolParam (invert,      "Invert",      "Mask adjustment", false);
 
-DeclareIntParam (SetTechnique, "Blur", "Mask Adjustment", 0, "No|Yes");
+DeclareIntParam (SetTechnique, "Blur",        "Mask adjustment", 0, "No|Yes");
 
-DeclareFloatParam (mblur, "Blur Strength", "Mask Adjustment", kNoFlags, 0.0, 0.0, 100.0);
-DeclareFloatParam (adjust, "Brightness", "Mask Adjustment", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (contrast, "Contrast", "Mask Adjustment", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (thresh, "Threshold", "Mask Adjustment", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (mblur,      "Blur size",   "Mask adjustment", kNoFlags, 0.0, 0.0, 100.0);
+DeclareFloatParam (adjust,     "Brightness",  "Mask adjustment", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (contrast,   "Contrast",    "Mask adjustment", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (thresh,     "Threshold",   "Mask adjustment", kNoFlags, 0.0, -1.0, 1.0);
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
@@ -174,7 +200,7 @@ float4 Combine (sampler m1, sampler s1, sampler F, sampler B, float2 uv)
                  : blurry > 0.0 ? ReadPixel (s1, uv)
                  : swap         ? ReadPixel (B, uv) : ReadPixel (F, uv);
 
-   return lerp (source, retval, tex2D (Mask, uv).x);
+   return lerp (source, retval, tex2D (Mask, uv));
 }
 
 //-----------------------------------------------------------------------------------------//
