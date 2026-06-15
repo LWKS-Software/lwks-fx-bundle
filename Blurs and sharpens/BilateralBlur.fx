@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-15
+// @Released 2026-06-15
 // @Author baopao
 // @Created 2013-10-23
 
@@ -14,6 +14,9 @@
 // Lightworks user effect BilateralBlur.fx
 //
 // Version history:
+//
+// Updated 2026-06-15 jwrl.
+// Changed masking from R to RGBA.
 //
 // Updated 2023-05-15 jwrl.
 // Header reformatted.
@@ -174,5 +177,5 @@ DeclareEntryPoint (BilateralBlur)
       x += stepX;
    }
 
-   return lerp (tempC0, Colour / normalizer, tex2D (Mask, uv1).x);
+   return lerp (tempC0, Colour / normalizer, tex2D (Mask, uv1));
 }
