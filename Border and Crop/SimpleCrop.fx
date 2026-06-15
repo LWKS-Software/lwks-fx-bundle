@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-04-16
+// @Released 2026-06-15
 // @Author jwrl
 // @Created 2017-03-23
 
@@ -9,6 +9,16 @@
  than the crop area the overflow is filled with the border colour.  With its extended
  alpha support you can also use it to crop and overlay two images with alpha channels
  over another background using an external blend effect.
+
+   [*]Upper left X:  Foreground left crop.
+   [*]Upper left Y:  Foreground top crop.
+   [*]Lower right X:  Foreground right crop.
+   [*]Lower right Y:  Foreground bottom crop.
+   [*]Alpha channel output:  Selects from background, foreground, and various
+      alpha modes.
+   [*]Border
+      [*]Thickness:  Sets the border width.
+      [*]Colour:  Sets the border colour.
 
  Previously the "sense" of the effect could have been swapped so that background
  became foreground and vice versa.  With the ability to cycle inputs built in to
@@ -21,6 +31,12 @@
 // Lightworks user effect SimpleCrop.fx
 //
 // Version history:
+//
+// Updated 2026-06-15 jwrl.
+// Changed masking from R to RGBA.
+// Changed X and Y "Top left" to "Upper left".
+// Changed X and Y "Bottom right" to "Lower right"
+// Added settings to header text.
 //
 // Updated 2024-04-16 jwrl.
 // Performed some code cleanup and added full comments.
@@ -50,16 +66,15 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (CropLeft, "Top left", kNoGroup, "SpecifiesPointX", 0.1, 0.0, 1.0);
-DeclareFloatParam (CropTop, "Top left", kNoGroup, "SpecifiesPointY", 0.9, 0.0, 1.0);
-DeclareFloatParam (CropRight, "Bottom right", kNoGroup, "SpecifiesPointX", 0.9, 0.0, 1.0);
-DeclareFloatParam (CropBottom, "Bottom right", kNoGroup, "SpecifiesPointY", 0.1, 0.0, 1.0);
+DeclareFloatParam (CropLeft,   "Upper left",  kNoGroup, "SpecifiesPointX", 0.1, 0.0, 1.0);
+DeclareFloatParam (CropTop,    "Upper left",  kNoGroup, "SpecifiesPointY", 0.9, 0.0, 1.0);
+DeclareFloatParam (CropRight,  "Lower right", kNoGroup, "SpecifiesPointX", 0.9, 0.0, 1.0);
+DeclareFloatParam (CropBottom, "Lower right", kNoGroup, "SpecifiesPointY", 0.1, 0.0, 1.0);
 
 DeclareIntParam (AlphaMode, "Alpha channel output", kNoGroup, 3, "Ignore alpha|Background only|Cropped foreground|Combined alpha|Overlaid alpha");
 
-DeclareFloatParam (Border, "Thickness", "Border", kNoFlags, 0.1, 0.0, 1.0);
-
-DeclareColourParam (Colour, "Colour", "Border", kNoFlags, 1.0, 1.0, 1.0, 1.0);
+DeclareFloatParam (Border,     "Thickness",   "Border", kNoFlags, 0.1, 0.0, 1.0);
+DeclareColourParam (Colour,    "Colour",      "Border", kNoFlags, 1.0, 1.0, 1.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -125,5 +140,5 @@ DeclareEntryPoint (SimpleCrop)
 
    // Finally the composited result is masked over the background and returned.
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1));
 }
