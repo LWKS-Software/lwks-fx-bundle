@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-15
+// @Released 2026-06-15
 // @Author jwrl
 // @Created 2021-12-09
 
@@ -11,11 +11,22 @@
  derived from this process can be clamped to control its visibility.  While this is
  similar in operation to a standard unsharp mask it can often give much finer edges.
 
+   [*]Strength:  Adjusts the amount of sharpening to be applied.
+   [*]Parameters
+      [*]Sample shift:  The pixel range to use for edge detection.
+      [*]Edge clamp:  The edge level limiting to be applied.
+
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect YAsharpen.fx
+//
+// Updated 2026-06-15 jwrl.
+// Changed masking from R to RGBA.
+// Changed "Sample offset" to "Sample shift"
+// Added settings description to header text.
 //
 // Updated 2023-05-15 jwrl.
 // Header reformatted.
@@ -39,9 +50,10 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Amount, "Strength", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Offset, "Sample offset", "Parameters", kNoFlags, 2.0, 0.0, 6.0);
-DeclareFloatParam (EdgeClamp, "Edge clamp", "Parameters", kNoFlags, 0.125, 0.0, 1.0);
+DeclareFloatParam (Amount,    "Strength",     kNoGroup,     kNoFlags, 0.5, 0.0, 1.0);
+
+DeclareFloatParam (Offset,    "Sample shift", "Parameters", kNoFlags, 2.0, 0.0, 6.0);
+DeclareFloatParam (EdgeClamp, "Edge clamp",   "Parameters", kNoFlags, 0.125, 0.0, 1.0);
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
@@ -82,5 +94,5 @@ DeclareEntryPoint (YAsharpen)
 
    retval.rgb += ((saturate (dot (edges, luma_val)) * clamp * 2.0) - clamp).xxx;
 
-   return lerp (Input, retval, tex2D (Mask, uv1).x);
+   return lerp (Input, retval, tex2D (Mask, uv1));
 }
