@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-15
 // @Author jwrl
 // @Created 2023-02-14
 
@@ -8,6 +8,27 @@
  the Lightworks mask effect.  The edges of the mask can be bordered with a bicolour
  shaded surround as a percentage of the edge softness.  Drop shadowing of the mask
  is included, and is set as an offset percentage.
+
+   [*]Opacity:  Sets the flexible crop opacity.
+   [*]Invert effect:  Self explanatory.
+   [*]Transform
+      [*]Master size:  Self explanatory.
+      [*]Size X:  Adjusts the horizontal size.
+      [*]Size Y:  Adjusts the vertical size.
+      [*]Position X:  Adjusts the horizontal position.
+      [*]Position Y:  Adjusts the vertical position.
+   [*]Border
+      [*]Show border:  Enables the border from the mask.
+      [*]Strength:  Sets the border opacity.
+      [*]Softness:  Adjusts the border softness independently of the edge softness.
+      [*]Use inner colour only:  Self explanatory.
+      [*]Inner colour:  Self explanatory.
+      [*]Outer colour:  Self explanatory.
+   [*]Drop shadow
+      [*]Use drop shadow:  Self explanatory.
+      [*]Strength:  Sets the drop shadow opacity.
+      [*]Offset X:  Adjusts the horizontal position of the drop shadow.
+      [*]Offset Y:  Adjusts the vertical position of the drop shadow.
 
  There is a limited transform function included which will allow the masked video to
  be scaled and positioned.  Since this is applied after the mask is generated it is
@@ -26,6 +47,10 @@
 // Lightworks user effect Flexicrop.fx
 //
 // Version history:
+//
+// Updated 2026-06-15 jwrl.
+// Changed masking from R to RGBA.
+// Added settings to header text.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
@@ -53,34 +78,31 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Opacity, "Opacity", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Opacity,         "Opacity",       kNoGroup,        kNoFlags, 1.0, 0.0, 1.0);
 
 DeclareBoolParam (Invert, "Invert effect", kNoGroup, false);
 
-DeclareFloatParam (Scale, "Master size", "Transform", "DisplayAsPercentage", 1.0, 0.0, 10.0);
-
-DeclareFloatParam (SizeX, "Size", "Transform", "SpecifiesPointX|DisplayAsPercentage", 1.0, 0.0, 10.0);
-DeclareFloatParam (SizeY, "Size", "Transform", "SpecifiesPointY|DisplayAsPercentage", 1.0, 0.0, 10.0);
-
-DeclareFloatParam (Pos_X, "Position", "Transform", "SpecifiesPointX|DisplayAsPercentage", 0.5, -1.0, 2.0);
-DeclareFloatParam (Pos_Y, "Position", "Transform", "SpecifiesPointY|DisplayAsPercentage", 0.5, -1.0, 2.0);
+DeclareFloatParam (Scale,           "Master size",   "Transform",     "DisplayAsPercentage", 1.0, 0.0, 10.0);
+DeclareFloatParam (SizeX,           "Size",          "Transform",     "SpecifiesPointX|DisplayAsPercentage", 1.0, 0.0, 10.0);
+DeclareFloatParam (SizeY,           "Size",          "Transform",     "SpecifiesPointY|DisplayAsPercentage", 1.0, 0.0, 10.0);
+DeclareFloatParam (Pos_X,           "Position",      "Transform",     "SpecifiesPointX|DisplayAsPercentage", 0.5, -1.0, 2.0);
+DeclareFloatParam (Pos_Y,           "Position",      "Transform",     "SpecifiesPointY|DisplayAsPercentage", 0.5, -1.0, 2.0);
 
 DeclareBoolParam (UseBorder, "Show border (mask softness must be on)", "Border", true);
 
-DeclareFloatParam (bStrength, "Strength", "Border", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (bSoft, "Softness", "Border", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (bStrength,       "Strength",       "Border",       kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (bSoft,           "Softness",       "Border",       kNoFlags, 0.5, 0.0, 1.0);
 
 DeclareBoolParam (FlatColour, "Use inner colour only", "Border", false);
 
-DeclareColourParam (BorderColour_1, "Inner colour", "Border", kNoFlags, 0.2, 0.8, 0.8, 1.0);
-DeclareColourParam (BorderColour_2, "Outer colour", "Border", kNoFlags, 0.2, 0.1, 1.0, 1.0);
+DeclareColourParam (BorderColour_1, "Inner colour",   "Border",       kNoFlags, 0.2, 0.8, 0.8, 1.0);
+DeclareColourParam (BorderColour_2, "Outer colour",   "Border",       kNoFlags, 0.2, 0.1, 1.0, 1.0);
 
 DeclareIntParam (UseShadow, "Use drop shadow", "Drop shadow", 1, "No|With border softness|With mask softness");
 
-DeclareFloatParam (sStrength, "Strength", "Drop shadow", kNoFlags, 0.5, 0.0, 1.0);
-
-DeclareFloatParam (ShadowX, "Offset", "Drop shadow", "SpecifiesPointX|DisplayAsPercentage", 0.525, 0.4, 0.6);
-DeclareFloatParam (ShadowY, "Offset", "Drop shadow", "SpecifiesPointY|DisplayAsPercentage", 0.475, 0.4, 0.6);
+DeclareFloatParam (sStrength,       "Strength",        "Drop shadow", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (ShadowX,         "Offset",          "Drop shadow", "SpecifiesPointX|DisplayAsPercentage", 0.525, 0.4, 0.6);
+DeclareFloatParam (ShadowY,         "Offset",          "Drop shadow", "SpecifiesPointY|DisplayAsPercentage", 0.475, 0.4, 0.6);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -118,8 +140,8 @@ DeclarePass (Msk)
 
    // The mask softness data for both the the foreground and the drop shadow is now recovered.
 
-   float FgndMask = tex2D (Mask, uv3).x;
-   float ShadMask = tex2D (Mask, xy1).x;
+   float4 FgndMask = tex2D (Mask, uv3);
+   float4 ShadMask = tex2D (Mask, xy1);
 
    // Check if we're colouring the border or not and skip if no
 
@@ -132,9 +154,10 @@ DeclarePass (Msk)
       // third of the mask, and outerBorder at maximum softness takes up the final two thirds.
 
       float softness    = max (bSoft, 0.01);
-      float outerBorder = 1.5 * FgndMask;
-      float innerBorder = (1.5 - outerBorder) / softness;
-      float drop_shadow = min (1.0, max ((1.5 * ShadMask) / softness, 0.0));
+
+      float4 outerBorder = 1.5 * FgndMask;
+      float4 innerBorder = (1.5.xxxx - outerBorder) / softness;
+      float4 drop_shadow = saturate ((1.5 * ShadMask) / softness);
 
       // Now build the border colour, depending on whether it's flat or bicolour.
 
@@ -142,7 +165,7 @@ DeclarePass (Msk)
 
       if (FlatColour) { BorderColour = BorderColour_1; }
       else {
-         float colourMixer = (((outerBorder * 2.0) - 1.5) / softness) + 0.5;
+         float colourMixer = (((outerBorder.g * 2.0) - 1.5) / softness) + 0.5;
 
          colourMixer = min (max (colourMixer, 0.0), 1.0);
          colourMixer = lerp (1.0, colourMixer, bStrength);
@@ -152,18 +175,19 @@ DeclarePass (Msk)
          BorderColour = lerp (BorderColour_2, BorderColour_1, colourMixer);
       }
 
-      innerBorder = 1.0 - min (max (innerBorder, 0.0), 1.0);
-      outerBorder = min (max (outerBorder / softness, 0.0), 1.0);
+      innerBorder = 1.0.xxxx - saturate (innerBorder);
+      outerBorder = saturate (outerBorder / softness);
 
       // The foreground is now blended with the border colours
 
-      innerBorder = lerp (1.0, innerBorder, bStrength);
+      innerBorder = lerp (1.0.xxxx, innerBorder, bStrength);
 
       Fgnd  = lerp (BorderColour, Fgnd, innerBorder);
 
       // The two raw masks are adjusted to allow for the percentage border width.
 
       FgndMask = lerp (FgndMask, outerBorder, bStrength);
+
       if (UseShadow == 1) { ShadMask = lerp (ShadMask, drop_shadow, bStrength); }
    }
 
