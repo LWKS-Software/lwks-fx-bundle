@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-15
+// @Released 2026-06-15
 // @Author jwrl
 // @Created 2019-01-10
 
@@ -9,6 +9,12 @@
  bidirectional blur.  Using that technique, 90 degrees and 270 degrees would give identical
  results.
 
+   [*]Blur angle:  Sets the correction angle for the sharpen.
+   [*]Sample width:  This sets the pixel spread to be used for the sharpen.
+   [*]Threshold:  The threshold sets the levels that will be recognised for sharpening.
+   [*]Tolerance:  Tolerance sets the difference in adjacent pixels that will trigger sharpening.
+   [*]Edge gain:  Sets the boost level of edges.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -16,6 +22,10 @@
 // Lightworks user effect DirectionalSharpen.fx
 //
 // Version history:
+//
+// Updated 2026-06-15 jwrl.
+// Changed masking from R to RGBA.
+// Added settings description to header text.
 //
 // Updated 2023-05-15 jwrl.
 // Header reformatted.
@@ -39,11 +49,11 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (BlurAngle, "Blur angle", kNoGroup, kNoFlags, 0.0, 0.0, 180.0);
+DeclareFloatParam (BlurAngle, "Blur angle",   kNoGroup, kNoFlags, 0.0, 0.0, 180.0);
 DeclareFloatParam (BlurWidth, "Sample width", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Threshold, "Threshold", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Tolerance, "Tolerance", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (EdgeGain, "Edge gain", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Threshold, "Threshold",    kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Tolerance, "Tolerance",    kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (EdgeGain,  "Edge gain",    kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -108,5 +118,5 @@ DeclareEntryPoint (DirectionalSharpen)
 
    unblur = float4 (retval.rgb + sharpness.xxx, retval.a);
 
-   return lerp (retval, unblur, tex2D (Mask, uv1).x);
+   return lerp (retval, unblur, tex2D (Mask, uv1));
 }
