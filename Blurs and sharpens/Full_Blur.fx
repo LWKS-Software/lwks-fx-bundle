@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-06-07
+// @Released 2026-06-15
 // @Author schrauber
 // @Created 2024-06-07
 
@@ -14,12 +14,29 @@
 
  Another thing that it provides is control over the way that image transparency
  is handled.  There are five transparency modes.  The default is to simply treat
- transparency as just another part of the video.  Called "Simple transparency",
- in that mode when blending the result with other video, softened transparency
- areas can appear darker than expected.  This happens because when blurred the
- non-tranparent video is combined with the black of the transparent areas.  This
- can be particularly noticeable when using input video with a different aspect
- ratio to the output video.
+ transparency as just another part of the video.  Again, in default mode it
+ handles pretty much as any other blur effects do. Here are the settings.
+
+   [*]Amount:  As described above, this is a nonlinear control of the amount of
+      blur to be used.
+   [*]Transparency mode
+      >> Simple transparency:  This is the default mode and treats transparency
+         as it would any other part of the video.
+      >> Processed transparency:  As with simple transparency, the full frame is
+         blurred, but adjustments are made to transparent areas to improve blending
+         performance. See the fuller description below.
+      >> Transparency passthrough:  Anywhere that the input is transparent before
+         blurring the output will be too. See the description below.
+      >> Blank, make opaque:  Anywhere that it is transparent the video will be
+         blanked (output as black), then made fully opaque.
+      >> Remove transparency:  The whole input frame will be blurred then made
+         opaque, whether transparent or not.
+
+ "Simple transparency" has issues when blending with other video. In that mode when
+ blending the result with other video, softened transparency areas can appear darker
+ than expected.  This happens because when blurred the non-tranparent video is
+ combined with the black of the transparent areas.  This can be particularly
+ noticeable when using input video with a different aspect ratio to the output video.
 
  To address this, "Processed transparency" has been provided.  It's slightly more
  complex in the way that it works, but is actually very like the way that the current
@@ -46,6 +63,10 @@
 // Lightworks user effect Full_Bur.fx
 //
 // Version history:
+//
+// Updated 2026-06-15 jwrl.
+// Changed masking from R to RGBA.
+// Added settings description to header text.
 //
 // Built 2024-06-07 by schrauber.
 //-----------------------------------------------------------------------------------------//
@@ -257,10 +278,9 @@ DeclareEntryPoint (samples5x6_Dither)
 
    if (Mode == 1 && blur.a == 0.0) blur = fg;
 
-   float4 retval = lerp( fg, blur, tex2D( Mask, uv1 ) );   // Mask
+   float4 retval = lerp( fg, blur, tex2D( Mask, uv1 ));    // Mask
 
    if (Mode > 2) retval.a = 1.0;                           // Transparency Modes
 
    return retval;
 }
-
