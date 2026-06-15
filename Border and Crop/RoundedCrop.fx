@@ -7,6 +7,23 @@
  This is a bordered crop that produces rounding at the corners of the crop shape.  The
  border can be feathered, and is a mix of two colours.
 
+   [*]Crop
+      [*]High right X:  Foreground right crop.
+      [*]High right Y:  Foreground top crop.
+      [*]Low left X:  Foreground left crop.
+      [*]Low left Y:  Foreground bottom crop.
+   [*]Border
+      [*]Width:  Sets the border width.
+      [*]Rounding:  Adjust the corner rounding of the border.
+      [*]Soften edge:  Adjusts the border softness.
+      [*]Colour 1:  Sets the inner border colour.
+      [*]Colour 2:  Sets the outer border colour.
+   [*]Shadow
+      [*]Opacity:  Sets the opacity of the drop shadow.
+      [*]Softness:  Sets the softness of the drop shadow.
+      [*]X offset:  Sets the horizontal drop shadow position.
+      [*]Y offset:  Sets the vertical drop shadow position.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -14,6 +31,12 @@
 // Lightworks user effect RoundedCrop.fx
 //
 // Version history:
+//
+// Updated 2026-06-15 jwrl.
+// Changed X and Y "Top right" to "High right".
+// Changed X and Y "Bottom left" to "Low left"
+// Changed "Edge softness" to "Soften edge"
+// Added settings to header text.
 //
 // Updated 2023-05-15 jwrl.
 // Header reformatted.
@@ -35,21 +58,21 @@ DeclareInputs (Fg, Bg);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (CropR, "Top right", "Crop", "SpecifiesPointX", 0.9, 0.0, 1.0);
-DeclareFloatParam (CropT, "Top right", "Crop", "SpecifiesPointY", 0.9, 0.0, 1.0);
-DeclareFloatParam (CropL, "Bottom left", "Crop", "SpecifiesPointX", 0.1, 0.0, 1.0);
-DeclareFloatParam (CropB, "Bottom left", "Crop", "SpecifiesPointY", 0.1, 0.0, 1.0);
+DeclareFloatParam (CropR,           "High right",  "Crop",   "SpecifiesPointX", 0.9, 0.0, 1.0);
+DeclareFloatParam (CropT,           "High right",  "Crop",   "SpecifiesPointY", 0.9, 0.0, 1.0);
+DeclareFloatParam (CropL,           "Low left",    "Crop",   "SpecifiesPointX", 0.1, 0.0, 1.0);
+DeclareFloatParam (CropB,           "Low left",    "Crop",   "SpecifiesPointY", 0.1, 0.0, 1.0);
 
-DeclareFloatParam (BorderWidth, "Width", "Border", kNoFlags, 0.25, 0.0, 1.0);
-DeclareFloatParam (CropRadius, "Rounding", "Border", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (BorderFeather, "Edge softness", "Border", kNoFlags, 0.05, 0.0, 1.0);
-DeclareColourParam (BorderColour_1, "Colour 1", "Border", kNoFlags, 0.345, 0.655, 0.926);
-DeclareColourParam (BorderColour_2, "Colour 2", "Border", kNoFlags, 0.655, 0.345, 0.926);
+DeclareFloatParam (BorderWidth,     "Width",       "Border", kNoFlags, 0.25, 0.0, 1.0);
+DeclareFloatParam (CropRadius,      "Rounding",    "Border", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (BorderFeather,   "Soften edge", "Border", kNoFlags, 0.05, 0.0, 1.0);
+DeclareColourParam (BorderColour_1, "Colour 1",    "Border", kNoFlags, 0.345, 0.655, 0.926);
+DeclareColourParam (BorderColour_2, "Colour 2",    "Border", kNoFlags, 0.655, 0.345, 0.926);
 
-DeclareFloatParam (Shadow, "Opacity", "Shadow", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (ShadowSoft, "Softness", "Shadow", kNoFlags, 0.2, 0.0, 1.0);
-DeclareFloatParam (ShadowX, "X offset", "Shadow", kNoFlags, 0.25, -1.0, 1.0);
-DeclareFloatParam (ShadowY, "Y offset", "Shadow", kNoFlags, -0.25, -1.0, 1.0);
+DeclareFloatParam (Shadow,          "Opacity",     "Shadow", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (ShadowSoft,      "Softness",    "Shadow", kNoFlags, 0.2, 0.0, 1.0);
+DeclareFloatParam (ShadowX,         "X offset",    "Shadow", kNoFlags, 0.25, -1.0, 1.0);
+DeclareFloatParam (ShadowY,         "Y offset",    "Shadow", kNoFlags, -0.25, -1.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
