@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-09-05
+// @Released 2026-06-15
 // @Author jwrl
 // @Created 2020-09-14
 
@@ -10,6 +10,25 @@
  angle can be changed.  Fill lighting is also included to soften the shaded areas of the
  bevel.  A hard-edged outer border is also included which simply shades the background
  by an adjustable amount.
+
+   [*]Foreground size and position
+      [*]Size:  Sets the foreground size.
+      [*]Position X:  Sets the horizontal foreground position.
+      [*]Position Y:  Sets the vertical foreground position.
+   [*]Foreground crop
+      [*]High left X:  Foreground left crop.
+      [*]High left Y:  Foreground top crop.
+      [*]Low right X:  Foreground right crop.
+      [*]Low right Y:  Foreground bottom crop.
+   [*]Border settings
+      [*]Width:  Sets the border width.
+      [*]Colour:  Sets the border colour.
+   [*]Bevel settings
+      [*]Width:  Sets the bevel width.
+      [*]Strength:  Sets the bevel depth.
+      [*]Light level:  Sets the simulated light level.
+      [*]Light angle:  Sets the simulated light angle.
+      [*]Colour:  Sets the simulated light colour.
 
  X-Y positioning of the border and its contents has been included, and simple scaling is
  available.  Since this is not intended as a comprehensive traqnsform effect replacement
@@ -26,6 +45,12 @@
 // Lightworks user effect 3Dbevel.fx
 //
 // Version history:
+//
+// Updated 2026-06-15 jwrl.
+// Changed masking from R to RGBA.
+// Changed X and Y "Top left" to "High left".
+// Changed X and Y "Bottom right" to "Low right"
+// Added settings to header text.
 //
 // Updated 2023-09-05 jwrl.
 // Corrected Linux/Mac bug.
@@ -58,23 +83,23 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Scale, "Size", "Foreground size and position", "DisplayAsPercentage", 1.0, 0.1, 5.0);
-DeclareFloatParam (PosX, "Position", "Foreground size and position", "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (PosY, "Position", "Foreground size and position", "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (Scale,      "Size",        "Foreground size and position", "DisplayAsPercentage", 1.0, 0.1, 5.0);
+DeclareFloatParam (PosX,       "Position",    "Foreground size and position", "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (PosY,       "Position",    "Foreground size and position", "SpecifiesPointY", 0.5, 0.0, 1.0);
 
-DeclareFloatParam (CropLeft, "Top left", "Foreground crop", "SpecifiesPointX", 0.1, 0.0, 1.0);
-DeclareFloatParam (CropTop, "Top left", "Foreground crop", "SpecifiesPointY", 0.9, 0.0, 1.0);
-DeclareFloatParam (CropRight, "Bottom right", "Foreground crop", "SpecifiesPointX", 0.9, 0.0, 1.0);
-DeclareFloatParam (CropBottom, "Bottom right", "Foreground crop", "SpecifiesPointY", 0.1, 0.0, 1.0);
+DeclareFloatParam (CropLeft,   "High left",   "Foreground crop", "SpecifiesPointX", 0.1, 0.0, 1.0);
+DeclareFloatParam (CropTop,    "High left",   "Foreground crop", "SpecifiesPointY", 0.9, 0.0, 1.0);
+DeclareFloatParam (CropRight,  "Low right",   "Foreground crop", "SpecifiesPointX", 0.9, 0.0, 1.0);
+DeclareFloatParam (CropBottom, "Low right",   "Foreground crop", "SpecifiesPointY", 0.1, 0.0, 1.0);
 
-DeclareFloatParam (Border, "Width", "Border settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareColourParam (Colour, "Colour", "Border settings", kNoFlags, 0.18, 0.06, 0.0, 1.0);
+DeclareFloatParam (Border,     "Width",       "Border settings", kNoFlags, 0.25, 0.0,  1.0);
+DeclareColourParam (Colour,    "Colour",      "Border settings", kNoFlags, 0.18, 0.06, 0.0, 1.0);
 
-DeclareFloatParam (Bevel, "Width", "Bevel settings", kNoFlags, 0.125, 0.0, 1.0);
-DeclareFloatParam (Bstrength, "Strength", "Bevel settings", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Intensity, "Light level", "Bevel settings", kNoFlags, 0.45, 0.0, 1.0);
-DeclareFloatParam (Angle, "Light angle", "Bevel settings", kNoFlags, 80.0, -180.0, 180.0);
-DeclareColourParam (Light, "Colour", "Bevel settings", kNoFlags, 1.0, 0.67, 0.0, 1.0);
+DeclareFloatParam (Bevel,      "Width",       "Bevel settings",  kNoFlags, 0.125, 0.0,   1.0);
+DeclareFloatParam (Bstrength,  "Strength",    "Bevel settings",  kNoFlags, 0.5,   0.0,   1.0);
+DeclareFloatParam (Intensity,  "Light level", "Bevel settings",  kNoFlags, 0.45,  0.0,   1.0);
+DeclareFloatParam (Angle,      "Light angle", "Bevel settings",  kNoFlags, 80.0, -180.0, 180.0);
+DeclareColourParam (Light,     "Colour",      "Bevel settings",  kNoFlags, 1.0,   0.67,  0.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -212,6 +237,5 @@ DeclareEntryPoint (Bevel3D)
    float4 Bgnd = ReadPixel (Bg, uv2);
    float4 retval = lerp (Bgnd, Fgnd, Fgnd.a);
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv3).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv3));
 }
-
