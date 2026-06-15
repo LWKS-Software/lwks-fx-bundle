@@ -1,13 +1,13 @@
 // @Maintainer jwrl
-// @Released 2023-05-15
+// @Released 2026-06-15
 // @Author jwrl
 // @Created 2016-05-09
 
 /**
- Originally created as YAblur.fx, this was an accident that looked interesting, so it was
- given a name and further developed.  It is based on a radial anti-aliassing blur developed
- for another series of effects, further modulated by image content.  The result is a very
- soft ghostly blur.
+ Originally created as YAblur.fx, this was an accident that looked interesting, so it
+ was given a name and further developed.  It is based on a radial anti-aliassing blur
+ developed for another series of effects, further modulated by image content.  The
+ result is a very soft ghostly blur.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -16,6 +16,9 @@
 // Lightworks user effect GhostlyBlur.fx
 //
 // Version history:
+//
+// Updated 2026-06-15 jwrl.
+// Changed masking from R to RGBA.
 //
 // Updated 2023-05-15 jwrl.
 // Header reformatted.
@@ -128,5 +131,5 @@ DeclareEntryPoint (GhostlyBlur)
 
    retval.rgb += lerp (0.0.xxx, Fgd.rgb - (Fgd.rgb * retval.rgb), saturate (-Fog));
 
-   return lerp (Fgd, saturate (retval), tex2D (Mask, uv1).x);
+   return lerp (Fgd, saturate (retval), tex2D (Mask, uv1));
 }
