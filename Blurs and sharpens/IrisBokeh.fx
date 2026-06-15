@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-11-06
+// @Released 2026-06-15
 // @Author khaver
 // @Created 2012-04-12
 
@@ -47,6 +47,9 @@
 //-----------------------------------------------------------------------------------------//
 //
 // Version history:
+//
+// Updated 2026-06-15 jwrl.
+// Changed masking from R to RGBA.
 //
 // Updated 2025-11-06 jwrl.
 // Changed group labels "Bokeh" to "Bokeh range" and "Mask" to "Bokeh mask".
@@ -314,5 +317,5 @@ DeclareEntryPoint (IrisBokeh)
    else if ((Focus <= 0.0) && (Size <= 0.0)) { retval = orig; }
    else retval = 1.0 - ((1.0 - (bokeh * bomix)) * (1.0 - (blurred * blmix)));
 
-   return lerp (orig, retval, tex2D (Mask, uv3).x);
+   return lerp (orig, retval, tex2D (Mask, uv3));
 }
