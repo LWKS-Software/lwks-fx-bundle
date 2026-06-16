@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2026-06-16
 // @Author jwrl
 // @Created 2018-03-15
 
@@ -16,6 +16,9 @@
 // Lightworks user effect Lower3rdToolsA.fx
 //
 // Version history:
+//
+// Updated 2026-06-16 jwrl.
+// Changed "Vertical position" to "Y position".
 //
 // Updated 2023-08-02 jwrl.
 // Reworded text type selection for 2023.2 settings.
@@ -51,7 +54,7 @@ DeclareFloatParam (TxtPosY, "Position", "Text settings", "SpecifiesPointY", 0.5,
 DeclareFloatParam (RibbonWidth, "Width", "Ribbon", kNoFlags, 0.33333333, 0.0, 1.0);
 DeclareFloatParam (RibbonL, "Crop left", "Ribbon", kNoFlags, 0.0, 0.0, 1.0);
 DeclareFloatParam (RibbonR, "Crop right", "Ribbon", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Ribbon_Y, "Vertical position", "Ribbon", kNoFlags, 0.15, 0.0, 1.0);
+DeclareFloatParam (Ribbon_Y, "Y position", "Ribbon", kNoFlags, 0.15, 0.0, 1.0);
 
 DeclareColourParam (RibbonColour, "Left colour", "Ribbon", kNoFlags, 0.0, 0.0, 1.0, 1.0);
 
@@ -59,14 +62,14 @@ DeclareFloatParam (BoxA_Width, "Width", "Box A", kNoFlags, 0.1, 0.0, 1.0);
 DeclareFloatParam (BoxA_L, "Crop left", "Box A", kNoFlags, 0.0, 0.0, 1.0);
 DeclareFloatParam (BoxA_R, "Crop right", "Box A", kNoFlags, 0.4, 0.0, 1.0);
 
-DeclareFloatParam (BoxA_Y, "Vertical position", "Box A", kNoFlags, 0.212, 0.0, 1.0);
+DeclareFloatParam (BoxA_Y, "Y position", "Box A", kNoFlags, 0.212, 0.0, 1.0);
 
 DeclareColourParam (BoxAcolour, "Colour", "Box A", kNoFlags, 1.0, 1.0, 0.0, 1.0);
 
 DeclareFloatParam (BoxB_Width, "Width", "Box B", kNoFlags, 0.15, 0.0, 1.0);
 DeclareFloatParam (BoxB_L, "Crop left", "Box B", kNoFlags, 0.35, 0.0, 1.0);
 DeclareFloatParam (BoxB_R, "Crop right", "Box B", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (BoxB_Y, "Vertical position", "Box B", kNoFlags, 0.085, 0.0, 1.0);
+DeclareFloatParam (BoxB_Y, "Y position", "Box B", kNoFlags, 0.085, 0.0, 1.0);
 
 DeclareColourParam (BoxBcolour, "Colour", "Box B", kNoFlags, 1.0, 0.0, 0.0, 1.0);
 
@@ -141,4 +144,3 @@ DeclareEntryPoint (Lower3rdToolsA)
 
    return lerp (ReadPixel (Video, uv3), Fgnd, Fgnd.a * Opacity);
 }
-
