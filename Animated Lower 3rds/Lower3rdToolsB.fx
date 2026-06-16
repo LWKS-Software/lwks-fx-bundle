@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2026-06-16
 // @Author jwrl
 // @Created 2018-03-15
 
@@ -17,6 +17,9 @@
 // Lightworks user effect Lower3rdToolsB.fx
 //
 // Version history:
+//
+// Updated 2026-06-16 jwrl.
+// Changed "Vertical position" to "Y position".
 //
 // Updated 2023-08-02 jwrl.
 // Reworded text type selection for 2023.2 settings.
@@ -56,7 +59,7 @@ DeclareFloatParam (LogoPosY, "Position", "Logo settings", "SpecifiesPointY", 0.0
 DeclareFloatParam (RibbonWidth, "Width", "Ribbon", kNoFlags, 0.33333333, 0.0, 1.0);
 DeclareFloatParam (RibbonL, "Crop left", "Ribbon", kNoFlags, 0.0, 0.0, 1.0);
 DeclareFloatParam (RibbonR, "Crop right", "Ribbon", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (RibbonY, "Vertical position", "Ribbon", kNoFlags, 0.15, 0.0, 1.0);
+DeclareFloatParam (RibbonY, "Y position", "Ribbon", kNoFlags, 0.15, 0.0, 1.0);
 
 DeclareColourParam (RibbonColourA, "Left colour", "Ribbon", kNoFlags, 0.0, 0.0, 1.0, 1.0);
 DeclareColourParam (RibbonColourB, "Right colour", "Ribbon", kNoFlags, 0.0, 1.0, 1.0, 0.0);
@@ -285,4 +288,3 @@ DeclareEntryPoint (Lower3rdToolsB_3)
 
    return lerp (tex2D (Inp_1_3, uv4), Fgnd, Fgnd.a * Opacity);
 }
-
