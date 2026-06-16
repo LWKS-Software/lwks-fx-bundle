@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2026-06-16
 // @Author jwrl
 // @Created 2018-03-15
 
@@ -15,6 +15,9 @@
 // Lightworks user effect Lower3rdD.fx
 //
 // Version history:
+//
+// Updated 2026-06-16 jwrl.
+// Changed "Limit of travel" to "Travel limit".
 //
 // Updated 2023-08-02 jwrl.
 // Reworded text type selection for 2023.2 settings.
@@ -50,7 +53,7 @@ DeclareIntParam (ArtAlpha, "Text type", "Text settings", 0, "Video, image key or
 DeclareFloatParam (TxtPosX, "Position", "Text settings", "SpecifiesPointX", 0.0, -1.0, 1.0);
 DeclareFloatParam (TxtPosY, "Position", "Text settings", "SpecifiesPointY", 0.0, -1.0, 1.0);
 
-DeclareFloatParam (BlockLimit, "Limit of travel", "Block setting", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (BlockLimit, "Travel limit", "Block setting", kNoFlags, 0.5, 0.0, 1.0);
 DeclareFloatParam (BlockCrop_A, "Crop A", "Block setting", kNoFlags, 0.08, 0.0, 1.0);
 DeclareFloatParam (BlockCrop_B, "Crop B", "Block setting", kNoFlags, 0.35, 0.0, 1.0);
 
@@ -230,4 +233,3 @@ DeclareEntryPoint (Lower3rdD_RightLeft)
 
    return lerp (tex2D (Input_2_4, uv3), Fgnd, Fgnd.a * Opacity);
 }
-
