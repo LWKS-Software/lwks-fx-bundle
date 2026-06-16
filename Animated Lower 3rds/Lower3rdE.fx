@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-16
 // @Author jwrl
 // @Created 2018-03-15
 
@@ -15,6 +15,11 @@
 // Lightworks user effect Lower3rdE.fx
 //
 // Version history:
+//
+// Updated 2026-06-16 jwrl.
+// Changed "Transition range" to "Effect range".
+// Changed "Vertical position" to "Y position".
+// Changed "Ripple amount" to "Ripples".
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
@@ -43,7 +48,7 @@ DeclareInputs (In_1, In_2);
 DeclareFloatParam (Transition, "Transition", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
 DeclareFloatParam (Opacity, "Opacity", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareFloatParam (TransRange, "Transition range", "Set this so the effect just ends when Transition reaches 100%", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (TransRange, "Effect range", "Set this so the effect just ends when Transition reaches 100%", kNoFlags, 0.5, 0.0, 1.0);
 
 DeclareIntParam (ArtAlpha, "Text type", "Text settings", 0, "Video, image key or title|Image key/Title pre LW 2023.2");
 
@@ -51,14 +56,14 @@ DeclareFloatParam (TxtPosX, "Position", "Text settings", "SpecifiesPointX", 0.0,
 DeclareFloatParam (TxtPosY, "Position", "Text settings", "SpecifiesPointY", 0.0, -1.0, 1.0);
 
 DeclareFloatParam (TxtDistort, "Distortion", "Text settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareFloatParam (TxtRipple, "Ripple amount", "Text settings", kNoFlags, 0.4, 0.0, 1.0);
+DeclareFloatParam (TxtRipple, "Ripples", "Text settings", kNoFlags, 0.4, 0.0, 1.0);
 
 DeclareIntParam (SetTechnique, "Effect direction", "Text settings", 0, "Wipe on|Wipe off");
 
 DeclareFloatParam (RibbonWidth, "Width", "Ribbon settings", kNoFlags, 0.33333333, 0.0, 1.0);
 DeclareFloatParam (RibbonL, "Crop left", "Ribbon settings", kNoFlags, 0.0, 0.0, 1.0);
 DeclareFloatParam (RibbonR, "Crop right", "Ribbon settings", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (RibbonY, "Vertical position", "Ribbon settings", kNoFlags, 0.15, 0.0, 1.0);
+DeclareFloatParam (RibbonY, "Y position", "Ribbon settings", kNoFlags, 0.15, 0.0, 1.0);
 
 DeclareColourParam (RibbonColour, "Colour", "Ribbon settings", kNoFlags, 0.0, 0.0, 1.0, 0.0);
 
