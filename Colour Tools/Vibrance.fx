@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-07-27
+// @Released 2026-06-17
 // @Author jwrl
 // @Created 2020-01-04
 
@@ -10,15 +10,19 @@
  heavily saturated colours.  This means that clipping is minimised as colours near
  full saturation.
 
- Added in this version is a saturation control, which does just that.  Unlike vibrance
- it affects all colours in the image.  It's been added to provide a means of overiding
- any unexpected saturation drifts that may be caused by the vibrance adjustment.
+ The saturation control, unlike vibrance, affects all colours in the image no matter
+ how saturated they may be.  It's been provided to give a means of overiding any
+ unexpected saturation drifts that may be caused by adjusting the vibrance.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect Vibrance.fx
 //
 // Version history:
+//
+// Updated 2026-06-17 jwrl.
+// Changed masking to full RGBA.
+// Replaced kTransparentBlack with _TransparentBlack definition.
 //
 // Updated 2025-07-27 jwrl.
 // Added saturation adjustment to bring the effect into line with Photoshop and other
@@ -60,13 +64,15 @@ DeclareFloatParam (Saturation, "Saturation", kNoGroup, kNoFlags, 0.0, -1.0, 1.0)
 
 #define LUMINOSITY float4(0.212656, 0.715158, 0.072186, 0.0)
 
+#define _TransparentBlack 0.0.xxxx
+
 //-----------------------------------------------------------------------------------------//
 // Code
 //-----------------------------------------------------------------------------------------//
 
 DeclareEntryPoint (Vibrance_2025)
 {
-   if (IsOutOfBounds (uv1)) return kTransparentBlack;
+   if (IsOutOfBounds (uv1)) return _TransparentBlack;
 
    float4 source = tex2D (Inp, uv1);
    float4 luma   = float4 (dot (source, LUMINOSITY).xxx, source.a);
@@ -87,5 +93,5 @@ DeclareEntryPoint (Vibrance_2025)
 
    retval.a = source.a;
 
-   return lerp (source, retval, tex2D (Mask, uv1).x);
+   return lerp (source, retval, tex2D (Mask, uv1));
 }
