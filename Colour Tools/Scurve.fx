@@ -1,12 +1,29 @@
 // @Maintainer jwrl
-// @Released 2023-05-15
+// @Released 2026-06-17
 // @Author jMovie
 // @Created 2011-05-27
 
 /**
- The effect adjusts RGB or HSV levels to give a smooth S-curve by means of fader controls.
- Care must be exercised not to push it too far, though, or discontinuities in the curves
- can appear.  The result can be quite ugly when that happens.
+ The effect adjusts RGB or HSV levels to give a smooth S-curve by means of fader
+ controls.  Care must be exercised not to push it too far, though, or discontinuities
+ in the curves can appear.  The result can be quite ugly when that happens.
+
+   [*]Curves
+      Black:  Sets the point for the black curve to start.
+      Low mid:  Sets the point at which the lower of the two midpoint curves will be.
+      High mid:  Sets the point at which the higher of the two midpoint curves will be.
+      White:  Sets the point for the white curve to start.
+   [*]Break points
+      Black:  Sets the start break point for the black.
+      Low mid:  Sets the break point for the lower of the two midpoints.
+      High mid:  Sets the break point for the higher of the two midpoints.
+      White:  Sets the end break point for the white.
+   [*]Visualize:  A switch which when enabled will show a graph of the curve on the
+      sequence viewer.
+   [*]Channel R:  A switch to control just reds.
+   [*]Channel G:  A switch to control just greens.
+   [*]Channel B:  A switch to control just blues.
+   [*]Channel HSV Overrides RGB:  When selected, controls RGB levels.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -15,6 +32,11 @@
 // Lightworks user effect Scurve.fx
 //
 // Version history:
+//
+// Updated 2026-06-17 jwrl.
+// Added settings description to header text.
+// Replaced kTransparentBlack with _TransparentBlack definition.
+// Removed bracketed labels in parameter declarations.
 //
 // Updated 2023-05-15 jwrl.
 // Header reformatted.
@@ -38,21 +60,31 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (InY, "Black (InY)", "Curves", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (LowY, "Low mid (LowY)", "Curves", kNoFlags, 0.3333, 0.0, 1.0);
-DeclareFloatParam (HighY, "High mid (HighY)", "Curves", kNoFlags, 0.6667, 0.0, 1.0);
-DeclareFloatParam (OutY, "White (OutY)", "Curves", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (InY,         "Black",     "Curves",       kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (LowY,        "Low mid",   "Curves",       kNoFlags, 0.3333, 0.0, 1.0);
+DeclareFloatParam (HighY,       "High mid",  "Curves",       kNoFlags, 0.6667, 0.0, 1.0);
+DeclareFloatParam (OutY,        "White",     "Curves",       kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareFloatParam (InX, "Black (InX)", "Break points", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (LowX, "Low mid (LowX)", "Break points", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (HighX, "High mid (HighX)", "Break points", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (OutX, "White (OutX)", "Break points", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (InX,         "Black",     "Break points", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (LowX,        "Low mid",   "Break points", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (HighX,       "High mid",  "Break points", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (OutX,        "White",     "Break points", kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareBoolParam (Visualize, "Visualize", kNoGroup, false);
-DeclareBoolParam (RChannel, "Channel R", kNoGroup, true);
-DeclareBoolParam (GChannel, "Channel G", kNoGroup, true);
-DeclareBoolParam (BChannel, "Channel B", kNoGroup, true);
-DeclareBoolParam (ValueChannel, "Channel (HS)V Overrides RGB", kNoGroup, false);
+DeclareBoolParam (Visualize,    "Visualize", kNoGroup, false);
+DeclareBoolParam (RChannel,     "Channel R", kNoGroup, true);
+DeclareBoolParam (GChannel,     "Channel G", kNoGroup, true);
+DeclareBoolParam (BChannel,     "Channel B", kNoGroup, true);
+DeclareBoolParam (ValueChannel, "Channel HSV Overrides RGB", kNoGroup, false);
+
+//-----------------------------------------------------------------------------------------//
+// Definitions and declarations
+//-----------------------------------------------------------------------------------------//
+
+#ifdef WINDOWS
+#define PROFILE ps_3_0
+#endif
+
+#define _TransparentBlack 0.0.xxxx
 
 //-----------------------------------------------------------------------------------------//
 // Functions
@@ -104,7 +136,7 @@ DeclarePass (HSVsampler)
 // Original Pass0_Input converted by changing _RGBtoHSV function to in-line code.
 // All float3 variables converted to float4 to preserve alpha channel - jwrl
 {
-   if (IsOutOfBounds (uv2)) return kTransparentBlack;
+   if (IsOutOfBounds (uv2)) return _TransparentBlack;
 
    if (Visualize) return float4 (uv2.x, 0.0, 0.0, 1.0);
 
@@ -136,7 +168,7 @@ DeclarePass (HSVsampler)
 
 DeclareEntryPoint (Scurve)
 {
-   if (IsOutOfBounds (uv2)) return kTransparentBlack;
+   if (IsOutOfBounds (uv2)) return _TransparentBlack;
 
    float points [6] = { 0.0, InX * 0.2745, LowX * 0.6275, (HighX * 0.6667) + 0.3333, (OutX * 0.3333) + 0.6667, 1.0 };
 
@@ -189,4 +221,3 @@ DeclareEntryPoint (Scurve)
 
    return lerp (src_raw, saturate (src_rgba), tex2D (Mask, uv2));
 }
-
