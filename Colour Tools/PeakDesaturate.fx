@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-15
+// @Released 2026-06-17
 // @Author jwrl
 // @Created 2016-04-06
 
@@ -8,6 +8,12 @@
  easily become contaminated during other grading operations.  The turnover point and
  blend smoothness of both black and white desaturation are adjustable.
 
+   [*]White
+      [*]Turnover:  The point at which white saturation adjustment will begin.
+      [*]Spread:  The softness of the white turnover point transition.
+      [*]Desaturate: White desaturation.
+   [*]Black: The same settings as for the white saturation adjustment.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -15,6 +21,10 @@
 // Lightworks user effect PeakDesaturate.fx
 //
 // Version history:
+//
+// Updated 2026-06-17 jwrl.
+// Added settings description to header text.
+// Replaced kTransparentBlack with _TransparentBlack definition.
 //
 // Updated 2023-05-15 jwrl.
 // Header reformatted.
@@ -38,13 +48,23 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (WhtPnt, "Turnover", "White", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (WhtRng, "Spread", "White", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (WhtPnt,   "Turnover",   "White", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (WhtRng,   "Spread",     "White", kNoFlags, 0.5, 0.0, 1.0);
 DeclareFloatParam (WhtDesat, "Desaturate", "White", kNoFlags, 0.0, 0.0, 1.0);
 
-DeclareFloatParam (BlkPnt, "Turnover", "Black", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (BlkRng, "Spread", "Black", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (BlkPnt,   "Turnover",   "Black", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (BlkRng,   "Spread",     "Black", kNoFlags, 0.5, 0.0, 1.0);
 DeclareFloatParam (BlkDesat, "Desaturate", "Black", kNoFlags, 0.0, 0.0, 1.0);
+
+//-----------------------------------------------------------------------------------------//
+// Definitions and declarations
+//-----------------------------------------------------------------------------------------//
+
+#ifdef WINDOWS
+#define PROFILE ps_3_0
+#endif
+
+#define _TransparentBlack 0.0.xxxx
 
 //-----------------------------------------------------------------------------------------//
 // Code
@@ -55,7 +75,7 @@ DeclarePass (Inp)
 
 DeclareEntryPoint (PeakDesaturate)
 {
-   if (IsOutOfBounds (uv1)) return kTransparentBlack;
+   if (IsOutOfBounds (uv1)) return _TransparentBlack;
 
    float4 video  = tex2D (Inp, uv2);
    float4 retval = saturate (video);
@@ -88,4 +108,3 @@ DeclareEntryPoint (PeakDesaturate)
 
    return lerp (video, retval, tex2D (Mask, uv2));
 }
-
