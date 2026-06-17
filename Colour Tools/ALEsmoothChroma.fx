@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-15
+// @Released 2026-06-17
 // @Author baopao
 // @Created 2013-06-03
 
@@ -17,6 +17,9 @@
 // Lightworks user effect ALEsmoothChroma.fx
 //
 // Version history:
+//
+// Updated 2026-06-17 jwrl.
+// Replaced kTransparentBlack with _TransparentBlack definition.
 //
 // Updated 2023-05-15 jwrl.
 // Header reformatted.
@@ -43,6 +46,16 @@ DeclareMask;
 DeclareFloatParam (BlurAmount, "BlurAmount", kNoGroup, kNoFlags, 0.2, 0.0, 1.0);
 
 //-----------------------------------------------------------------------------------------//
+// Definitions and declarations
+//-----------------------------------------------------------------------------------------//
+
+#ifdef WINDOWS
+#define PROFILE ps_3_0
+#endif
+
+#define _TransparentBlack 0.0.xxxx
+
+//-----------------------------------------------------------------------------------------//
 // Code
 //-----------------------------------------------------------------------------------------//
 
@@ -51,7 +64,7 @@ DeclarePass (Input)
 
 DeclareEntryPoint (ALEsmoothChroma)
 {
-   if (IsOutOfBounds (uv1)) return kTransparentBlack;
+   if (IsOutOfBounds (uv1)) return _TransparentBlack;
 
    float4 Inp = tex2D (Input, uv2);
    float4 ret = Inp;
@@ -85,4 +98,3 @@ DeclareEntryPoint (ALEsmoothChroma)
 
    return lerp (Inp, saturate (ret), tex2D (Mask, uv2));
 }
-
