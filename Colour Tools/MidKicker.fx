@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-15
+// @Released 2026-06-17
 // @Author jwrl
 // @Created 2020-11-09
 
@@ -10,6 +10,23 @@
  final look that you achieve will be affected by the black and white levels provision
  has been made to adjust them.  This should be done before doing anything else.
 
+
+   [*]Set black & white references and levels first: When this is turned on you can
+      independently adjust black and white levels.  Turning it off locks those settings.
+   [*]Reference points
+      [*]White: Sets reference white level when enabled. See above.
+      [*]Black: Sets reference black level when enabled.
+   [*]Midtone adjustments
+      [*]Contrast: Adjusts midtone contrast. This and saturation together give results
+         similar to vibrance.
+      [*]Saturation: Adjusts midtone saturation.
+   [*]Fine tuning
+      [*]White level: Fine tunes the white level.
+      [*]Red mids: Fine tunes the red mid level gain.
+      [*]Green mids: Fine tunes the green mid level gain.
+      [*]Blue mids: Fine tunes the blue mid level gain.
+      [*]Black level: Fine tunes the black level.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -17,6 +34,10 @@
 // Lightworks user effect MidtoneKicker.fx
 //
 // Version history:
+//
+// Updated 2026-06-17 jwrl.
+// Changed "midtones" parameter labels to "mids".
+// Added settings description to header text.
 //
 // Updated 2023-05-15 jwrl.
 // Header reformatted.
@@ -40,19 +61,27 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareBoolParam (Reference, "Set black & white references and levels first", kNoGroup, true);
+DeclareBoolParam   (Reference,  "Set black & white references and levels first", kNoGroup, true);
 
-DeclareColourParam (WhitePoint, "White", "Reference points", kNoFlags, 1.0, 1.0, 1.0);
-DeclareColourParam (BlackPoint, "Black", "Reference points", kNoFlags, 0.0, 0.0, 0.0);
+DeclareColourParam (WhitePoint, "White",       "Reference points", kNoFlags, 1.0, 1.0, 1.0);
+DeclareColourParam (BlackPoint, "Black",       "Reference points", kNoFlags, 0.0, 0.0, 0.0);
 
-DeclareFloatParam (S_curve, "Contrast", "Midtone adjustments", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (Vibrance, "Saturation", "Midtone adjustments", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (S_curve,     "Contrast",    "Midtone adjustments", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (Vibrance,    "Saturation",  "Midtone adjustments", kNoFlags, 0.0, -1.0, 1.0);
 
-DeclareFloatParam (WhiteLevel, "White level", "Fine tuning", "DisplayAsPercentage", 1.0, 0.5, 1.5);
-DeclareFloatParam (Trim_R, "Red midtones", "Fine tuning", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (Trim_G, "Green midtones", "Fine tuning", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (Trim_B, "Blue midtones", "Fine tuning", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (BlackLevel, "Black level", "Fine tuning", "DisplayAsPercentage", 0.0, -0.5, 0.5);
+DeclareFloatParam (WhiteLevel,  "White level", "Fine tuning", "DisplayAsPercentage", 1.0, 0.5, 1.5);
+DeclareFloatParam (Trim_R,      "Red mids",    "Fine tuning", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (Trim_G,      "Green mids",  "Fine tuning", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (Trim_B,      "Blue mids",   "Fine tuning", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (BlackLevel,  "Black level", "Fine tuning", "DisplayAsPercentage", 0.0, -0.5, 0.5);
+
+//-----------------------------------------------------------------------------------------//
+// Definitions and declarations
+//-----------------------------------------------------------------------------------------//
+
+#ifdef WINDOWS
+#define PROFILE ps_3_0
+#endif
 
 //-----------------------------------------------------------------------------------------//
 // Functions
@@ -109,4 +138,3 @@ DeclareEntryPoint (MidtoneKicker)
 
    return lerp (Bgd, ret, tex2D (Mask, uv2));
 }
-
