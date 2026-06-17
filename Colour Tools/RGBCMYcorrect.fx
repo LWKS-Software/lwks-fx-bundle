@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-04
+// @Released 2026-06-17
 // @Author baopao
 // @Created 2015-09-23
 
@@ -8,6 +8,20 @@
  magenta and yellow parameters.  This is a "Color_NOT_Channel" correction based filter
  originally created for Mac and Linux systems, and subsequently extended to Windows.
 
+   [*]RED
+      [*]Tint colour:  Sets the tint colour to apply to reds.
+      [*]Tint amount:  Sets the amount of tint colour to apply to reds.
+      [*]Saturate:  Sets the red saturation.
+      [*]Gamma:  Adjusts the red gamma.
+      [*]Contrast:  Adjusts the red contrast.
+      [*]Gain:  Adjusts the red gain.
+      [*]Brightness:  Adjusts the red brightness.
+   [*]GREEN:  Same seven settings as those used for red adjustment.
+   [*]BLUE:  Same seven settings as those used for red adjustment.
+   [*]CYAN:  Same seven settings as those used for red adjustment.
+   [*]MAGENTA:  Same seven settings as those used for red adjustment.
+   [*]YELLOW:  Same seven settings as those used for red adjustment.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -15,6 +29,10 @@
 // Lightworks user effect RGBCMYcorrect.fx
 //
 // Version history:
+//
+// Updated 2026-06-17 jwrl.
+// Added settings description to header text.
+// Replaced kTransparentBlack with _TransparentBlack definition.
 //
 // Updated 2023-08-04 jwrl.
 // Reworded tint colour and tint amount parameters.
@@ -41,71 +59,71 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-// RED_P
+// Red parameters
 
-DeclareColourParam (R_TintColour, "Tint colour", "RED", kNoFlags, 1.0, 1.0, 1.0, 1.0);
+DeclareColourParam (R_TintColour, "Tint colour", "RED",     kNoFlags, 1.0, 1.0, 1.0, 1.0);
 
-DeclareFloatParam (R_TintAmount, "Tint amount", "RED", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (R_Saturate, "Saturate", "RED", kNoFlags, 1.0, 0.0, 5.0);
-DeclareFloatParam (R_Gamma, "Gamma", "RED", kNoFlags, 1.0, 0.0, 2.0);
-DeclareFloatParam (R_Contrast, "Contrast", "RED", kNoFlags, 1.0, 0.0, 2.0);
-DeclareFloatParam (R_Gain, "Gain", "RED", kNoFlags, 1.0, 0.0, 2.0);
-DeclareFloatParam (R_Brightness, "Brightness", "RED", kNoFlags, 0.0, -1.0, 2.0);
+DeclareFloatParam  (R_TintAmount, "Tint amount", "RED",     kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam  (R_Saturate,   "Saturate",    "RED",     kNoFlags, 1.0, 0.0, 5.0);
+DeclareFloatParam  (R_Gamma,      "Gamma",       "RED",     kNoFlags, 1.0, 0.0, 2.0);
+DeclareFloatParam  (R_Contrast,   "Contrast",    "RED",     kNoFlags, 1.0, 0.0, 2.0);
+DeclareFloatParam  (R_Gain,       "Gain",        "RED",     kNoFlags, 1.0, 0.0, 2.0);
+DeclareFloatParam  (R_Brightness, "Brightness",  "RED",     kNoFlags, 0.0, -1.0, 2.0);
 
-// GREEN_P
+// Green parameters
 
-DeclareColourParam (G_TintColour, "Tint colour", "GREEN", kNoFlags, 1.0, 1.0, 1.0, 1.0);
+DeclareColourParam (G_TintColour, "Tint colour", "GREEN",   kNoFlags, 1.0, 1.0, 1.0, 1.0);
 
-DeclareFloatParam (G_TintAmount, "Tint amount", "GREEN", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (G_Saturate, "Saturate", "GREEN", kNoFlags, 1.0, 0.0, 5.0);
-DeclareFloatParam (G_Gamma, "Gamma", "GREEN", kNoFlags, 1.0, 0.0, 2.0);
-DeclareFloatParam (G_Contrast, "Contrast", "GREEN", kNoFlags, 1.0, 0.0, 2.0);
-DeclareFloatParam (G_Gain, "Gain", "GREEN", kNoFlags, 1.0, 0.0, 2.0);
-DeclareFloatParam (G_Brightness, "Brightness", "GREEN", kNoFlags, 0.0, -1.0, 2.0);
+DeclareFloatParam  (G_TintAmount, "Tint amount", "GREEN",   kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam  (G_Saturate,   "Saturate",    "GREEN",   kNoFlags, 1.0, 0.0, 5.0);
+DeclareFloatParam  (G_Gamma,      "Gamma",       "GREEN",   kNoFlags, 1.0, 0.0, 2.0);
+DeclareFloatParam  (G_Contrast,   "Contrast",    "GREEN",   kNoFlags, 1.0, 0.0, 2.0);
+DeclareFloatParam  (G_Gain,       "Gain",        "GREEN",   kNoFlags, 1.0, 0.0, 2.0);
+DeclareFloatParam  (G_Brightness, "Brightness",  "GREEN",   kNoFlags, 0.0, -1.0, 2.0);
 
-// BLUE_P
+// Blue parameters
 
-DeclareColourParam (B_TintColour, "Tint colour", "BLUE", kNoFlags, 1.0, 1.0, 1.0, 1.0);
+DeclareColourParam (B_TintColour, "Tint colour", "BLUE",    kNoFlags, 1.0, 1.0, 1.0, 1.0);
 
-DeclareFloatParam (B_TintAmount, "Tint amount", "BLUE", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (B_Saturate, "Saturate", "BLUE", kNoFlags, 1.0, 0.0, 5.0);
-DeclareFloatParam (B_Gamma, "Gamma", "BLUE", kNoFlags, 1.0, 0.0, 2.0);
-DeclareFloatParam (B_Contrast, "Contrast", "BLUE", kNoFlags, 1.0, 0.0, 2.0);
-DeclareFloatParam (B_Gain, "Gain", "BLUE", kNoFlags, 1.0, 0.0, 2.0);
-DeclareFloatParam (B_Brightness, "Brightness", "BLUE", kNoFlags, 0.0, -1.0, 2.0);
+DeclareFloatParam  (B_TintAmount, "Tint amount", "BLUE",    kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam  (B_Saturate,   "Saturate",    "BLUE",    kNoFlags, 1.0, 0.0, 5.0);
+DeclareFloatParam  (B_Gamma,      "Gamma",       "BLUE",    kNoFlags, 1.0, 0.0, 2.0);
+DeclareFloatParam  (B_Contrast,   "Contrast",    "BLUE",    kNoFlags, 1.0, 0.0, 2.0);
+DeclareFloatParam  (B_Gain,       "Gain",        "BLUE",    kNoFlags, 1.0, 0.0, 2.0);
+DeclareFloatParam  (B_Brightness, "Brightness",  "BLUE",    kNoFlags, 0.0, -1.0, 2.0);
 
-// CYAN_P
+// Cyan parameters
 
-DeclareColourParam (C_TintColour, "Tint colour", "CYAN", kNoFlags, 1.0, 1.0, 1.0, 1.0);
+DeclareColourParam (C_TintColour, "Tint colour", "CYAN",    kNoFlags, 1.0, 1.0, 1.0, 1.0);
 
-DeclareFloatParam (C_TintAmount, "Tint amount", "CYAN", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (C_Saturate, "Saturate", "CYAN", kNoFlags, 1.0, 0.0, 5.0);
-DeclareFloatParam (C_Gamma, "Gamma", "CYAN", kNoFlags, 1.0, 0.0, 2.0);
-DeclareFloatParam (C_Contrast, "Contrast", "CYAN", kNoFlags, 1.0, 0.0, 2.0);
-DeclareFloatParam (C_Gain, "Gain", "CYAN", kNoFlags, 1.0, 0.0, 2.0);
-DeclareFloatParam (C_Brightness, "Brightness", "CYAN", kNoFlags, 0.0, -1.0, 2.0);
+DeclareFloatParam  (C_TintAmount, "Tint amount", "CYAN",    kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam  (C_Saturate,   "Saturate",    "CYAN",    kNoFlags, 1.0, 0.0, 5.0);
+DeclareFloatParam  (C_Gamma,      "Gamma",       "CYAN",    kNoFlags, 1.0, 0.0, 2.0);
+DeclareFloatParam  (C_Contrast,   "Contrast",    "CYAN",    kNoFlags, 1.0, 0.0, 2.0);
+DeclareFloatParam  (C_Gain,       "Gain",        "CYAN",    kNoFlags, 1.0, 0.0, 2.0);
+DeclareFloatParam  (C_Brightness, "Brightness",  "CYAN",    kNoFlags, 0.0, -1.0, 2.0);
 
-// MAGENTA_P
+// Magenta parameters
 
 DeclareColourParam (M_TintColour, "Tint colour", "MAGENTA", kNoFlags, 1.0, 1.0, 1.0, 1.0);
 
-DeclareFloatParam (M_TintAmount, "Tint amount", "MAGENTA", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (M_Saturate, "Saturate", "MAGENTA", kNoFlags, 1.0, 0.0, 5.0);
-DeclareFloatParam (M_Gamma, "Gamma", "MAGENTA", kNoFlags, 1.0, 0.0, 2.0);
-DeclareFloatParam (M_Contrast, "Contrast", "MAGENTA", kNoFlags, 1.0, 0.0, 2.0);
-DeclareFloatParam (M_Gain, "Gain", "MAGENTA", kNoFlags, 1.0, 0.0, 2.0);
-DeclareFloatParam (M_Brightness, "Brightness", "MAGENTA", kNoFlags, 0.0, -1.0, 2.0);
+DeclareFloatParam  (M_TintAmount, "Tint amount", "MAGENTA", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam  (M_Saturate,   "Saturate",    "MAGENTA", kNoFlags, 1.0, 0.0, 5.0);
+DeclareFloatParam  (M_Gamma,      "Gamma",       "MAGENTA", kNoFlags, 1.0, 0.0, 2.0);
+DeclareFloatParam  (M_Contrast,   "Contrast",    "MAGENTA", kNoFlags, 1.0, 0.0, 2.0);
+DeclareFloatParam  (M_Gain,       "Gain",        "MAGENTA", kNoFlags, 1.0, 0.0, 2.0);
+DeclareFloatParam  (M_Brightness, "Brightness",  "MAGENTA", kNoFlags, 0.0, -1.0, 2.0);
 
-// YELLOW_P
+// Yellow parameters
 
-DeclareColourParam (Y_TintColour, "Tint colour", "YELLOW", kNoFlags, 1.0, 1.0, 1.0, 1.0);
+DeclareColourParam (Y_TintColour, "Tint colour", "YELLOW",  kNoFlags, 1.0, 1.0, 1.0, 1.0);
 
-DeclareFloatParam (Y_TintAmount, "Tint amount", "YELLOW", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (Y_Saturate, "Saturate", "YELLOW", kNoFlags, 1.0, 0.0, 5.0);
-DeclareFloatParam (Y_Gamma, "Gamma", "YELLOW", kNoFlags, 1.0, 0.0, 2.0);
-DeclareFloatParam (Y_Contrast, "Contrast", "YELLOW", kNoFlags, 1.0, 0.0, 2.0);
-DeclareFloatParam (Y_Gain, "Gain", "YELLOW", kNoFlags, 1.0, 0.0, 2.0);
-DeclareFloatParam (Y_Brightness, "Brightness", "YELLOW", kNoFlags, 0.0, -1.0, 2.0);
+DeclareFloatParam  (Y_TintAmount, "Tint amount", "YELLOW",  kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam  (Y_Saturate,   "Saturate",    "YELLOW",  kNoFlags, 1.0, 0.0, 5.0);
+DeclareFloatParam  (Y_Gamma,      "Gamma",       "YELLOW",  kNoFlags, 1.0, 0.0, 2.0);
+DeclareFloatParam  (Y_Contrast,   "Contrast",    "YELLOW",  kNoFlags, 1.0, 0.0, 2.0);
+DeclareFloatParam  (Y_Gain,       "Gain",        "YELLOW",  kNoFlags, 1.0, 0.0, 2.0);
+DeclareFloatParam  (Y_Brightness, "Brightness",  "YELLOW",  kNoFlags, 0.0, -1.0, 2.0);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -114,6 +132,8 @@ DeclareFloatParam (Y_Brightness, "Brightness", "YELLOW", kNoFlags, 0.0, -1.0, 2.
 #ifdef WINDOWS
 #define PROFILE ps_3_0
 #endif
+
+#define _TransparentBlack 0.0.xxxx
 
 //-----------------------------------------------------------------------------------------//
 // Code
@@ -124,7 +144,7 @@ DeclarePass (Inp)
 
 DeclareEntryPoint (RGBCMYcorrect)
 {
-   if (IsOutOfBounds (uv2)) return kTransparentBlack;
+   if (IsOutOfBounds (uv2)) return _TransparentBlack;
 
    float4 video = tex2D (Inp, uv2);
    float4 Cs = saturate (video);
@@ -212,4 +232,3 @@ DeclareEntryPoint (RGBCMYcorrect)
 
    return lerp (video, saturate (Cs), tex2D (Mask, uv2));
 }
-
