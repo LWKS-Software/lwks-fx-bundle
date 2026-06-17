@@ -1,13 +1,22 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-17
 // @Author jwrl
 // @Created 2020-04-23
 
 /**
- This is a simple black and white balance utility.  To use it, first sample the point that
- you want to use as a white reference with the eyedropper, then get the black reference
- point.  Switch off "Select white and black reference points" and set up the white and
- black levels.
+ This is a simple black and white balance utility.  To use it, first sample the point
+ that you want to use as a white reference with the eyedropper, then get the black
+ reference point.  Switch off "Select white and black reference points" and set up the
+ white and black levels.
+
+   [*]Select white and black reference points:  Enables or disables the setting of
+      black and white reference points​.
+   [*]Reference points
+      [*]White:  Sets the value to be used as peak white.​
+      [*]Black:  Sets the value to be used as absolute black.​
+   [*]Target levels
+      [*]White:  Adjusts white level.​
+      [*]Black:  Adjusts black level.​
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -16,6 +25,10 @@
 // Lightworks user effect WhiteBlackBalance.fx
 //
 // Version history:
+//
+// Updated 2026-06-17 jwrl.
+// Added settings description to header text.
+// Changed masking to full RGBA.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
@@ -52,6 +65,10 @@ DeclareFloatParam (BlackLevel, "Black", "Target levels", "DisplayAsPercentage", 
 // Definitions and Declarations
 //-----------------------------------------------------------------------------------------//
 
+#ifdef WINDOWS
+#define PROFILE ps_3_0
+#endif
+
 float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
@@ -82,5 +99,5 @@ DeclareEntryPoint (WhiteBalance)
 
    retval = lerp (_TransparentBlack, saturate (retval), source.a);
 
-   return lerp (source, retval, tex2D (Mask, uv2).x);
+   return lerp (source, retval, tex2D (Mask, uv2));
 }
