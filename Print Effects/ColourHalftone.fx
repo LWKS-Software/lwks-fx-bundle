@@ -1,11 +1,21 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-06-18
 // @Author windsturm
 // @Created 2012-06-16
 
 /**
- This effect emulates the dot pattern of a colour half-tone print image.  The colours used
- for background and dots are user adjustable.
+ This effect emulates the dot pattern of a colour half-tone print image.  The colours
+ used for background and dots are user adjustable.
+
+   [*]Center:  Sets the centre point position for dot matrix sampling.
+   [*]Size:  Sets the maximum size of the dots produced.
+   [*]Cyan
+      [*]Angle:  Sets the angle of the cyan dot patterns.
+      [*]Colour:  Sets the colour of the cyan dot patterns.
+   [*]Magenta:  As for the Cyan group.
+   [*]Yellow:  As for the Cyan group.
+   [*]blacK:  As for the Cyan group.
+   [*]Background:  Sets the background colour.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -14,6 +24,11 @@
 // Lightworks user effect ColourHalftone.fx
 //
 // Version history:
+//
+// Updated 2026-06-18 jwrl.
+// Reordered the settings and groups so that they're more logical.
+// All channels of Mask are now used.
+// Added settings to the header text.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -37,21 +52,23 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (centerX, "Center", NoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (centerY, "Center", NoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam  (centerX, "Center",      NoGroup,   "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam  (centerY, "Center",      NoGroup,   "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam  (dotSize, "Size",        NoGroup,   kNoFlags, 0.01, 0.0, 1.0);
 
-DeclareFloatParam (dotSize, "Size", NoGroup, kNoFlags, 0.01, 0.0, 1.0);
+DeclareFloatParam  (angleC,  "Angle",       "Cyan",    kNoFlags, 15.0, 0.0, 90.0);
+DeclareColourParam (colourC, "Colour",      "Cyan",    kNoFlags, 0.0, 1.0, 1.0, 1.0);
 
-DeclareFloatParam (angleC, "Cyan", "Angle", kNoFlags, 15.0, 0.0, 90.0);
-DeclareFloatParam (angleM, "Magenta", "Angle", kNoFlags, 75.0, 0.0, 90.0);
-DeclareFloatParam (angleY, "Yellow", "Angle", kNoFlags, 0.0, 0.0, 90.0);
-DeclareFloatParam (angleK, "blacK", "Angle", kNoFlags, 40.0, 0.0, 90.0);
+DeclareFloatParam  (angleM,  "Angle",       "Magenta", kNoFlags, 75.0, 0.0, 90.0);
+DeclareColourParam (colourM, "Colour",      "Magenta", kNoFlags, 1.0, 0.0, 1.0, 1.0);
 
-DeclareColourParam (colorC, "Cyan", "Color", kNoFlags, 0.0, 1.0, 1.0, 1.0);
-DeclareColourParam (colorM, "Magenta", "Color", kNoFlags, 1.0, 0.0, 1.0, 1.0);
-DeclareColourParam (colorY, "Yellow", "Color", kNoFlags, 1.0, 1.0, 0.0, 1.0);
-DeclareColourParam (colorK, "blacK", "Color", kNoFlags, 0.0, 0.0, 0.0, 1.0);
-DeclareColourParam (colorBG, "Background", "Color", kNoFlags, 1.0, 1.0, 1.0, 1.0);
+DeclareFloatParam  (angleY,  "Angle",       "Yellow",  kNoFlags, 0.0, 0.0, 90.0);
+DeclareColourParam (colourY, "Colour",      "Yellow",  kNoFlags, 1.0, 1.0, 0.0, 1.0);
+
+DeclareFloatParam  (angleK,  "Angle",       "blacK",   kNoFlags, 40.0, 0.0, 90.0);
+DeclareColourParam (colourK, "Colour",      "blacK",   kNoFlags, 0.0, 0.0, 0.0, 1.0);
+
+DeclareColourParam (colourBG, "Background", NoGroup,   kNoFlags, 1.0, 1.0, 1.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -99,7 +116,7 @@ float4 half_tone (float2 uv, float i, float s, float angle, float a)
    slideXY *= asp;
 
    float cmykluma [4] = { cmykColor.w, cmykColor.x, cmykColor.y, cmykColor.z };
-   float4 cmykcol [4] = { colorK, colorC, colorM, colorY };
+   float4 cmykcol [4] = { colourK, colourC, colourM, colourY };
 
    xy += slideXY;
    asp *= (dotSize * cmykluma [i]);
@@ -122,7 +139,7 @@ DeclareEntryPoint (ColourHalftone)
 
    if (dotSize <= 0.0) { ret = source; }
    else {
-      ret = colorBG;
+      ret = colourBG;
 
       float cmykang [4] = {angleK, angleC, angleM, angleY};
 
@@ -149,6 +166,5 @@ DeclareEntryPoint (ColourHalftone)
       if (IsOutOfBounds (uv2)) ret = kTransparentBlack;
    }
 
-   return lerp (source, ret, tex2D (Mask, uv2).x);
+   return lerp (source, ret, tex2D (Mask, uv2));
 }
-
