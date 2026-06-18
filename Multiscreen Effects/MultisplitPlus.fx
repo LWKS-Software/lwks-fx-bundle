@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-05-18
+// @Released 2026-06-18
 // @Author jwrl
 // @Created 2026-03-17
 
@@ -21,9 +21,9 @@
        [*] Position X:  Sets the horizontal position of the video 1 input.
        [*] Position Y:  Sets the vertical position of the video 1 input.
        [*] Size:  Increases the size of the video 1 input.
-       [*] Monochrome:  Dissolves video 1 to monochrome.
-    [*] V2 settings:  Identical to V1 settings.
-    [*] V3 settings:  Identical to V1 settings.
+       [*] Desaturate:  Dissolves video 1 to monochrome.
+    [*] V2 settings.  Identical to V1 settings.
+    [*] V3 settings.  Identical to V1 settings.
     [*] Border settings.
        [*] Position:  Trims border position horizontally.  This is a limited range
            adjustment, and is symmetrical when adjusting triple video parameters.
@@ -50,17 +50,16 @@
  each input.
 
  NOTE:  There is no masking provided in this effect.  Given the nature of what it's
- designed to do, masking would be rather pointless. Also versions dated March 19 2026
- and later have had antialiassing added to the border generation. This is important
- to improve the appearance of the slope when the border angle is changed.  The May 18,
- 2126 version adds the ability to independently adjust the right panel in triple
- image mode.
+ designed to do, masking would be rather pointless.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect MultisplitPlus.fx
 //
 // Version history:
+//
+// Modified 2026-06-18 jwrl.
+// Changed "Monochrome" setting name in V1, V2 and V3 to "Desaturate".
 //
 // Modified 2026-05-18 jwrl.
 // Added the ability to control the right wipe independently of the left.
@@ -84,33 +83,33 @@ DeclareInputs (V1, V2, V3);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareIntParam (SetTechnique, "Effect mode", kNoGroup, 0, "V1 left, V2 right|V1 left, V2 centre, V3 right");
+DeclareIntParam (SetTechnique,    "Effect mode", kNoGroup, 0,      "V1 left, V2 right|V1 left, V2 centre, V3 right");
 
-DeclareFloatParam (V1PosX, "Position",   "V1 settings", "SpecifiesPointX|DisplayAsPercentage", 0.0, -1.5, 1.5);
-DeclareFloatParam (V1PosY, "Position",   "V1 settings", "SpecifiesPointY|DisplayAsPercentage", 0.0, -1.5, 1.5);
-DeclareFloatParam (V1size, "Size",       "V1 settings", "DisplayAsPercentage", 1.0, 1.0, 5.0);
-DeclareFloatParam (V1mono, "Monochrome", "V1 settings", kNoFlags,              0.0, 0.0, 1.0);
+DeclareFloatParam (V1PosX,        "Position",   "V1 settings",     "SpecifiesPointX|DisplayAsPercentage", 0.0, -1.5, 1.5);
+DeclareFloatParam (V1PosY,        "Position",   "V1 settings",     "SpecifiesPointY|DisplayAsPercentage", 0.0, -1.5, 1.5);
+DeclareFloatParam (V1size,        "Size",       "V1 settings",     "DisplayAsPercentage", 1.0, 1.0, 5.0);
+DeclareFloatParam (V1mono,        "Desaturate", "V1 settings",     kNoFlags,              0.0, 0.0, 1.0);
 
-DeclareFloatParam (V2PosX, "Position",   "V2 settings", "SpecifiesPointX|DisplayAsPercentage", 0.0, -1.5, 1.5);
-DeclareFloatParam (V2PosY, "Position",   "V2 settings", "SpecifiesPointY|DisplayAsPercentage", 0.0, -1.5, 1.5);
-DeclareFloatParam (V2size, "Size",       "V2 settings", "DisplayAsPercentage", 1.0, 1.0, 5.0);
-DeclareFloatParam (V2mono, "Monochrome", "V2 settings", kNoFlags,              0.0, 0.0, 1.0);
+DeclareFloatParam (V2PosX,        "Position",   "V2 settings",     "SpecifiesPointX|DisplayAsPercentage", 0.0, -1.5, 1.5);
+DeclareFloatParam (V2PosY,        "Position",   "V2 settings",     "SpecifiesPointY|DisplayAsPercentage", 0.0, -1.5, 1.5);
+DeclareFloatParam (V2size,        "Size",       "V2 settings",     "DisplayAsPercentage", 1.0, 1.0, 5.0);
+DeclareFloatParam (V2mono,        "Desaturate", "V2 settings",     kNoFlags,              0.0, 0.0, 1.0);
 
-DeclareFloatParam (V3PosX, "Position",   "V3 settings", "SpecifiesPointX|DisplayAsPercentage", 0.0, -1.5, 1.5);
-DeclareFloatParam (V3PosY, "Position",   "V3 settings", "SpecifiesPointY|DisplayAsPercentage", 0.0, -1.5, 1.5);
-DeclareFloatParam (V3size, "Size",       "V3 settings", "DisplayAsPercentage", 1.0, 1.0, 5.0);
-DeclareFloatParam (V3mono, "Monochrome", "V3 settings", kNoFlags,              0.0, 0.0, 1.0);
+DeclareFloatParam (V3PosX,        "Position",   "V3 settings",     "SpecifiesPointX|DisplayAsPercentage", 0.0, -1.5, 1.5);
+DeclareFloatParam (V3PosY,        "Position",   "V3 settings",     "SpecifiesPointY|DisplayAsPercentage", 0.0, -1.5, 1.5);
+DeclareFloatParam (V3size,        "Size",       "V3 settings",     "DisplayAsPercentage", 1.0, 1.0, 5.0);
+DeclareFloatParam (V3mono,        "Desaturate", "V3 settings",     kNoFlags,              0.0, 0.0, 1.0);
 
-DeclareFloatParam  (BrdrPosn_1,   "Position", "Border settings", "DisplayAsPercentage", 0.0,  -0.1, 0.1);
-DeclareFloatParam  (BrdrWidth_1,  "Width",    "Border settings", "DisplayAsPercentage", 0.005, 0.0, 0.02);
-DeclareFloatParam  (BrdrAngle_1,  "Angle",    "Border settings", kNoFlags, 0.0, -1.0, 1.0);
-DeclareColourParam (BrdrColour_1, "Colour",   "Border settings", kNoFlags, 1.0, 1.0, 1.0, 1.0);
+DeclareFloatParam  (BrdrPosn_1,   "Position",   "Border settings", "DisplayAsPercentage", 0.0,  -0.1, 0.1);
+DeclareFloatParam  (BrdrWidth_1,  "Width",      "Border settings", "DisplayAsPercentage", 0.005, 0.0, 0.02);
+DeclareFloatParam  (BrdrAngle_1,  "Angle",      "Border settings", kNoFlags, 0.0, -1.0, 1.0);
+DeclareColourParam (BrdrColour_1, "Colour",     "Border settings", kNoFlags, 1.0, 1.0, 1.0, 1.0);
 
-DeclareIntParam    (AdjRight,     "Settings", "Right border",    0, "Lock to main border|Adjust independently");
-DeclareFloatParam  (BrdrPosn_2,   "Position", "Right border",   "DisplayAsPercentage", 0.0,  -0.1, 0.1);
-DeclareFloatParam  (BrdrWidth_2,  "Width",    "Right border",   "DisplayAsPercentage", 0.005, 0.0, 0.02);
-DeclareFloatParam  (BrdrAngle_2,  "Angle",    "Right border",   kNoFlags, 0.0, -1.0, 1.0);
-DeclareColourParam (BrdrColour_2, "Colour",   "Right border",   kNoFlags, 1.0, 1.0, 1.0, 1.0);
+DeclareIntParam    (AdjRight,     "Settings",   "Right border",    0, "Lock to main border|Adjust independently");
+DeclareFloatParam  (BrdrPosn_2,   "Position",   "Right border",    "DisplayAsPercentage", 0.0,  -0.1, 0.1);
+DeclareFloatParam  (BrdrWidth_2,  "Width",      "Right border",    "DisplayAsPercentage", 0.005, 0.0, 0.02);
+DeclareFloatParam  (BrdrAngle_2,  "Angle",      "Right border",    kNoFlags, 0.0, -1.0, 1.0);
+DeclareColourParam (BrdrColour_2, "Colour",     "Right border",    kNoFlags, 1.0, 1.0, 1.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
