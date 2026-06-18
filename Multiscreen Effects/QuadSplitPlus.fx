@@ -1,46 +1,46 @@
 // @Maintainer jwrl
-// @Released 2026-06-08
+// @Released 2026-06-18
 // @Author jwrl
 // @Created 2020-06-22
 
 /**
- This simple effect produces individually sized and positioned images of up to four sources
- at a time from the inputs A, B, C and D.  Input X (for eXternal) is a background source
- that can be used to daisy chain other instances of this effect to produce much more than
- four images on screen.  The effect settings are:
+ This simple effect produces individually sized and positioned images of up to four
+ sources at a time from the inputs A, B, C and D.  A fifth input X (for eXternal) is a
+ background source that can be used to daisy chain other instances of this effect to
+ produce much more than five images on screen at a time.
 
    [*]Source A
       [*]Opacity:  Sets the A input opacity.
-      [*]Crop / size grouping:  When switched on, enables source A size and crop settings
-         for all inputs.
+      [*]Crop / size grouping:  When switched on, enables source A size and crop
+         settings for all inputs.
       [*]Size:  Scales around the top left corner of the image.
       [*]Crop width:  Symmetrically crops right and left sides of the A image.
       [*]Crop height:  Symmetrically crops top and bottom sides of the A image.
-      [*]Position X:  Self explanatory.
-      [*]Position Y:  Self explanatory.
+      [*]Position X: Self explanatory.
+      [*]Position Y: Self explanatory.
    [*]Source B:  Has the same group of settings as used in the A input.
    [*]Source C:  As for the B input.
    [*]Source D:  As for the B input.
    [*]Border
-      [*]Width:  Sets the border width for all inputs.
-      [*]Colour:  Sets the border colour for all inputs.
+      [*]Width: Sets the border width for all inputs.
+      [*]Colour: Sets the border colour for all inputs.
 
  The images can be individually cropped to create differing aspect ratios of the source
- media.  The cropping is symmetrical to reduce the number of controls necessary.  To make
- sizing and position calculation simpler for the user, sizing scales around the top left
- corner of the frame.  This means that a position setting of 0%, 0% will place the image at
- the top left of the frame, and if you reduce the size of all frames to 25% the next image
- will be at 25%, 0%, the third at 50%, 0% and fourth at 75%, 0% for a vertical column of
- four images.  In other words, you always add the size percentages to get the appropriate
- position.
+ media.  The cropping is symmetrical to reduce the number of controls necessary.  To
+ make sizing and position calculation simpler for the user, sizing scales around the
+ top left corner of the frame.  This means that a position setting of 0%, 0% will place
+ the image at the top left of the frame, and if you reduce the size of all frames to
+ 25% the next image will be at 25%, 0%, the third at 50%, 0% and fourth at 75%, 0% for
+ a vertical column of four images.  In other words, you always add the size percentages
+ to get the appropriate position.
 
- A hard edged border which erodes the image by the border thickness has also been provided.
- It applies to all images simultaneously.  If desired the A input's settings for size and
- cropping can also be used for all four of the images.  That can make setting up much faster.
+ A hard edged border which erodes the image by the border thickness has been provided.
+ It applies to all images simultaneously.  If desired the A input's settings for size
+ and cropping can also be used for all four of the images.  That can make setting up
+ much faster.
 
- The order of the various parameters in the user interface is the suggested order in which
- they should be set up.  No adjustments are provided for input X, since its intended use
- is as a simple background and daisy chain input.
+ The order of the various parameters in the user interface is the suggested order in
+ which they should be set up.  No adjustments are provided for input X.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -50,10 +50,10 @@
 //
 // Version history:
 //
-// Updated 2026-06-08 jwrl.
-// Changed "Symmetrical crop X" to "Crop width" and "Symmetrical crop Y" to "Crop
-// Height".  The intention is to improve function clarity and also improve compatibility
-// with 2026.1.  Added a text description of the settings to the header.
+// Updated 2026-06-18 jwrl.
+// Changed "Symmetrical crop X" to "Crop width".
+// Changed "Symmetrical crop Y" to "Crop height".
+// Added settings to the header text.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -75,40 +75,48 @@ DeclareInputs (A, B, C, D, X);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (A_Opacity, "Opacity", "Source A", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (A_Opacity,     "Opacity",      "Source A", kNoFlags, 1.0, 0.0, 1.0);
+
 DeclareIntParam (A_Group, "Crop / size grouping", "Source A", 0, "Set each input individually|Use source A settings for all");
-DeclareFloatParam (A_Size, "Size", "Source A", kNoFlags, 0.25, 0.0, 1.0);
-DeclareFloatParam (A_Crop_X, "Crop width", "Source A", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (A_Crop_Y, "Crop height", "Source A", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (A_Position_X, "Position", "Source A", "SpecifiesPointX|DisplayAsPercentage", 0.0, -0.5, 1.5);
-DeclareFloatParam (A_Position_Y, "Position", "Source A", "SpecifiesPointY|DisplayAsPercentage", 1.0, -0.5, 1.5);
 
-DeclareFloatParam (B_Opacity, "Opacity", "Source B", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (A_Size,        "Size",         "Source A", kNoFlags, 0.25, 0.0, 1.0);
+DeclareFloatParam (A_Crop_X,      "Crop width",   "Source A", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (A_Crop_Y,      "Crop height",  "Source A", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (A_Position_X,  "Position",     "Source A", "SpecifiesPointX|DisplayAsPercentage", 0.0, -0.5, 1.5);
+DeclareFloatParam (A_Position_Y,  "Position",     "Source A", "SpecifiesPointY|DisplayAsPercentage", 1.0, -0.5, 1.5);
+
+DeclareFloatParam (B_Opacity,     "Opacity",      "Source B", kNoFlags, 1.0, 0.0, 1.0);
+
 DeclareIntParam (B_Group, "Crop / size grouping", "Source B", 1, "Only use B settings|Follow source A group settings)";
-DeclareFloatParam (B_Size, "Size", "Source B", kNoFlags, 0.25, 0.0, 1.0);
-DeclareFloatParam (B_Crop_X, "Crop width", "Source B", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (B_Crop_Y, "Crop height", "Source B", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (B_Position_X, "Position", "Source B", "SpecifiesPointX|DisplayAsPercentage", 0.25, -0.5, 1.5);
-DeclareFloatParam (B_Position_Y, "Position", "Source B", "SpecifiesPointY|DisplayAsPercentage", 1.0, -0.5, 1.5);
 
-DeclareFloatParam (C_Opacity, "Opacity", "Source C", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (B_Size,        "Size",         "Source B", kNoFlags, 0.25, 0.0, 1.0);
+DeclareFloatParam (B_Crop_X,      "Crop width",   "Source B", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (B_Crop_Y,      "Crop height",  "Source B", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (B_Position_X,  "Position",     "Source B", "SpecifiesPointX|DisplayAsPercentage", 0.25, -0.5, 1.5);
+DeclareFloatParam (B_Position_Y,  "Position",     "Source B", "SpecifiesPointY|DisplayAsPercentage", 1.0, -0.5, 1.5);
+
+DeclareFloatParam (C_Opacity,     "Opacity",      "Source C", kNoFlags, 1.0, 0.0, 1.0);
+
 DeclareIntParam (C_Group, "Crop / size grouping", "Source C", 1, "Only use C settings|Follow source A group settings)";
-DeclareFloatParam (C_Size, "Size", "Source C", kNoFlags, 0.25, 0.0, 1.0);
-DeclareFloatParam (C_Crop_X, "Crop width", "Source C", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (C_Crop_Y, "Crop height", "Source C", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (C_Position_X, "Position", "Source C", "SpecifiesPointX|DisplayAsPercentage", 0.5, -0.5, 1.5);
-DeclareFloatParam (C_Position_Y, "Position", "Source C", "SpecifiesPointY|DisplayAsPercentage", 1.0, -0.5, 1.5);
 
-DeclareFloatParam (D_Opacity, "Opacity", "Source D", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (C_Size,        "Size",         "Source C", kNoFlags, 0.25, 0.0, 1.0);
+DeclareFloatParam (C_Crop_X,      "Crop width",   "Source C", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (C_Crop_Y,      "Crop height",  "Source C", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (C_Position_X,  "Position",     "Source C", "SpecifiesPointX|DisplayAsPercentage", 0.5, -0.5, 1.5);
+DeclareFloatParam (C_Position_Y,  "Position",     "Source C", "SpecifiesPointY|DisplayAsPercentage", 1.0, -0.5, 1.5);
+
+DeclareFloatParam (D_Opacity,     "Opacity",      "Source D", kNoFlags, 1.0, 0.0, 1.0);
+
 DeclareIntParam (D_Group, "Crop / size grouping", "Source D", 1, "Only use D settings|Follow source A group settings");
-DeclareFloatParam (D_Size, "Size", "Source D", kNoFlags, 0.25, 0.0, 1.0);
-DeclareFloatParam (D_Crop_X, "Crop width", "Source D", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (D_Crop_Y, "Crop height", "Source D", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (D_Position_X, "Position", "Source D", "SpecifiesPointX|DisplayAsPercentage", 0.75, -0.5, 1.5);
-DeclareFloatParam (D_Position_Y, "Position", "Source D", "SpecifiesPointY|DisplayAsPercentage", 1.0, -0.5, 1.5);
 
-DeclareFloatParam (BorderWidth, "Width", "Border", kNoFlags, 0.025, 0.0, 0.1);
-DeclareColourParam (BorderColour, "Colour", "Border", kNoFlags, 0.694, 0.255, 0.710);
+DeclareFloatParam (D_Size,        "Size",         "Source D", kNoFlags, 0.25, 0.0, 1.0);
+DeclareFloatParam (D_Crop_X,      "Crop width",   "Source D", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (D_Crop_Y,      "Crop height",  "Source D", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (D_Position_X,  "Position",     "Source D", "SpecifiesPointX|DisplayAsPercentage", 0.75, -0.5, 1.5);
+DeclareFloatParam (D_Position_Y,  "Position",     "Source D", "SpecifiesPointY|DisplayAsPercentage", 1.0, -0.5, 1.5);
+
+DeclareFloatParam (BorderWidth,   "Width",        "Border",   kNoFlags, 0.025, 0.0, 0.1);
+DeclareColourParam (BorderColour, "Colour",       "Border",   kNoFlags, 0.694, 0.255, 0.710);
 
 DeclareFloatParam (_OutputAspectRatio);
 
