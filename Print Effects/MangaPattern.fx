@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-17
 // @Author windsturm
 // @Author jwrl
 // @Created 2012-05-23
@@ -8,6 +8,14 @@
  This simulates the star pattern and hard contours used to create tonal values in a Manga
  half-tone image.
 
+   [*]Greyscale derived from:  Selects from either luminance or RGB average.
+   [*]Pattern size:  Sets the maximum size of the manga pattern.
+   [*]Sample threshold
+      [*]Black threshold:  Sets the threshold below which a colour is detected as black.
+      [*]Dark grey:  Sets the low midtone level.
+      [*]Light grey:  Sets the high midtone level.
+      [*]White threshold:  Sets the threshold above which a colour is detected as white.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -15,6 +23,10 @@
 // Lightworks user effect MangaPattern.fx
 //
 // Version history:
+//
+// Updated 2026-06-18 jwrl.
+// All channels of Mask are now used.
+// Added settings to the header text.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
@@ -41,12 +53,11 @@ DeclareMask;
 
 DeclareIntParam (skipGS, "Greyscale derived from:", NoGroup, 0, "Luminance|RGB average");
 
-DeclareFloatParam (threshold, "Pattern size", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
-
-DeclareFloatParam (td1, "Black threshold", "Sample threshold", kNoFlags, 0.2, 0.0, 1.0);
-DeclareFloatParam (td2, "Dark grey", "Sample threshold", kNoFlags, 0.4, 0.0, 1.0);
-DeclareFloatParam (td3, "Light grey", "Sample threshold", kNoFlags, 0.6, 0.0, 1.0);
-DeclareFloatParam (td4, "White threshold", "Sample threshold", kNoFlags, 0.8, 0.0, 1.0);
+DeclareFloatParam (threshold, "Pattern size",    kNoGroup,           kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (td1,       "Black threshold", "Sample threshold", kNoFlags, 0.2, 0.0, 1.0);
+DeclareFloatParam (td2,       "Dark grey",       "Sample threshold", kNoFlags, 0.4, 0.0, 1.0);
+DeclareFloatParam (td3,       "Light grey",      "Sample threshold", kNoFlags, 0.6, 0.0, 1.0);
+DeclareFloatParam (td4,       "White threshold", "Sample threshold", kNoFlags, 0.8, 0.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 DeclareFloatParam (_OutputWidth);
@@ -100,5 +111,5 @@ DeclareEntryPoint (MangaPattern)
 
    if (IsOutOfBounds (uv2)) dots = _TransparentBlack;
 
-   return lerp (color, dots, tex2D (Mask, uv2).x);
+   return lerp (color, dots, tex2D (Mask, uv2));
 }
