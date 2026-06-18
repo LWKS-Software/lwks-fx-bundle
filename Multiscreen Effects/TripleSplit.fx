@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-02-26
+// @Released 2026-06-18
 // @Author jwrl
 // @Created 2024-02-26
 
@@ -9,6 +9,26 @@
  produces a main panel from the V1 input, with two smaller panels on the right
  containing V2 and V3.  The second, "Upper L V1, lower L V2, right V3" is the reverse
  of that effect.
+
+   [*]Split type:  Selects the desired three way split from the five options shown.
+   [*]H size:  Adjusts the overall horizontal size of the group of panels.
+   [*]V size:  Does the same for the vertical size.
+   [*]Divider 1:  Adjusts the position of the first divider - this will be the horizontal divider when both horizontal and vertical are available.
+   [*]Divider 2:  Is the second divider which is the vertical divider when both are available.
+   [*]Position X and Y:  Are the master position settings for the panel group.
+   [*]Video 1
+      [*]Size:  Adjusts the size of V1 inside the panel that it is in.
+      [*]Aspect ratio:  Adjusts the width of V1 in all split types except horizontal bands.  In that it adjusts the vertical size.
+      [*]Position:  Is self explanatory.
+   [*]Video 2 has the same group of settings as used for the V1 input.
+   [*]Video 3 as above.
+   [*]Background
+      [*]Size:  Adjusts the size of the background.
+      [*]Aspect ratio:  Adjusts the width of the background in settings below 1, and the height otherwise.
+      [*]Position:  Is self explanatory.
+   [*]Border
+      [*]Width:  Sets the border width for all panels.
+      [*]Colour:  Sets the border colour for all panels.
 
  "Left V1, middle V2, right V3" has three vertical panels that can be independently
  adjusted in height to mimic the common news interview effect.  "Horizontal bands"
@@ -31,7 +51,8 @@
 //
 // Version history:
 //
-// Built 2024-02-26 jwrl.
+// Updated 2026-06-18 jwrl.
+// Added settings to the header text.
 //-----------------------------------------------------------------------------------------//
 
 #include "_utils.fx"
@@ -510,4 +531,3 @@ DeclareEntryPoint (TripleSplit)
 
    return lerp (tex2D (Bgd, uv5), retval, retval.a);
 }
-
