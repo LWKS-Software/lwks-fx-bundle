@@ -1,11 +1,19 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-06-18
 // @Author windsturm
 // @Created 2012-06-16
 // @OriginalAuthor "Evan Wallace"
 
 /**
  This effect is a version of the dot pattern of a black and white half-tone print image.
+ It simulates the look of the pattern used in newsprint.
+
+   [*]Greyscale derived from:  Selects from either luminance or RGB average.
+   [*]Centre point X:  Sets the horizontal centre point for the pattern sampling.
+   [*]Centre point Y:  Sets the vertical centre point for the pattern sampling.
+   [*]Angle:  Sets the on-screen angle of the dot pattern.
+   [*]Size:  Sets the maximum size of the dots.
+   [*]Strength:  Sets the dot intensity.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -45,6 +53,11 @@ THE SOFTWARE.
 //
 // Version history:
 //
+// Updated 2026-06-18 jwrl.
+// Changed "Center Position" to "Centre point".
+// All channels of Mask are now used.
+// Added settings to the header text.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
@@ -69,12 +82,11 @@ DeclareMask;
 
 DeclareIntParam (skipGS, "Greyscale derived from:", kNoGroup, 0, "Luminance|RGB average");
 
-DeclareFloatParam (centerX, "Center Position", kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (centerY, "Center Position", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
-
-DeclareFloatParam (angle, "Angle", kNoGroup, kNoFlags, 15.0, 0.0, 90.0);
-DeclareFloatParam (dotSize, "Size", kNoGroup, kNoFlags, 3.0, 3.0, 1000.0);
-DeclareFloatParam (Strength, "Strength", kNoGroup, kNoFlags, 4.0, 0.0, 200.0);
+DeclareFloatParam (centerX,  "Centre point", kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (centerY,  "Centre point", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (angle,    "Angle",        kNoGroup, kNoFlags, 15.0, 0.0, 90.0);
+DeclareFloatParam (dotSize,  "Size",         kNoGroup, kNoFlags, 3.0, 3.0, 1000.0);
+DeclareFloatParam (Strength, "Strength",     kNoGroup, kNoFlags, 4.0, 0.0, 200.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -115,6 +127,5 @@ DeclareEntryPoint (DotScreen)
 
    if (IsOutOfBounds (uv2)) color = kTransparentBlack;
 
-   return lerp (source, color, tex2D (Mask, uv2).x);
+   return lerp (source, color, tex2D (Mask, uv2));
 }
-
