@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-08-30
+// @Released 2026-06-19
 // @Author Vision-victory
 // @Created 2024-08-28
 
@@ -15,6 +15,9 @@
 // Lightworks user effect NoiseReduction.fx
 //
 // Version history:
+//
+// Updated 2026-06-19 jwrl.
+// Used full Lightworks mask channels instead of R.
 //
 // Modified 2024-08-30 Vision-victory.
 // Fixed the found errors and changed the algorithm a little.
@@ -37,7 +40,7 @@ DeclareMask();
 //-----------------------------------------------------------------------------------------//
 
 DeclareFloatParam (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam( Step, "Step", kNoGroup, kNoFlags, 0.0, 0.0, 0.003 );
+DeclareFloatParam( Step,   "Step",   kNoGroup, kNoFlags, 0.0, 0.0, 0.003 );
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -178,5 +181,5 @@ DeclareEntryPoint (NoiseReduction)
    float4 input  = ReadPixel (Input, uv1);
    float4 output = f_median  (p_median5, uv1);
 
-   return lerp (input, output, ReadPixel (Mask, uv1).x * Amount);
+   return lerp (input, output, ReadPixel (Mask, uv1) * Amount);
 }
