@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-06-19
 // @Author khaver
 // @Created 2013-12-04
 
@@ -8,6 +8,16 @@
  of helping handle mixed aspect ratio media.  It was designed to do the 4:3 to 16:9 warped
  stretch we all hate having to do.  You can set the range of the inner area that is not warped
  and set the outer limits at the edges of the crop.
+
+   [*]Show grid:  Displays four vertical red lines that define the three stretch zones.
+   [*]Stretch:  Enables and disables stretching of the two outer zones.
+   [*]Strength:  Sets the amount of stretch.
+   [*]Inner lines
+      [*]Inner left:  Sets the left edge of the unstretched zone.
+      [*]Inner right:  Sets the right edge of the unstretched zone.
+   [*]Outer lines
+      [*]Outer left:  Sets the outer edge of the left stretched zone.
+      [*]Outer right:  Sets the outer edge of the right stretched zone.
 
  It defaults to a 4:3 image in a 16:9 frame, but since a "Strength" slider is provided it can
  be used for other purposes as well.  Note that because of its intended purpose of correcting
@@ -21,6 +31,10 @@
 // Lightworks user effect WarpedStretch.fx
 //
 // Version history:
+//
+// Updated 2026-06-19 jwrl.
+// Added "Inner lines" and "Outer lines" groups.
+// Added settings description to header text.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -42,22 +56,19 @@ DeclareInput (Input);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareBoolParam (Grid, "Show grid", kNoGroup, true);
-DeclareBoolParam (Stretch, "Stretch", kNoGroup, false);
+DeclareBoolParam (Grid,      "Show grid",   kNoGroup,      true);
+DeclareBoolParam (Stretch,   "Stretch",     kNoGroup,      false);
+DeclareFloatParam (Strength, "Strength",    kNoGroup,      kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareFloatParam (Strength, "Strength", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (ILX,      "Inner left",  "Inner lines", "SpecifiesPointX", 0.42, 0.0, 1.0);
+DeclareFloatParam (ILY,      "Inner left",  "Inner lines", "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (IRX,      "Inner right", "Inner lines", "SpecifiesPointX", 0.58, 0.0, 1.0);
+DeclareFloatParam (IRY,      "Inner right", "Inner lines", "SpecifiesPointY", 0.5, 0.0, 1.0);
 
-DeclareFloatParam (ILX, "Inner Left", kNoGroup, "SpecifiesPointX", 0.42, 0.0, 1.0);
-DeclareFloatParam (ILY, "Inner Left", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
-
-DeclareFloatParam (IRX, "Inner Right", kNoGroup, "SpecifiesPointX", 0.58, 0.0, 1.0);
-DeclareFloatParam (IRY, "Inner Right", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
-
-DeclareFloatParam (OLX, "Outer Left", kNoGroup, "SpecifiesPointX", 0.125, 0.0, 1.0);
-DeclareFloatParam (OLY, "Outer Left", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
-
-DeclareFloatParam (ORX, "Outer Right", kNoGroup, "SpecifiesPointX", 0.875, 0.0, 1.0);
-DeclareFloatParam (ORY, "Outer Right", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (OLX,      "Outer left",  "Outer lines", "SpecifiesPointX", 0.125, 0.0, 1.0);
+DeclareFloatParam (OLY,      "Outer left",  "Outer lines", "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (ORX,      "Outer right", "Outer lines", "SpecifiesPointX", 0.875, 0.0, 1.0);
+DeclareFloatParam (ORY,      "Outer right", "Outer lines", "SpecifiesPointY", 0.5, 0.0, 1.0);
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
@@ -113,4 +124,3 @@ DeclareEntryPoint (WarpedStretch)
 
    return color;
 }
-
