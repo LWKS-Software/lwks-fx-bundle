@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-06-19
 // @Author khaver
 // @Created 2013-02-14
 
@@ -9,6 +9,16 @@
  with a green target pixel in the middle.  It defaults to a single pixel but you can select
  a pixel pattern of up to 4 pixels in a group.  The green pixels will change as you select
  the different patterns.
+
+   [*]Magnify:  Enables magnification of the pixel that you need to fix.
+   [*]Magnification:  Enlarges the bad pixel.
+   [*]Fix:  Switches on the pixel correction.
+   [*]Pixel pattern:  Selects the pattern of adjacent pixels that will be used to correct
+      the bad pixel.
+   [*]Pixel X:  Selects the horizontal position of the pixel that you wish to fix.
+   [*]Pixel Y:  Selects the vertical position of the pixel that you wish to fix.
+   [*]X adjust:  Fine tunes the horizontal position.
+   [*]Y adjust:  Fine tunes the vertical position.
 
  Using the on-screen cross-hairs, move the magnified area to the dead pixels and use the X
  Adjust and Y Adjust to fine tune the target over the dead pixel(s).  Check the "Fix" box
@@ -25,6 +35,9 @@
 // Lightworks user effect PixelFixer.fx
 //
 // Version history:
+//
+// Updated 2026-06-19 jwrl.
+// Added settings description to header text.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -46,19 +59,16 @@ DeclareInput (Input);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareBoolParam (Glass, "Magnify", kNoGroup, true);
+DeclareBoolParam (Glass,       "Magnify",       kNoGroup, true);
+DeclareFloatParam (mag,        "Magnification", kNoGroup, kNoFlags, 2.0, 1.0, 10.0);
+DeclareBoolParam (Proc,        "Fix",           kNoGroup, false);
 
-DeclareFloatParam (mag, "Magnification", kNoGroup, kNoFlags, 2.0, 1.0, 10.0);
+DeclareIntParam (SetTechnique, "Pixel pattern", kNoGroup, 0, "1|2H|2V|2DF|2DB|3A|3B|3C|3D|4");
 
-DeclareBoolParam (Proc, "Fix", kNoGroup, false);
-
-DeclareIntParam (SetTechnique, "Pixel Pattern", kNoGroup, 0, "1|2H|2V|2DF|2DB|3A|3B|3C|3D|4");
-
-DeclareFloatParam (c1x, "Pixel", kNoGroup, "SpecifiesPointX", 0.25, 0.0, 1.0);
-DeclareFloatParam (c1y, "Pixel", kNoGroup, "SpecifiesPointY", 0.75, 0.0, 1.0);
-
-DeclareFloatParam (fineX, "X Adjust", kNoGroup, kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (fineY, "Y Adjust", kNoGroup, kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (c1x,        "Pixel",         kNoGroup, "SpecifiesPointX", 0.25, 0.0, 1.0);
+DeclareFloatParam (c1y,        "Pixel",         kNoGroup, "SpecifiesPointY", 0.75, 0.0, 1.0);
+DeclareFloatParam (fineX,      "X adjust",      kNoGroup, kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (fineY,      "Y adjust",      kNoGroup, kNoFlags, 0.0, -1.0, 1.0);
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
@@ -603,4 +613,3 @@ DeclarePass (Bars4)
 
 DeclareEntryPoint (PixelFixer_4)
 { return fn_main (Bars4, uv2, uv1); }
-
