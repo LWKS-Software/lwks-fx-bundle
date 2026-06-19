@@ -1,11 +1,26 @@
 // @Maintainer jwrl
-// @Released 2023-06-19
+// @Released 2026-06-19
 // @Author nouanda
 // @Created 2014-10-20
 
 /**
  A means of cloning sections of the image into other sections, in a similar way to the art
  tool.  This effect breaks resolution independence.
+
+   [*]Shape:  Selects the clone shape from either an ellipse or a rectangle.
+   [*]Parameters
+      [*]Size:  Sets the size of the clone source.
+      [*]Softness:  Sets the softness of the edges of the clone source.
+      [*]Interpolation:  Defines how areas between pixels are determined.
+      [*]Source:  Clone source.
+      [*]Aspect ratio:  Sets the aspect ratio of the clone shape.
+      [*]End point:  Clone destination.
+   [*]Overlay
+      [*]Blend:  Adjusts the clone opacity.
+   [*]Color Correction
+      [*]Red adjust:  Fine tunes the red gain.
+      [*]Green adjust:  Is self explanatory.
+      [*]Blue adjust:  Is self explanatory.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -24,6 +39,15 @@
 //-----------------------------------------------------------------------------------------//
 //
 // Version history:
+//
+// Updated 2026-06-19 jwrl.
+// Used full Lightworks mask channels instead of R.
+// Changed "Source Position" to "Source".
+// Changed "Aspect ratio x:1" to "Aspect ratio".
+// Changed "Destination Pos" to "End Point".
+// Changed "Blend Opacity" to "Blend".
+// Changed "Red correction" to "Red adjust", Green and Blue similarly changed.
+// Added settings description to header text.
 //
 // Updated 2023-06-19 jwrl.
 // Changed "Destination Position" to "Destination Pos".
@@ -51,26 +75,22 @@ DeclareInput (Input);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareIntParam (SetTechnique, "Shape", kNoGroup, 0, "Ellipse|Rectangle");
+DeclareIntParam (SetTechnique,   "Shape", kNoGroup,                   0, "Ellipse|Rectangle");
 
-DeclareFloatParam (Size, "Size", "Parameters", kNoFlags, 0.33, 0.0, 1.0);
-DeclareFloatParam (Softness, "Softness", "Parameters", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Size,         "Size",          "Parameters",       kNoFlags, 0.33, 0.0, 1.0);
+DeclareFloatParam (Softness,     "Softness",      "Parameters",       kNoFlags, 0.5, 0.0, 1.0);
+DeclareIntParam (Interpolation,  "Interpolation", "Parameters",       0, "Linear|Square|Sinusoidal");
+DeclareFloatParam (SrcPosX,      "Source",        "Parameters",       "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (SrcPosY,      "Source",        "Parameters",       "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (AspectRatio,  "Aspect ratio",  "Parameters",       kNoFlags, 1.0, 0.3, 3.3333333);
+DeclareFloatParam (DestPosX,     "End point",     "Parameters",       "SpecifiesPointX", 0.7, 0.0, 1.0);
+DeclareFloatParam (DestPosY,     "End point",     "Parameters",       "SpecifiesPointY", 0.7, 0.0, 1.0);
 
-DeclareIntParam (Interpolation, "Interpolation", "Parameters", 0, "Linear|Square|Sinusoidal");
+DeclareFloatParam (BlendOpacity, "Blend",         "Overlay",          kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareFloatParam (SrcPosX, "Source Position", "Parameters", "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (SrcPosY, "Source Position", "Parameters", "SpecifiesPointY", 0.5, 0.0, 1.0);
-
-DeclareFloatParam (AspectRatio, "Aspect ratio x:1", "Parameters", kNoFlags, 1.0, 0.3, 3.3333333);
-
-DeclareFloatParam (DestPosX, "Destination Pos", "Parameters", "SpecifiesPointX", 0.7, 0.0, 1.0);
-DeclareFloatParam (DestPosY, "Destination Pos", "Parameters", "SpecifiesPointY", 0.7, 0.0, 1.0);
-
-DeclareFloatParam (BlendOpacity, "Blend Opacity", "Overlay", kNoFlags, 1.0, 0.0, 1.0);
-
-DeclareFloatParam (DestRed, "Red correction", "Color Correction", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (DestGreen, "Green correction", "Color Correction", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (DestBlue, "Blue correction", "Color Correction", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (DestRed,      "Red adjust",    "Color Correction", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (DestGreen,    "Green adjust",  "Color Correction", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (DestBlue,     "Blue adjust",   "Color Correction", kNoFlags, 0.0, -1.0, 1.0);
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
@@ -224,4 +244,3 @@ DeclareEntryPoint (CloneStampRectangle)
 
    return IsOutOfBounds (uv1) ? kTransparentBlack : float4 (lerp (Src.rgb, Dest.rgb, BlendOpacity), Src.a);
 }
-
