@@ -1,11 +1,16 @@
 // @Maintainer jwrl
-// @Released 2023-07-13
+// @Released 2026-06-19
 // @Author brdloush
 // @Created 2012-06-10
 
 /**
  Nice effect that can be used for getting rid of heavy fish-eye distortion when shooting
  with extreme wide angle lenses.  This effect will break resolution independence.
+
+   [*]Scale:  Adjusts the master size after correcting the distortion.
+   [*]Distortion:  This is one of two interacting distortion adjustments. It's a simple
+      radial scaling tool.
+   [*]Cubic Distort:  This is the second distortion tool and is parabolic in operation.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -57,6 +62,10 @@
 //
 // Version history:
 //
+// Updated 2026-06-19 jwrl.
+// Changed "Cubic Distortion" to "Cubic distort".
+// Added settings description to header.
+//
 // Updated 2023-07-13 jwrl.
 // Corrected creation date.
 //
@@ -80,9 +89,9 @@ DeclareInput (Input);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (scale, "Scale", kNoGroup, kNoFlags, 1.0,  0.25, 4.0);
-DeclareFloatParam (distortion, "Distortion", kNoGroup, kNoFlags, 0.0,  -1.0, 1.0);
-DeclareFloatParam (cubicDistortion, "Cubic Distortion", kNoGroup, kNoFlags, 0.0,  -1.0, 1.0);
+DeclareFloatParam (scale,           "Scale",         kNoGroup, kNoFlags, 1.0,  0.25, 4.0);
+DeclareFloatParam (distortion,      "Distortion",    kNoGroup, kNoFlags, 0.0,  -1.0, 1.0);
+DeclareFloatParam (cubicDistortion, "Cubic distort", kNoGroup, kNoFlags, 0.0,  -1.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -103,4 +112,3 @@ DeclareEntryPoint (CubicLensDistortion)
 
    return IsOutOfBounds (uv1) ? kTransparentBlack : ReadPixel (Input, uv);
 }
-
