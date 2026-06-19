@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-19
 // @Author khaver
 // @Created 2011-05-18
 
@@ -9,6 +9,13 @@
  (chromatic aberration) in areas near the edges of the frame often produced by cheaper
  lenses.  To see the fringing better while adjusting click the saturation check box.
 
+   [*]Red adjust:  Sets the scaling of the red channel.
+   [*]Green adjust:  Sets the scaling of the green channel.
+   [*]Blue adjust:  Sets the scaling of the blue channel.
+   [*]Saturation
+      [*]Saturation:  Enables saturation adjustment.
+      [*]Adjustment:  Trims the master saturation.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -16,6 +23,9 @@
 // Lightworks user effect ChromaticAbFixer.fx
 //
 // Version history:
+//
+// Updated 2026-06-19 jwrl.
+// Used full Lightworks mask channels instead of R.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with 0.0.xxxx for Linux fix.
@@ -40,13 +50,12 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (radjust, "Red adjust", kNoGroup, kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (radjust, "Red adjust",   kNoGroup, kNoFlags, 0.0, -1.0, 1.0);
 DeclareFloatParam (gadjust, "Green adjust", kNoGroup, kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (badjust, "Blue adjust", kNoGroup, kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (badjust, "Blue adjust",  kNoGroup, kNoFlags, 0.0, -1.0, 1.0);
 
-DeclareBoolParam (saton, "Saturation", "Saturation", false);
-
-DeclareFloatParam (sat, "Adjustment", "Saturation", kNoFlags, 2.0, 0.0, 4.0);
+DeclareBoolParam (saton,    "Saturation",   "Saturation", false);
+DeclareFloatParam (sat,     "Adjustment",   "Saturation", kNoFlags, 2.0, 0.0, 4.0);
 
 //-----------------------------------------------------------------------------------------//
 // Code
@@ -77,5 +86,5 @@ DeclareEntryPoint (ChromaticAbFixer)
 
    float4 retval = lerp (0.0.xxxx, float4 (dest, Fgd.a), Fgd.a);
 
-   return lerp (Fgd, retval, tex2D (Mask, uv2).x);
+   return lerp (Fgd, retval, tex2D (Mask, uv2));
 }
