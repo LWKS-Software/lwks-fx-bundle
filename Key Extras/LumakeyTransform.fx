@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-07-15
+// @Released 2026-06-21
 // @Author jwrl
 // @Created 2018-03-20
 
@@ -8,6 +8,22 @@
  This is a luminance key similar to the Lightworks effect, but with some differences.  A
  simple 2D transform effect has also been included to provide this often-needed function
  without requiring the addition of external effects.
+
+   [*]Key settings
+      [*]Key clip:  Known as tolerance in the Lightworks lumakey effect, this is the
+         term used in the original luminance keyer.
+      [*]Key softness:  Adjusts key softness symmetrically around the key edges.
+      [*]Invert key:  Keys out white areas rather than black.
+      [*]Display alpha channel:  Show the combined alpha channel and key alpha.
+      [*]Hide background:  Shows the foreground keyed over black.
+   [*]Foreground transform
+      [*]Position X:  Sets the foreground horizontal position.
+      [*]Position Y:  Sets the foreground vertical position.
+   [*]Foreground scale
+      [*]Master:  Sets the size of the foreground.
+      [*]Width:  Sets the width of the foreground.
+      [*]Height:  Sets the height of the foreground.
+   [*]Opacity:  Sets the foreground opacity.
 
  DIFFERENCES:
  The most obvious difference from the Lightworks version is in the way that the parameters
@@ -32,6 +48,10 @@
 // Lightworks user effect LumakeyTransform.fx
 //
 // Version history:
+//
+// Updated 2026-06-21 jwrl.
+// Header now contains settings description.
+// Mask now uses all four channels, not just R.
 //
 // Updated 2024-07-15 jwrl.
 // Corrected references to cropping in the descriptive text.
@@ -159,5 +179,5 @@ DeclareEntryPoint (LumakeyTransform)
 
    Fgd = (ShowAlpha) ? alpha.xxxx : lerp (Bgd, Fgd, alpha * Opacity);
 
-   return lerp (Bgd, Fgd, tex2D (Mask, uv3).x);
+   return lerp (Bgd, Fgd, tex2D (Mask, uv3));
 }
