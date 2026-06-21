@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-06-21
 // @Author jwrl
 // @Created 2016-09-01
 
@@ -9,6 +9,16 @@
  technique, or can replace the key colour with the background image either in colour
  or monochrome.  Finally, the key can be faded in and out by adjusting the opacity.
 
+   [*]Opacity:  Sets the foreground opacity.
+   [*]Key colour:  The key colour to be used for the chromakey.
+   [*]Key clip:  The key clip adjusts the key edges.
+   [*]Key gain:  This refines the key to clean up any noise or dirt.
+   [*]Feather:  Adjusts key softness.
+   [*]Defringing
+      [*]Technique:  Uses either simple desaturation or the background (monochrome or colour).
+      [*]Amount:  Self explanatory.
+      [*]Depth:  The amount into the key that will be defringed.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -16,6 +26,14 @@
 // Lightworks user effect SimpleChromakey.fx
 //
 // Version history:
+//
+// Updated 2026-06-21 jwrl.
+// Header now contains settings description.
+// Mask now uses all four channels, not just R.
+// Created new group, "Defringing".
+// Moved "Defringe technique" into "Defringing", renamed it "Technique".
+// Moved "Defringe amount" into "Defringing", renamed it "Amount".
+// Moved "Defringe depth" into "Defringing", renamed it "Depth".
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -39,18 +57,15 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Amount, "Opacity", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Amount,      "Opacity",    kNoGroup,     kNoFlags, 1.0, 0.0, 1.0);
+DeclareColourParam (Colour,     "Key colour", kNoGroup,     kNoFlags, 0.0, 1.0, 0.0, 1.0);
+DeclareFloatParam (Clip,        "Key clip",   kNoGroup,     kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Gain,        "Key gain",   kNoGroup,     kNoFlags, 0.25, 0.0, 1.0);
+DeclareFloatParam (Size,        "Feather",    kNoGroup,     kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareColourParam (Colour, "Key colour", kNoGroup, kNoFlags, 0.0, 1.0, 0.0, 1.0);
-
-DeclareFloatParam (Clip, "Key clip", kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (Gain, "Key gain", kNoGroup, kNoFlags, 0.25, 0.0, 1.0);
-DeclareFloatParam (Size, "Feather", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
-
-DeclareIntParam (DefringeType, "Defringe technique", kNoGroup, 0, "Desaturate fringe|Use background (monochrome)|Use background (colour)");
-
-DeclareFloatParam (DeFringeAmt, "Defringe amount", kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (DeFringe, "Defringe depth", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareIntParam (DefringeType,  "Technique",  "Defringing", 0, "Desaturate fringe|Use background (monochrome)|Use background (colour)");
+DeclareFloatParam (DeFringeAmt, "Amount",     "Defringing", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (DeFringe,    "Depth",      "Defringing", kNoFlags, 0.5, 0.0, 1.0);
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
@@ -149,6 +164,5 @@ DeclareEntryPoint (SimpleChromakey)
    Fgnd.rgb = lerp (Fgnd.rgb, Frng, DeFringeAmt);
    Fgnd.a  *= Amount;
 
-   return lerp (Bgnd, Fgnd, Fgnd.a * tex2D (Mask, uv3).x);
+   return lerp (Bgnd, Fgnd, Fgnd.a * tex2D (Mask, uv3));
 }
-
