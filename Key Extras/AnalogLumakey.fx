@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-24
+// @Released 2026-06-21
 // @Author jwrl
 // @Created 2023-01-27
 
@@ -8,6 +8,15 @@
  luminance keyer.  In this version "Tolerance" is called "Clip" and "Invert" has become
  "Invert key".  These are the industry standard names used for these functions in analogue
  keyers.
+
+   [*]Opacity: Mixes the keyed foreground over the background.
+   [*]Key settings
+      [*]Mode: This allows the key to use or ignore any existing transparency, and to
+         optionally output the key as transparent for downstream use.
+      [*]Clip: Known as tolerance in the Lightworks lumakey effect, this is the term
+         used in analogue luminance keyers.
+      [*]Softness: Adjusts key softness symmetrically around the key edges.
+      [*]Invert key: Keys out white areas rather than black.
 
  When the key clip is exceeded by the image luminance the Lightworks keyer passes the luma
  value unchanged, which an analogue keyer will not.  This keyer turns the alpha channel fully
@@ -30,6 +39,10 @@
 // Lightworks user effect AnalogLumakey.fx
 //
 // Version history:
+//
+// Updated 2026-06-21 jwrl.
+// Header now contains settings description.
+// Mask now uses all four channels, not just R.
 //
 // Updated 2023-08-24 jwrl.
 // Optimised the code to resolve a Linux/Mac compatibility issue.
@@ -103,8 +116,7 @@ DeclareEntryPoint (AnalogLumakey)
 
    if ((KeyMode == 1) || (KeyMode == 3)) alpha = min (Fgd.a, alpha);
 
-   alpha *= Amount * tex2D (Mask, uv3).x;
+   alpha *= Amount;
 
-   return lerp (Bgd, Fgd, alpha);
+   return lerp (Bgd, Fgd, alpha * tex2D (Mask, uv3));
 }
-
