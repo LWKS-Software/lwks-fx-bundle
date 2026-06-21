@@ -1,11 +1,30 @@
 // @Maintainer jwrl
-// @Released 2023-08-04
+// @Released 2026-06-21
 // @Author baopao
 // @Created 2013-06-07
 
 /**
- This sophisticated chromakey has the same range of adjustments that you would expect to
- find on expensive commercial tools.  It's particularly effective on fine detail.
+ This sophisticated chromakey has similar key control to what you would expect to find
+ on expensive third party tools.  It existed previously with a different appearance, but
+ this is really just that effect with a new coat of paint.  Most of the settings have
+ been renamed to make their purposes more readily understood, but their functionality
+ has in no way been changed.
+
+ It's still particularly effective on fine detail.  Highly recommended.
+
+   [*]Chromakey:  Chooses between green or blue to use as the key colour.
+   [*]Red amount:  Mixes red back into the key colour to adjust the saturation.
+   [*]Fg value:  Adjusts the foreground clip level and replacement mix.
+   [*]Clip shadows:  Adjusts the shadow preservation in the key.
+   [*]Fine tuning
+      [*]Trim key:  Adjusts the foreground gamma to tighten or loosen the key.
+         This will help preserve fine detail.
+      [*]Shadows:  Varies the background gamma to darken or lighten the shadows
+         produced by shaded key colour areas.
+   [*]Spill removal
+      [*]Spill fix:  Uses the key gamma to control spill removal.
+      [*]Despill blur:  Blurs the key colour despill component.
+      [*]Colour fill:  Sets the colour to be used as the despill replacement fill.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -16,6 +35,18 @@
 // Created by baopao (http://www.alessandrodallafontana.com).
 //
 // Version history:
+//
+// Updated 2026-06-21 jwrl.
+// Header now contains settings description.
+// Mask now uses all four channels, not just R.
+// Renamed "Bg val" to "Clip shadows".
+// Created a new group, "Fine tuning".
+// Renamed "Gamma fg" to "Trim key" and put it in the "Fine tuning" group.
+// Renamed "Gamma bg" to "Shadows" and put it in the "Fine tuning" group.
+// Created a new group, "Spill removal".
+// Renamed "Gamma mix" to "Spill fix" and put it in the "Spill removal" group.
+// Renamed "Despill blur" to "Blur spill" and put it in the "Spill removal" group.
+// Renamed "Color replace" to "Colour fill" and put it in the "Spill removal" group.
 //
 // Updated 2023-08-04 jwrl.
 // User parameters reformatted.
@@ -42,17 +73,17 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareIntParam (ChromaKey, "ChromaKey", kNoGroup, 0, "Green|Blue");
+DeclareIntParam (ChromaKey,       "Chromakey",    kNoGroup, 0, "Green|Blue");
+DeclareFloatParam (RedAmount,     "Red amount",   kNoGroup,        kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (FgVal,         "Fg value",     kNoGroup,        kNoFlags, 0.45, 0.0, 1.0);
+DeclareFloatParam (BgVal,         "Clip shadows", kNoGroup,        kNoFlags, 0.25, 0.0, 1.0);
 
-DeclareFloatParam (RedAmount, "Red amount", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (FgVal, "Fg val", kNoGroup, kNoFlags, 0.45, 0.0, 1.0);
-DeclareFloatParam (BgVal, "Bg val", kNoGroup, kNoFlags, 0.25, 0.0, 1.0);
-DeclareFloatParam (GammaFG, "Gamma fg", kNoGroup, kNoFlags, 2.0, 0.0, 4.0);
-DeclareFloatParam (GammaBG, "Gamma bg", kNoGroup, kNoFlags, 0.4, 0.0, 2.0);
-DeclareFloatParam (GammaMix, "Gamma mix", kNoGroup, kNoFlags, 2.0, 0.0, 5.0);
-DeclareFloatParam (Despill, "Despill blur", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (GammaFG,       "Trim key",     "Fine tuning",   kNoFlags, 2.0, 0.0, 4.0);
+DeclareFloatParam (GammaBG,       "Shadows",      "Fine tuning",   kNoFlags, 0.4, 0.0, 2.0);
 
-DeclareColourParam (ColorReplace, "Color replace", kNoGroup, kNoFlags, 0.5, 0.5, 0.5, 1.0);
+DeclareFloatParam (GammaMix,      "Spill fix",    "Spill removal", kNoFlags, 2.0, 0.0, 5.0);
+DeclareFloatParam (Despill,       "Blur spill",   "Spill removal", kNoFlags, 0.5, 0.0, 1.0);
+DeclareColourParam (ColorReplace, "Colour fill",  "Spill removal", kNoFlags, 0.5, 0.5, 0.5, 1.0);
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
@@ -160,4 +191,3 @@ DeclareEntryPoint (AleChromakey)
 
    return lerp (colorBG, color, tex2D (Mask, uv3).x);
 }
-
