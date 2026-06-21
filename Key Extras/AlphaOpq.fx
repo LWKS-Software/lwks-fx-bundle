@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-24
+// @Released 2026-06-21
 // @Author jwrl
 // @Created 2019-05-12
 
@@ -8,6 +8,13 @@
  are two modes available - the first simply turns the alpha on, the second adds a flat
  opaque background colour where previously the clip was transparent.  The default colour
  used is black, and the image can be unpremultiplied in this mode if desired.
+
+   [*]Opacity mode:  Selects whether to make the alpha channel opaque over black or with
+      a colour background.
+   [*]Type of alpha channel:  Selects between a standard alpha channel or premultiplied
+      video.
+   [*]Background colour:  Selects the background colour to use if opacity mode is set to
+      blend with colour.
 
  A means of boosting alpha before processing to support clips such as Lightworks titles
  and image keys in versions earlier than 2023.2 has also been included.  This only
@@ -20,6 +27,12 @@
 // Lightworks user effect AlphaOpq.fx
 //
 // Version history:
+//
+// Updated 2026-06-21 jwrl.
+// Implemented OpacityMode as SetTechnique.
+// Header now contains settings description.
+// Mask now uses all four channels, not just R.
+// Changed "Background colour" to "Background".
 //
 // Updated 2023-08-24 jwrl.
 // Explicitly declare transparent black if masked when OpacityMode is set to 0.
@@ -51,22 +64,28 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareIntParam (OpacityMode, "Opacity mode", kNoGroup, 0, "Make opaque|Blend with colour");
-DeclareIntParam (KeyMode, "Type of alpha channel", kNoGroup, 0, "Standard|Premultiplied|Image key/Title pre 2023.2");
+DeclareIntParam (SetTechnique, "Opacity mode",          kNoGroup, 0, "Make opaque|Blend with colour");
+DeclareIntParam (KeyMode,      "Type of alpha channel", kNoGroup, 0, "Standard|Premultiplied|Image key/Title pre 2023.2");
 
-DeclareColourParam (Colour, "Background colour", kNoGroup, kNoFlags, 0.0, 0.0, 0.0);
+DeclareColourParam (Colour,    "Background",            kNoGroup, kNoFlags, 0.0, 0.0, 0.0);
 
 //-----------------------------------------------------------------------------------------//
 // Code
 //-----------------------------------------------------------------------------------------//
 
-DeclareEntryPoint (AlphaOpq)
+DeclareEntryPoint (AlphaOpq_0)
 {
    float4 Fgd = ReadPixel (Inp, uv1);
 
-   float maskShape = tex2D (Mask, uv1).x;
+   return lerp (0.0.xxxx, float4 (Fgd.rgb, 1.0), tex2D (Mask, uv1));
+}
 
-   if (OpacityMode == 0) return lerp (0.0.xxxx, float4 (Fgd.rgb, 1.0), maskShape);
+//-----------------------------------------------------------------------------------------//
+
+DeclareEntryPoint (AlphaOpq_1)
+{
+   float4 Fgd       = ReadPixel (Inp, uv1);
+   float4 maskShape = tex2D (Mask, uv1);
 
    if (KeyMode == 2) Fgd.a = pow (Fgd.a, 0.5);
    if (KeyMode > 0) Fgd.rgb /= Fgd.a;
@@ -75,4 +94,3 @@ DeclareEntryPoint (AlphaOpq)
 
    return lerp (Colour, Fgd, maskShape);
 }
-
