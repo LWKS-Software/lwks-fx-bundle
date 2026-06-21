@@ -1,18 +1,35 @@
 // @Maintainer jwrl
-// @Released 2024-05-16
+// @Released 2026-06-21
 // @Author jwrl
 // @Created 2024-05-16
 
 /**
- This keyer is similar to the Lightworks lumakey effect, but has a perspective
- ability as well.  In addition to the standard Invert switch to help set up the
- effect there are switches associated with keying, perspective and cropping.
- They are:
+ This is a luminance key similar to the Lightworks effect, but with some differences.
+ A crop function and a simple perspective effect have been included to provide these
+ often-needed functions without the need to add any external effects.
 
-   1. Disable key.  Exactly what it says.
-   2. Disable crop.  Disables cropping, showing the foreground full screen.
-   3. Show perspective boundary.  Displays a border around the active sequence area.
-   4. Disable perspective.  Allso exactly what it says.
+   [*]Opacity:  Sets the foreground opacity.
+   [*]Key settings
+      [*]Mode:  Selects either the luminance key or a combination of luminance key
+         plus foreground transparency.
+      [*]Key clip:  Known as tolerance in the Lightworks lumakey effect, this is
+         the term used in the original luminance keyer.
+      [*]Key softness:  Adjusts key softness symmetrically around the key edges.
+   [*]Invert key:  Keys out white areas rather than black.
+   [*]Disable cropping:  Self explanatory.
+   [*]Crop
+      [*]Left:  Crops the left side of the foreground.
+      [*]Right:  Self explanatory - see above.
+      [*]Top:  Self explanatory- see above.
+      [*]Bottom:  Self explanatory- see above.
+   [*]Corner pins
+      [*]Show perspective boundary:  Shows the effect's boundary as white box
+         outline (see screen grab).
+      [*]Disable perspective:  Self explanatory.
+      [*]Hi left X and Y:  Self explanatory.
+      [*]Hi right X and Y:  Self explanatory.
+      [*]Lo left X and Y:  Self explanatory.
+      [*]Lo right X and Y:  Self explanatory.
 
  When the effect is applied you will notice a reduction in the size of the foreground
  video.  This is because the perspective settings by default are 5% inside the total
@@ -57,6 +74,13 @@
 //
 // Version history:
 //
+// Updated 2026-06-21 jwrl.
+// Rewrote header, including settings description.
+// Mask now uses all four channels, not just R.
+// Changed "Top" references in settings to "Hi".
+// Changed "Bottom" references in settings to "Lo".
+// InvertKey and HideCroppping used kNoFlags instead of kNoGroup.  Fixed.
+//
 // Built 2024-05-16 jwrl.
 //-----------------------------------------------------------------------------------------//
 
@@ -74,35 +98,31 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Opacity, "Opacity", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Opacity,     "Opacity",          kNoGroup,       kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareIntParam (KeyMode, "Mode", "Key settings", 0, "Luminance key|Key plus foreground alpha");
+DeclareIntParam (KeyMode,       "Mode",             "Key settings", 0, "Luminance key|Key plus foreground alpha");
+DeclareFloatParam (KeyClip,     "Clip",             "Key settings", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Softness,    "Softness",         "Key settings", kNoFlags, 0.1, 0.0, 1.0);
 
-DeclareFloatParam (KeyClip,  "Clip",     "Key settings", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Softness, "Softness", "Key settings", kNoFlags, 0.1, 0.0, 1.0);
+DeclareBoolParam (InvertKey,    "Invert key",       kNoGroup, false);
+DeclareBoolParam (HideCropping, "Disable cropping", kNoGroup, false);
 
-DeclareBoolParam (InvertKey,    "Invert key",       kNoFlags, false);
-DeclareBoolParam (HideCropping, "Disable cropping", kNoFlags, false);
+DeclareFloatParam (Left,        "Left",             "Crop",         kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Right,       "Right",            "Crop",         kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Top,         "Top",              "Crop",         kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Bottom,      "Bottom",           "Crop",         kNoFlags, 0.0, 0.0, 1.0);
 
-DeclareFloatParam (Left,  "Left",    "Crop", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (Right,  "Right",  "Crop", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (Top,    "Top",    "Crop", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (Bottom, "Bottom", "Crop", kNoFlags, 0.0, 0.0, 1.0);
+DeclareBoolParam (Bounds,          "Show perspective boundary",     "Corner pins", false);
+DeclareBoolParam (HidePerspective, "Disable perspective",           "Corner pins", false);
 
-DeclareBoolParam (Bounds,          "Show perspective boundary", "Corner pins", false);
-DeclareBoolParam (HidePerspective, "Disable perspective",       "Corner pins", false);
-
-DeclareFloatParam (TLx, "Top left",     "Corner pins", "SpecifiesPointX", 0.05, 0.0, 1.0);
-DeclareFloatParam (TLy, "Top left",     "Corner pins", "SpecifiesPointY", 0.95, 0.0, 1.0);
-
-DeclareFloatParam (TRx, "Top right",    "Corner pins", "SpecifiesPointX", 0.95, 0.0, 1.0);
-DeclareFloatParam (TRy, "Top right",    "Corner pins", "SpecifiesPointY", 0.95, 0.0, 1.0);
-
-DeclareFloatParam (BLx, "Bottom left",  "Corner pins", "SpecifiesPointX", 0.05, 0.0, 1.0);
-DeclareFloatParam (BLy, "Bottom left",  "Corner pins", "SpecifiesPointY", 0.05, 0.0, 1.0);
-
-DeclareFloatParam (BRx, "Bottom right", "Corner pins", "SpecifiesPointX", 0.95, 0.0, 1.0);
-DeclareFloatParam (BRy, "Bottom right", "Corner pins", "SpecifiesPointY", 0.05, 0.0, 1.0);
+DeclareFloatParam (TLx,         "Hi left",          "Corner pins",  "SpecifiesPointX", 0.05, 0.0, 1.0);
+DeclareFloatParam (TLy,         "Hi left",          "Corner pins",  "SpecifiesPointY", 0.95, 0.0, 1.0);
+DeclareFloatParam (TRx,         "Hi right",         "Corner pins",  "SpecifiesPointX", 0.95, 0.0, 1.0);
+DeclareFloatParam (TRy,         "Hi right",         "Corner pins",  "SpecifiesPointY", 0.95, 0.0, 1.0);
+DeclareFloatParam (BLx,         "Lo left",          "Corner pins",  "SpecifiesPointX", 0.05, 0.0, 1.0);
+DeclareFloatParam (BLy,         "Lo left",          "Corner pins",  "SpecifiesPointY", 0.05, 0.0, 1.0);
+DeclareFloatParam (BRx,         "Lo right",         "Corner pins",  "SpecifiesPointX", 0.95, 0.0, 1.0);
+DeclareFloatParam (BRy,         "Lo right",         "Corner pins",  "SpecifiesPointY", 0.05, 0.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -223,10 +243,9 @@ DeclareEntryPoint (LumakeyPerspective)
       Fgnd = any (xy0 - frac (xy0)) ? kTransparentBlack : tex2D (FgKey, xy0);
    }
 
-   Fgnd.a  *= saturate (Opacity) * tex2D (Mask, uv3).x;
-   retval   = lerp (Bgnd, Fgnd, Fgnd.a);
+   Fgnd.a  *= saturate (Opacity);
+   retval   = lerp (Bgnd, Fgnd, Fgnd.a * tex2D (Mask, uv3));
    retval.a = max (Bgnd.a, Fgnd.a);
 
    return retval;
 }
-
