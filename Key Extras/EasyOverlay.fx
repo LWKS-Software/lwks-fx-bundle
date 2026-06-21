@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-06-21
 // @Author hugly
 // @Author schrauber
 // @Created 2019-08-09
@@ -9,6 +9,11 @@
  i.e. full transparency appears as solid black in the overlay.  The keyer works also on
  overlays with an alpha channel.  It reveals transparency using a black&white mask created
  from the foreground.
+
+   [*]Mask Gain:  Similar in operation to a key clip / key tolerance adjustment.  Not
+      in any way connected to Lightworks' effect masking.
+   [*]Fg Lift:  Lifts the foreground black levels prior to processing by the keyer.
+   [*]Fg Opacity:  Sets the foreground mix over the background.
 
  The presets should work for most material of that kind with good looking results. If
  adjustments should be necessary, start with 'MaskGain'.  'Fg Lift' influences overall
@@ -22,6 +27,10 @@
 // Lightworks user effect EasyOverlay.fx
 //
 // Version history:
+//
+// Updated 2026-06-21 jwrl.
+// Header now contains settings description.
+// Mask now uses all four channels, not just R.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -45,8 +54,8 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (MaskGain, "Mask Gain", kNoGroup, kNoFlags, 3.0, 0.0, 6.0);
-DeclareFloatParam (FgLift, "Fg Lift", kNoGroup, kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (MaskGain,  "Mask Gain",  kNoGroup, kNoFlags, 3.0, 0.0, 6.0);
+DeclareFloatParam (FgLift,    "Fg Lift",    kNoGroup, kNoFlags, 0.0, -1.0, 1.0);
 DeclareFloatParam (FgOpacity, "Fg Opacity", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
 
 //-----------------------------------------------------------------------------------------//
@@ -97,6 +106,5 @@ DeclareEntryPoint (EasyOverlay)
 
    ret.a = 1.0;
 
-   return lerp (Bgd, ret, tex2D (Mask, uv3).x);
+   return lerp (Bgd, ret, tex2D (Mask, uv3));
 }
-
