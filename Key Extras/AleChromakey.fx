@@ -189,5 +189,5 @@ DeclareEntryPoint (AleChromakey)
       color = lerp (retval, pow (retval, 1.0 / GammaMix), OverMask);
    }
 
-   return lerp (colorBG, color, tex2D (Mask, uv3).x);
+   return lerp (colorBG, color, tex2D (Mask, uv3));
 }
