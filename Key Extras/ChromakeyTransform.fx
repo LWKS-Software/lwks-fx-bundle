@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-04-09
+// @Released 2026-06-21
 // @Author jwrl
 // @Created 2018-03-20
 
@@ -8,6 +8,21 @@
  some simple transform adjustments added.  The ChromaKey section is copyright (c) LWKS
  Software Ltd., modified to improve keying over transparent backgrounds.
 
+   [*]Key colour setup is identical to the Lightworks chromakey.
+   [*]Chromakey
+      [*]Key softness:  The same as the Lightworks version.
+      [*]Remove spill:  The same as the Lightworks version.
+      [*]Invert:  The same as the Lightworks version.
+      [*]Reveal:  The same as the Lightworks version.
+   [*]Foreground transform
+      [*]Position X:  Sets the foreground horizontal position.
+      [*]Position Y:  Sets the foreground vertical position.
+   [*]Foreground scale
+      [*]Master:  Sets the size of the foreground.
+      [*]Width:  Sets the width of the foreground.
+      [*]Height:  Sets the height of the foreground.
+   [*]Opacity:  Sets the foreground opacity.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -15,6 +30,10 @@
 // Lightworks user effect ChromakeyTransform.fx
 //
 // Version history:
+//
+// Updated 2026-06-21 jwrl.
+// Header now contains settings description.
+// Mask now uses all four channels, not just R.
 //
 // Updated 2024-04-09 jwrl.
 // Corrected a typo that meant the same operation was executed twice.
@@ -301,7 +320,6 @@ DeclareEntryPoint (ChromakeyTransform)
    // foreground to shrink in from the edges.  After we derive the mix amount we
    // invert the spill removal and the mix amount if necessary.
 
-   float maskAmount = tex2D (Mask, uv3).x;
    float mixAmount  = saturate ((1.0 - min (Key.x, Key.y) * Fgd.a) * 2.0);
 
    if (Invert) {
@@ -310,6 +328,8 @@ DeclareEntryPoint (ChromakeyTransform)
    }
 
    // If we just want to show the key we can get out now.
+
+   float4 maskAmount = tex2D (Mask, uv3);
 
    if (Reveal) return lerp (0.0.xxxx, float4 (mixAmount.xxx, 1.0), maskAmount);
 
