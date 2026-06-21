@@ -4,7 +4,18 @@
 // @Created 2016-05-02
 
 /**
- INK is an extremely good proportionate colour difference keyer.
+ INK is an oddly named effect. Don't let that fool you - it's an extremely good
+ proportionate colour difference keyer with just three parameters, key colour, key
+ balance and key gain. It can be used to quickly and easily get rid of all that
+ green or blue from your effects edit, for doing a previz or for just validating
+ that the green screen is shot properly. But don't just use it for that. The
+ simplicity of the setup is deceptive.
+
+   [*]Key Colour:  Sets the colour to be used for the key.
+   [*]Key Balance:  Fine tunes the colour tolerance.
+   [*]Key Gain:  Adjusts the strength of the key.
+
+ It works, and works well.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -25,6 +36,10 @@
 // 1.2  N. Carroll  4-MAY-16  Put the matte in the alpha channel.
 //
 // Version history:
+//
+// Updated 2026-06-21 jwrl.
+// Header now contains settings description.
+// Mask now uses all four channels, not just R.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -157,6 +172,5 @@ DeclareEntryPoint (Ink)
       Ckey = float4 (lerp (background.rgb, chan, matte), max (background.a, matte));
    }
 
-   return lerp (background, Ckey, tex2D (Mask, uv3).x);
+   return lerp (background, Ckey, tex2D (Mask, uv3));
 }
-
