@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-07-23
+// @Released 2026-06-21
 // @Author jwrl
 // @Created 2024-04-12
 
@@ -9,6 +9,36 @@
  image can be cropped prior to the key being generated. After the key has been
  generated perspective is applied, and finally the key is blended with the the
  background video.
+
+   [*]Chromakey
+      [*]Key colour setup is identical to the Lightworks chromakey.
+      [*]Key softness:  As the Lightworks version does, adjusting softness causes
+         the foreground to soften in from the edges.
+      [*]Remove spill:  As with the Lightworks version, spill removal desaturates
+         any spill found.
+      [*]Invert:  The same as the Lightworks version - just inverts the key.
+      [*]Reveal:  The Lightworks version shows the detected chromakey as white on
+         black. So does this effect.
+   [*]Disable Chromakey:  Provided so that you can easily see the cropped area,
+      it can also help when selecting the key colour with the eyedropper.
+   [*]Crop
+      [*]Disable cropping:  A switch that turns cropping on or off.
+      [*]Left:  Identical to cropping in the Lightworks Transform effects, it's
+         applied before perspective and is affected by the perspective settings.
+      [*]Right:  Similar to the left crop in operation.
+      [*]Top:  As above.
+      [*]Bottom:  As above.
+   [*]Corner pins
+      [*]Show perspective boundary:  As shown in the screen grab, this places a
+         white outline around the foreground and helps set up the corner pins.
+      [*]Disable perspective:  This hides or reveals the perspective distortion
+         and can be useful when adjusting keying and cropping.
+      [*]Hi left:  This is the top left of the four perspective corner pins and
+         is best set up by dragging in the edit sequence display.
+      [*]Hi right:  Self explanatory.
+      [*]Lo left:  Self explanatory.
+      [*]Lo right:  Self explanatory.
+   [*]Opacity:  Fades the key in or out.
 
  To help with setting up the effect, in addition to the two standard Invert and
  Reveal switches there are also switches associated with keying, perspective and
@@ -62,6 +92,12 @@
 //
 // Version history:
 //
+// Updated 2026-06-21 jwrl.
+// Header now contains settings description.
+// Mask now uses all four channels, not just R.
+// Changed "Top" references in settings to "Hi".
+// Changed "Bottom" references in settings to "Lo".
+//
 // Modified 2025-07-23 jwrl.
 // Corrected duplicate of same effect in this upload.
 //
@@ -107,17 +143,17 @@ DeclareFloatParam (Bottom, "Bottom", "Crop", kNoFlags, 0.0, 0.0, 1.0);
 DeclareBoolParam (Bounds, "Show perspective boundary", "Corner pins", false);
 DeclareBoolParam (HidePerspective, "Disable perspective", "Corner pins", false);
 
-DeclareFloatParam (TLx, "Top left", "Corner pins", "SpecifiesPointX", 0.05, 0.0, 1.0);
-DeclareFloatParam (TLy, "Top left", "Corner pins", "SpecifiesPointY", 0.95, 0.0, 1.0);
+DeclareFloatParam (TLx, "Hi left", "Corner pins", "SpecifiesPointX", 0.05, 0.0, 1.0);
+DeclareFloatParam (TLy, "Hi left", "Corner pins", "SpecifiesPointY", 0.95, 0.0, 1.0);
 
-DeclareFloatParam (TRx, "Top right", "Corner pins", "SpecifiesPointX", 0.95, 0.0, 1.0);
-DeclareFloatParam (TRy, "Top right", "Corner pins", "SpecifiesPointY", 0.95, 0.0, 1.0);
+DeclareFloatParam (TRx, "Hi right", "Corner pins", "SpecifiesPointX", 0.95, 0.0, 1.0);
+DeclareFloatParam (TRy, "Hi right", "Corner pins", "SpecifiesPointY", 0.95, 0.0, 1.0);
 
-DeclareFloatParam (BLx, "Bottom left", "Corner pins", "SpecifiesPointX", 0.05, 0.0, 1.0);
-DeclareFloatParam (BLy, "Bottom left", "Corner pins", "SpecifiesPointY", 0.05, 0.0, 1.0);
+DeclareFloatParam (BLx, "Lo left", "Corner pins", "SpecifiesPointX", 0.05, 0.0, 1.0);
+DeclareFloatParam (BLy, "Lo left", "Corner pins", "SpecifiesPointY", 0.05, 0.0, 1.0);
 
-DeclareFloatParam (BRx, "Bottom right", "Corner pins", "SpecifiesPointX", 0.95, 0.0, 1.0);
-DeclareFloatParam (BRy, "Bottom right", "Corner pins", "SpecifiesPointY", 0.05, 0.0, 1.0);
+DeclareFloatParam (BRx, "Lo right", "Corner pins", "SpecifiesPointX", 0.95, 0.0, 1.0);
+DeclareFloatParam (BRy, "Lo right", "Corner pins", "SpecifiesPointY", 0.05, 0.0, 1.0);
 
 DeclareFloatParam (Opacity, "Opacity", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
 
