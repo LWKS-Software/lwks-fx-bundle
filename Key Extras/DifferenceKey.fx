@@ -1,12 +1,20 @@
 // @Maintainer jwrl
-// @Released 2024-01-24
+// @Released 2026-06-21
 // @Author jwrl
 // @Created 2024-01-24
 
 /**
  This is a difference keyer that has only six parameters, the opacity, key clip, key
  gain, feathering controls and the invert key switch.  Finally, so that the difference
- key result can be better visualised a seventh parameter, key mask, can be selcted.
+ key result can be better visualised a seventh parameter, key mask, can be selected.
+
+   [*]Opacity:  Adjusts the foreground opacity. This is bypassed when the Show key
+      switch is enabled.​
+   [*]Key clip:  Fine tunes keying, and should be used in conjunction with key gain.​
+   [*]Key gain:  See above.​
+   [*]Feather:  Adjusts the key edge softness.​
+   [*]Invert key:  Self explanatory.​
+   [*]Show key:  Self explanatory.​
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -15,6 +23,10 @@
 // Lightworks user effect DifferenceKey.fx
 //
 // Version history:
+//
+// Updated 2026-06-21 jwrl.
+// Header now contains settings description.
+// Mask now uses all four channels, not just R.
 //
 // Created 2024-01-24 jwrl.
 //-----------------------------------------------------------------------------------------//
@@ -87,7 +99,6 @@ DeclareEntryPoint (DifferenceKey)
 {
    float4 Fgnd = ReadPixel (Fg, uv1);
    float4 Bgnd = ShowKey ? BLACK : ReadPixel (Bg, uv2);
-   float4 _msk = ReadPixel (Mask, uv1);
    float4 retval;
 
    if (IsOutOfBounds (uv1)) { retval = Bgnd; }
@@ -112,5 +123,5 @@ DeclareEntryPoint (DifferenceKey)
       retval = ShowKey ? float4 (alpha.xxx, 1.0) : lerp (Bgnd, Fgnd, alpha * Amount);
    }
 
-   return lerp (Bgnd, retval, retval.a * _msk.x);
+   return lerp (Bgnd, retval, retval.a * tex2D (Mask, uv1));
 }
