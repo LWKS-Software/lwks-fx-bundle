@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-04-09
+// @Released 2026-06-21
 // @Author jwrl
 // @Created 2023-09-05
 
@@ -9,6 +9,21 @@
  background has also been included.  The colour of the background and its linearity can
  be adjusted to give a very realistic studio look.  The ChromaKey sections are based on
  work copyright (c) LWKS Software Ltd.
+
+   [*]Key colour setup is identical to the Lightworks chromakey.
+   [*]Key Settings
+      [*]Key softness:  The same as the Lightworks version.
+      [*]Remove spill:  The same as the Lightworks version.
+      [*]Invert:  The same as the Lightworks version.
+      [*]Reveal:  The same as the Lightworks version.
+   [*]Position X:  Sets the foreground horizontal position.
+   [*]Position Y:  Sets the foreground vertical position.
+   [*]Position Z:  Sets the size in the same way as the transform 3D effect does.
+   [*]Cyclorama
+      [*]Ambience:  Sets the ambient lighting colour on our imaginary background inifinity cyclorama.
+      [*]Lighting grid:  Sets the overhead lighting intensity.
+      [*]Groundrow:  Sets the groundrow lighting inensity.
+      [*]Horizon line:  Adjusts the mythical cyclorama horizon.
 
  There was a previous version of this effect called "Chromakey and background" which had
  full cropping.  That has been withdrawn, since the Lightworks native masking gives the
@@ -23,6 +38,13 @@
 // Lightworks user effect ChromakeyWithCyc.fx
 //
 // Version history:
+//
+// Updated 2026-06-21 jwrl.
+// Header now contains settings description.
+// Mask now uses all four channels, not just R.
+// Changed "Lighting colour" to "Ambience".
+// Changed "Overhead light" to "Lighting grid".
+// Changed "Groundrow light" to "Groundrow".
 //
 // Updated 2024-04-09 jwrl.
 // Corrected a typo that meant the same operation was executed twice.
@@ -59,9 +81,9 @@ DeclareFloatParam (CentreX, "Position", kNoGroup, "SpecifiesPointX|DisplayAsPerc
 DeclareFloatParam (CentreY, "Position", kNoGroup, "SpecifiesPointY|DisplayAsPercentage", 0.5, -1.5, 1.5);
 DeclareFloatParam (CentreZ, "Position", kNoGroup, "SpecifiesPointZ", 0.0, -1.0, 1.0);
 
-DeclareColourParam (HorizonColour, "Lighting colour", "Cyclorama", kNoFlags, 0.631, 0.667, 0.702, 1.0);
-DeclareFloatParam (Lighting, "Overhead light", "Cyclorama", "DisplayAsPercentage", 1.5, 0.5, 2.0);
-DeclareFloatParam (Groundrow, "Groundrow light", "Cyclorama", "DisplayAsPercentage", 1.1, 0.5, 2.0);
+DeclareColourParam (Ambience, "Ambience", "Cyclorama", kNoFlags, 0.631, 0.667, 0.702, 1.0);
+DeclareFloatParam (Lighting, "Lighting grid", "Cyclorama", "DisplayAsPercentage", 1.5, 0.5, 2.0);
+DeclareFloatParam (Groundrow, "Groundrow", "Cyclorama", "DisplayAsPercentage", 1.1, 0.5, 2.0);
 DeclareFloatParam (Horizon, "Horizon line", "Cyclorama", "DisplayAsPercentage", 0.3, 0.1, 0.9);
 
 DeclareFloatParam (_OutputWidth);
@@ -163,7 +185,7 @@ DeclarePass (bgVid)
    // to produce the desired lighting effect on the background.  The alpha channel is
    // then set to 1.0 and we quit.
 
-   return float4 (pow (HorizonColour, gamma).rgb, 1.0);
+   return float4 (pow (Ambience, gamma).rgb, 1.0);
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -325,19 +347,18 @@ DeclareEntryPoint (ChromakeyAndBg)
    float4 Fgd = tex2D (fgVid, uv2);
    float4 Bgd = tex2D (bgVid, uv2);          // Here we recover the cyclorama background.
    float4 Key = tex2D (FullKey, uv2);
+   float4 maskAmount = tex2D (Mask, uv2);
 
    // Key.w = spill removal amount
    // Key.x = blurred key
    // Key.y = raw, unblurred key
 
    // Using min (Key.x, Key.y) means that any softness around the key causes the
-   // foreground to shrink in from the edges.
+   // foreground to shrink in from the edges.  If we just want to show the key we
+   // can get out now.  Because we no longer have the invert key function this
+   // process has become simpler than the Lightworks original.
 
-   float maskAmount = tex2D (Mask, uv2).x;
    float mixAmount  = saturate ((1.0 - min (Key.x, Key.y) * Fgd.a) * 2.0);
-
-   // If we just want to show the key we can get out now.  Because we no longer have the
-   // invert key function this process has become simpler than the Lightworks original.
 
    if (Reveal) return lerp (0.0.xxxx, float4 (mixAmount.xxx, 1.0), maskAmount);
 
