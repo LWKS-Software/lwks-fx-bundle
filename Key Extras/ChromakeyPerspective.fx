@@ -7,7 +7,7 @@
  This effect is a customised version of the Lightworks Chromakey effect with a very
  much simplified perspective effect added to the foreground video.  The foreground
  image can be cropped prior to the key being generated. After the key has been
- generated perspective is applied, and finally the key is blended with the the
+ generated perspective is applied, and finally the key is blended with the
  background video.
 
    [*]Chromakey
@@ -95,8 +95,8 @@
 // Updated 2026-06-21 jwrl.
 // Header now contains settings description.
 // Mask now uses all four channels, not just R.
-// Changed "Top" references in settings to "Hi".
-// Changed "Bottom" references in settings to "Lo".
+// Changed "Top" references insettings to "Hi".
+// Changed "Bottom" references insettings to "Lo".
 //
 // Modified 2025-07-23 jwrl.
 // Corrected duplicate of same effect in this upload.
@@ -456,12 +456,16 @@ DeclareEntryPoint (ChromakeyPerspective)
       Fgnd = any (xy0 - frac (xy0)) ? kTransparentBlack : tex2D (FgKey, xy0);
    }
 
-   Fgnd.a *= tex2D (Mask, uv3).x;
+   // To show the masking correctly we recover the full RGBA of Mask, and then if we
+   // want to show the masked alpha, multiply masking by the foreground alpha.  In
+   // this mode the alpha channel will be turned fully on.
 
-   if (Reveal && !HideKey) { retval = float4 (Fgnd.aaa, 1.0); }
+   float4 masking = tex2D (Mask, uv3) * Fgnd.a;
+
+   if (Reveal && !HideKey) { retval = float4 (masking.rgb, 1.0); }
    else {
       Fgnd.a  *= saturate (Opacity);
-      retval   = lerp (Bgnd, Fgnd, Fgnd.a);
+      retval   = lerp (Bgnd, Fgnd, masking);
       retval.a = max (Bgnd.a, Fgnd.a);
    }
 
