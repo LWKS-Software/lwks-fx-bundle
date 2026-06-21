@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-21
 // @Author jwrl
 // @Created 2018-06-08
 
@@ -10,6 +10,25 @@
  can be produced from a white on black image or inverted.  Alternatively the alpha
  channel can be used instead of the video to provide the key.  The same controls apply
  to the alpha channel in this mode as do to the video.
+
+   [*]Opacity:  Adjusts the opacity of the key, border and shadow.
+   [*]Use key alpha channel:  A switch to use either a luminance key or the key transparency.
+   [*]Invert key:  Self explanatory.
+   [*]Key
+      [*]Clip level:  In luminance key mode sets the clip / tolerance, otherwise adjusts the alpha gain.
+      [*]Tolerance:  Sets the softness range of the key.
+      [*]Fill key with:  Selects from key source, V_1 input or the matte colour. If V_1 is chosen V_2 is the background.
+      [*]Matte colour:  Self explanatory.
+   [*]Border
+      [*]Opacity:  Sets the opacity of just the border.
+      [*]Width:  Sets the border width.
+      [*]Colour:  Sets the border colour.
+   [*]Shadow
+      [*]Opacity:  Sets the opacity of just the drop shadow.
+      [*]Feather:  Sets the border softness or feathering.
+      [*]X offset:  Sets the horizontal offset of the drop shadow.
+      [*]Y offset:  Sets the vertical offset of the drop shadow.
+      [*]Colour:  Sets the drop shadow colour.
 
  A coloured border can also be generated from the key.  Border opacity, width and
  colour are all adjustable.  A drop shadow with the same range of adjustments can also
@@ -22,6 +41,9 @@
 // Lightworks user effect LumakeyAndMatte.fx
 //
 // Version history:
+//
+// Updated 2026-06-21 jwrl.
+// Header now contains settings description.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
@@ -46,25 +68,25 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Amount, "Opacity", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Amount,     "Opacity",        kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareBoolParam (K_alpha, "Use key alpha channel", kNoGroup, false);
-DeclareBoolParam (K_invert, "Invert key", kNoGroup, false);
+DeclareBoolParam (K_alpha,     "Use key alpha channel", kNoGroup, false);
+DeclareBoolParam (K_invert,    "Invert key",     kNoGroup, false);
 
-DeclareFloatParam (K_clip, "Clip level", "Key", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (K_range, "Tolerance", "Key", kNoFlags, 0.5, 0.0, 1.0);
-DeclareIntParam (K_fill, "Fill key with:", "Key", 2, "Key video|Video 1|Matte colour");
-DeclareColourParam (K_matte, "Matte colour", "Key", kNoFlags, 1.0, 1.0, 1.0);
+DeclareFloatParam (K_clip,     "Clip level",     "Key", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (K_range,    "Tolerance",      "Key", kNoFlags, 0.5, 0.0, 1.0);
+DeclareIntParam (K_fill,       "Fill key with:", "Key", 2, "Key video|Video 1|Matte colour");
+DeclareColourParam (K_matte,   "Matte colour",   "Key", kNoFlags, 1.0, 1.0, 1.0);
 
-DeclareFloatParam (B_amount, "Opacity", "Border", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (B_width, "Width", "Border", kNoFlags, 0.05, 0.0, 1.0);
-DeclareColourParam (B_colour, "Colour", "Border", kNoFlags, 0.0, 0.0, 0.0);
+DeclareFloatParam (B_amount,   "Opacity",        "Border", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (B_width,    "Width",          "Border", kNoFlags, 0.05, 0.0, 1.0);
+DeclareColourParam (B_colour,  "Colour",         "Border", kNoFlags, 0.0, 0.0, 0.0);
 
-DeclareFloatParam (S_amount, "Opacity", "Shadow", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (S_feather, "Feather", "Shadow", kNoFlags, 0.33333333, 0.0, 1.0);
-DeclareFloatParam (S_offset_X, "X offset", "Shadow", kNoFlags, 0.2, -1.0, 1.0);
-DeclareFloatParam (S_offset_Y, "Y offset", "Shadow", kNoFlags, -0.2, -1.0, 1.0);
-DeclareColourParam (S_colour, "Colour", "Shadow", kNoFlags, 0.0, 0.0, 0.0);
+DeclareFloatParam (S_amount,   "Opacity",        "Shadow", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (S_feather,  "Feather",        "Shadow", kNoFlags, 0.33333333, 0.0, 1.0);
+DeclareFloatParam (S_offset_X, "X offset",       "Shadow", kNoFlags, 0.2, -1.0, 1.0);
+DeclareFloatParam (S_offset_Y, "Y offset",       "Shadow", kNoFlags, -0.2, -1.0, 1.0);
+DeclareColourParam (S_colour,  "Colour",         "Shadow", kNoFlags, 0.0, 0.0, 0.0);
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
@@ -132,7 +154,7 @@ DeclarePass (KeyFgd)
 
    if (K_invert) retval.a = 1.0 - retval.a;
 
-   return IsOutOfBounds (uv1) ? _TransparentBlack : lerp (_TransparentBlack, retval, tex2D (Mask, uv1).x);
+   return IsOutOfBounds (uv1) ? _TransparentBlack : lerp (_TransparentBlack, retval, tex2D (Mask, uv1));
 }
 
 DeclarePass (Border_A)
