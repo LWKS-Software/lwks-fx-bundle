@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-26
 // @Author khaver
 // @Created 2011-05-24
 
@@ -8,6 +8,12 @@
  The origin of the flare can be positioned by adjusting the X and Y sliders or by
  dragging the on-viewer icon with the mouse.
 
+   [*]Origin X:  Sets the flare origin's horizontal position.
+   [*]Origin Y:  Sets the flare origin's vertical position.
+   [*]Strength:  Sets the flare intensity.
+   [*]Stretch:  Sets the range covered by the flare.
+   [*]Adjust:  Sets the flare transparency.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -15,6 +21,10 @@
 // Lightworks user effect Flare.fx
 //
 // Version history:
+//
+// Updated 2026-06-22 jwrl.
+// Rewrote header to include settings details.
+// Changed masking to full RGBA.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with 0.0.xxxx for Linux fix.
@@ -89,5 +99,5 @@ DeclareEntryPoint (Flare)
 
    ret = lerp (0.0.xxxx, saturate (ret + source), source.a);
 
-   return lerp (source, ret, tex2D (Mask, uv1).x);
+   return lerp (source, ret, tex2D (Mask, uv1));
 }
