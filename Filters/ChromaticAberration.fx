@@ -1,10 +1,16 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-22
 // @Author josely
 // @Created 2012-06-29
 
 /**
- Generates or removes chromatic aberration.
+ This effect generates or removes chromatic aberration.  The amount can be varied from
+ -100% to 100%, with negative values intended for aberration removal.  The aberration
+ algorithm used blurs the offset, and the blur amount can be varied using the "Chromatic
+ Band" setting.  That blurring means that using this effect for aberration removal can
+ result in some softening of the video.
+
+ Any transparency in the video will display as black, and be passed on to further effects.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -15,6 +21,10 @@
 // Chromatic Abberation Copyright (c) Johannes Bausch (josely). All rights reserved.
 //
 // Version history:
+//
+// Updated 2026-06-26 jwrl.
+// Changed masking to full RGBA.
+// Expanded the header.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with 0.0.xxxx for Linux fix.
@@ -41,7 +51,7 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareIntParam (Mode, "Chromatic Band", kNoGroup, 0, "Half|Full");
+DeclareIntParam (Mode, "Chromatic band", kNoGroup, 0, "Half|Full");
 
 DeclareFloatParam (Amount, "Amount", kNoGroup, kNoFlags, 0.1, -1.0, 1.0);
 
@@ -106,5 +116,5 @@ DeclareEntryPoint (ChromaticAberration)
 
    fragColor = lerp (0.0.xxxx, fragColor, ReadPixel (Input, uv1).a);
 
-   return lerp (source, fragColor, tex2D (Mask, uv2).x);
+   return lerp (source, fragColor, tex2D (Mask, uv2));
 }
