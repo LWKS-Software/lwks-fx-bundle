@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-22
 // @Author khaver
 // @Created 2011-05-25
 
@@ -10,6 +10,12 @@
  size of the flare.  Checking the "Show Flare" checkbox will display the flare against
  black.
 
+   [*]Length:  Sets the flare length.
+   [*]Strength:  Sets the flare strength.
+   [*]Threshold:  Sets the threshold that triggers the flare.
+   [*]Hue:  Adjusts the flare hue.
+   [*]Show flare:  Displays just the flare.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -17,6 +23,10 @@
 // Lightworks user effect AnamorphicLensFlare.fx
 //
 // Version history:
+//
+// Updated 2026-06-22 jwrl.
+// Rewrote header to include settings details.
+// Changed masking to full RGBA.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
@@ -46,7 +56,7 @@ DeclareFloatParam (Strength, "Strength", kNoGroup, kNoFlags, 0.75, 0.0, 1.0);
 DeclareFloatParam (adjust, "Threshold", kNoGroup, kNoFlags, 0.25, 0.0, 1.0);
 DeclareFloatParam (Hue, "Hue", kNoGroup, kNoFlags, 0.0, -0.5, 0.5);
 
-DeclareBoolParam (flare, "Show Flare", kNoGroup, false);
+DeclareBoolParam (flare, "Show flare", kNoGroup, false);
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
@@ -132,5 +142,5 @@ DeclareEntryPoint (AnamorphicLensFlare)
 
    blr = lerp (_TransparentBlack, blr, source.a);
 
-   return lerp (source, blr, tex2D (Mask, uv2).x);
+   return lerp (source, blr, tex2D (Mask, uv2));
 }
