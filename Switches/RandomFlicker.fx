@@ -1,10 +1,18 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-06-22
 // @Author jwrl
 // @Created 2018-08-24
 
 /**
- This effect is a pseudo random switch between two inputs.
+ This effect is a pseudo random switch between two video sources.  Alternatively you
+ could feed one input directly from a video source and the second from the same source
+ through a colourgrade or a transform effect.  You could even just connect to In1,
+ with nothing on In2.  That would give a hard flicker between black and video.
+
+   [*]Opacity:  Self explanatory.
+   [*]Switch settings
+      [*]Speed:  Sets the rate at which switching takes place.
+      [*]Random:  Varies how random the switching will be. Speed and Random interact.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -13,6 +21,10 @@
 // Lightworks user effect RandomFlicker.fx
 //
 // Version history:
+//
+// Updated 2026-06-22 jwrl.
+// Changed "Randomness" to "Random".
+// Added settings description to header text.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -36,10 +48,10 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Opacity, "Opacity", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Opacity, "Opacity", kNoGroup,          kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareFloatParam (Speed, "Speed", "Switch settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareFloatParam (Random, "Randomness", "Switch settings", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Speed,   "Speed",   "Switch settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareFloatParam (Random,  "Random",  "Switch settings", kNoFlags, 0.5, 0.0, 1.0);
 
 DeclareFloatParam (_Progress);
 DeclareFloatParam (_LengthFrames);
@@ -70,4 +82,3 @@ DeclareEntryPoint (RandomFlicker)
 
    return lerp (Bgnd, retval, tex2D (Mask, uv1));
 }
-
