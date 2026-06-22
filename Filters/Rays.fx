@@ -1,10 +1,21 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-22
 // @Author khaver
 // @Created 2012-01-19
 
 /**
- This effect radiates rays away from the highlights in the image.
+ This effect radiates rays away from the highlights in the image.  If used in conjunction
+ with the lens flare effect it can give really striking naturalistic results.
+
+   [*]Center X:  Sets the horizontal origin of the rays.
+   [*]Center Y:  Sets the vertical origin of the rays.
+   [*]Length:  Sets the ray length.
+   [*]Radius:  Sets the radius over which the rays will be created.
+   [*]Threshold
+      [*]Red:  Sets the threshold above which rays will be created from the red channel.
+      [*]Green:  Sets the threshold above which rays will be created from the green channel.
+      [*]Blue:  Sets the threshold above which rays will be created from the blue channel.
+   [*]Brightness:  Sets the overall brightness of the rays.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -13,6 +24,11 @@
 // Lightworks user effect Rays.fx
 //
 // Version history:
+//
+// Updated 2026-06-22 jwrl.
+// Updated header to include settings details.
+// Created a new group, "Threshold", and put "Red threshold", "Green threshold" and
+// "Blue threshold" in it as "Red", "Green" and "Blue" respectively.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with 0.0.xxxx for Linux fix.
@@ -35,15 +51,16 @@ DeclareInput (Input);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (CX, "Center", kNoGroup, "SpecifiesPointX", 0.5, -1.5, 2.5);
-DeclareFloatParam (CY, "Center", kNoGroup, "SpecifiesPointY", 0.5, -1.5, 2.5);
+DeclareFloatParam (CX,         "Center",     kNoGroup,    "SpecifiesPointX", 0.5, -1.5, 2.5);
+DeclareFloatParam (CY,         "Center",     kNoGroup,    "SpecifiesPointY", 0.5, -1.5, 2.5);
+DeclareFloatParam (BlurAmount, "Length",     kNoGroup,    kNoFlags, 0.1, 0.0, 1.0);
+DeclareFloatParam (Radius,     "Radius",     kNoGroup,    kNoFlags, 2.0, 0.0, 2.0);
 
-DeclareFloatParam (BlurAmount, "Length", kNoGroup, kNoFlags, 0.1, 0.0, 1.0);
-DeclareFloatParam (Radius, "Radius", kNoGroup, kNoFlags, 2.0, 0.0, 2.0);
-DeclareFloatParam (RThreshold, "Red Threshold", kNoGroup, kNoFlags, 0.8, 0.0, 1.0);
-DeclareFloatParam (GThreshold, "Green Threshold", kNoGroup, kNoFlags, 0.8, 0.0, 1.0);
-DeclareFloatParam (BThreshold, "Blue Threshold", kNoGroup, kNoFlags, 0.8, 0.0, 1.0);
-DeclareFloatParam (Mix, "Brightness", kNoGroup, kNoFlags, 2.0, 0.0, 10.0);
+DeclareFloatParam (RThreshold, "Red",        "Threshold", kNoFlags, 0.8, 0.0, 1.0);
+DeclareFloatParam (GThreshold, "Green",      "Threshold", kNoFlags, 0.8, 0.0, 1.0);
+DeclareFloatParam (BThreshold, "Blue",       "Threshold", kNoFlags, 0.8, 0.0, 1.0);
+
+DeclareFloatParam (Mix,        "Brightness", kNoGroup,    kNoFlags, 2.0, 0.0, 10.0);
 
 DeclareFloatParam (_OutputWidth);
 
