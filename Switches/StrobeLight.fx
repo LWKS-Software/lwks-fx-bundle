@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-06-22
 // @Author jwrl
 // @Created 2018-03-31
 
@@ -9,6 +9,11 @@
  as a percentage of progress.  This means that the flash timing will be accurate
  regardless of the actual length of the clips to which it is applied.  The effect
  also handles foreground and background components at their native resolutions.
+
+   [*]Vision seen when flash is off:  Is a choice between the background video
+      or black.
+   [*]Frame rate:  Self explanatory.
+   [*]Swap start frame:  Sets the first frame seen when the effect starts.
 
  Because this version is designed specifically for Lightworks versions 2023 plus
  it does not support earlier versions at all.  The earlier StrobeLight.fx by khaver
@@ -22,6 +27,10 @@
 // Lightworks user effect StrobeLight.fx
 //
 // Version history:
+//
+// Updated 2026-06-22 jwrl.
+// Changed "Flash frame rate" to "Frame rate".
+// Added settings description to header text.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -43,11 +52,9 @@ DeclareInputs (Fg, Bg);
 // Parameters
 //-------------------------------------------------------------------------------------//
 
-DeclareIntParam (SetBgd, "Vision seen when flash is off", kNoGroup, 0, "Background|Black");
-
-DeclareFloatParam (Rate, "Flash frame rate", kNoGroup, kNoFlags, 1.0, 1.0, 60.0);
-
-DeclareBoolParam (SwapStart, "Swap start frame", kNoGroup, false);
+DeclareIntParam   (SetBgd,    "Vision seen when flash is off", kNoGroup, 0, "Background|Black");
+DeclareFloatParam (Rate,      "Frame rate",       kNoGroup, kNoFlags, 1.0, 1.0, 60.0);
+DeclareBoolParam  (SwapStart, "Swap start frame", kNoGroup, false);
 
 DeclareFloatParam (_Progress);
 DeclareFloatParam (_LengthFrames);
@@ -70,4 +77,3 @@ DeclareEntryPoint (StrobeLight)
 
    return flash ? ReadPixel (Fg, uv1) : SetBgd ? BLACK : ReadPixel (Bg, uv2);
 }
-
