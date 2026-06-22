@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-22
 // @Author khaver
 // @Created 2014-07-10
 
@@ -8,6 +8,16 @@
  blend modes can be adjusted.  Select vertical or horizontal, flip the gradient, adjust
  strength and use the on-screen handles to move where the gradient starts and ends.
 
+   [*]Direction:  Sets whether the ND filter is a horizontal gradient or vertical.
+   [*]Flip:  A switch to invert the gradient.
+   [*]Blend mode:  This provides a subset of Photoshop-style blend modes to apply the filter.
+   [*]Tint:  Sets the colour of the filter gradient.
+   [*]Strength:  Sets the mix level of the filter over the background.
+   [*]Start X:  Sets the horizontal start point of the gradient.
+   [*]Start Y:  Sets the vertical start point of the gradient.
+   [*]End X:  Sets the horizontal end point of the gradient.
+   [*]End Y:  Sets the vertical end point of the gradient.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -15,6 +25,9 @@
 // Lightworks user effect GraduatedNDFilter.fx
 //
 // Version history:
+//
+// Updated 2026-06-22 jwrl.
+// Updated header to include settings details.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
@@ -37,21 +50,16 @@ DeclareInput (Input);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareIntParam (Direction, "Direction", kNoGroup, 0, "Vertical|Horizontal");
+DeclareIntParam (Direction, "Direction",  kNoGroup, 0, "Vertical|Horizontal");
+DeclareBoolParam (Flip,     "Flip",       kNoGroup, false);
+DeclareIntParam (Mode,      "Blend mode", kNoGroup, 2, "Add|Subtract|Multiply|Screen|Overlay|Soft Light|Hard Light|Exclusion|Lighten|Darken|Difference|Burn");
+DeclareColourParam (Tint,   "Tint",       kNoGroup, kNoFlags, 0.0, 0.0, 0.0, 1.0);
+DeclareFloatParam (Mixit,   "Strength",   kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareBoolParam (Flip, "Flip", kNoGroup, false);
-
-DeclareIntParam (Mode, "Blend mode", kNoGroup, 2, "Add|Subtract|Multiply|Screen|Overlay|Soft Light|Hard Light|Exclusion|Lighten|Darken|Difference|Burn");
-
-DeclareColourParam (Tint, "Tint", kNoGroup, kNoFlags, 0.0, 0.0, 0.0, 1.0);
-
-DeclareFloatParam (Mixit, "Strength", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
-
-DeclareFloatParam (SX, "Start", kNoGroup, "SpecifiesPointX", 0.25, 0.0, 1.0);
-DeclareFloatParam (SY, "Start", kNoGroup, "SpecifiesPointY", 0.75, 0.0, 1.0);
-
-DeclareFloatParam (EX, "End", kNoGroup, "SpecifiesPointX", 0.75, 0.0, 1.0);
-DeclareFloatParam (EY, "End", kNoGroup, "SpecifiesPointY", 0.25, 0.0, 1.0);
+DeclareFloatParam (SX,      "Start",      kNoGroup, "SpecifiesPointX", 0.25, 0.0, 1.0);
+DeclareFloatParam (SY,      "Start",      kNoGroup, "SpecifiesPointY", 0.75, 0.0, 1.0);
+DeclareFloatParam (EX,      "End",        kNoGroup, "SpecifiesPointX", 0.75, 0.0, 1.0);
+DeclareFloatParam (EY,      "End",        kNoGroup, "SpecifiesPointY", 0.25, 0.0, 1.0);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
