@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-06-22
 // @Author khaver
 // @Created 2012-10-03
 
@@ -8,6 +8,16 @@
  glints/stars can be rotated and may be normal or rainbow coloured.  They may also be
  blurred, and the "Show Glint" checkbox will display the glints over a black background.
 
+   [*]Star points:  Selects the number of star points that will be generated from a highlight.
+   [*]Threshold:  Sets the threshold above which glints will be generated.
+   [*]Brightness:  Sets the brightness of the glint. This affected by the brightness of the glint source.
+   [*]Length:  Sets the length of the star points from the glint.
+   [*]Rotation:  Rotates the glint stars.
+   [*]Strength:  This sets the glint strength and interacts with brightness and length.
+   [*]Rainbow glint:  A switch that enables rainbow patterns on the star points.
+   [*]Blur glint:  Softens the star points.
+   [*]Show glint:  This switch displays the glints over a black background to assist setup.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -15,6 +25,10 @@
 // Lightworks user effect Glint.fx by Gary Hango (khaver)
 //
 // Version history:
+//
+// Updated 2026-06-22 jwrl.
+// Updated header to include settings details.
+// Changed masking to full RGBA.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -38,17 +52,17 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareIntParam (SetTechnique, "Star Points", kNoGroup, 0, "4|6|8");
+DeclareIntParam (SetTechnique,  "Star points",   kNoGroup, 0, "4|6|8");
 
-DeclareFloatParam (Threshold, "Threshold", kNoGroup, kNoFlags, 0.25, 0.0, 1.0);
-DeclareFloatParam (Brightness, "Brightness", kNoGroup, kNoFlags, 1.0, 1.0, 10.0);
-DeclareFloatParam (Length, "Length", kNoGroup, kNoFlags, 5.0, 0.0, 20.0);
-DeclareFloatParam (Rotation, "Rotation", kNoGroup, kNoFlags, 0.0, 0.0, 360.0);
-DeclareFloatParam (Strength, "Strength", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Threshold,   "Threshold",     kNoGroup, kNoFlags, 0.25, 0.0, 1.0);
+DeclareFloatParam (Brightness,  "Brightness",    kNoGroup, kNoFlags, 1.0, 1.0, 10.0);
+DeclareFloatParam (Length,      "Length",        kNoGroup, kNoFlags, 5.0, 0.0, 20.0);
+DeclareFloatParam (Rotation,    "Rotation",      kNoGroup, kNoFlags, 0.0, 0.0, 360.0);
+DeclareFloatParam (Strength,    "Strength",      kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareBoolParam (RainbowGlint, "Rainbow Glint", kNoGroup, false);
-DeclareBoolParam (BlurGlint, "Blur Glint", kNoGroup, false);
-DeclareBoolParam (ShowGlint, "Show Glint", kNoGroup, false);
+DeclareBoolParam (RainbowGlint, "Rainbow glint", kNoGroup, false);
+DeclareBoolParam (BlurGlint,    "Blur glint",    kNoGroup, false);
+DeclareBoolParam (ShowGlint,    "Show glint",    kNoGroup, false);
 
 DeclareFloatParam (_OutputWidth);
 
@@ -192,7 +206,7 @@ float4 main (sampler S, float2 xy1, sampler T, float2 xy2)
 
    comb = lerp (source, comb, source.a * Strength);
 
-   return lerp (source, comb, tex2D (Mask, xy1).x);
+   return lerp (source, comb, tex2D (Mask, xy1));
 }
 
 //-----------------------------------------------------------------------------------------//
