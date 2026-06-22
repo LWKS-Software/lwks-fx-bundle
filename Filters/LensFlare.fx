@@ -1,11 +1,23 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-22
 // @Author khaver
 // @Author toninoni
 // @Created 2018-06-12
 
 /**
- This effect is an accurate lens flare simulation.
+ This effect is an accurate lens flare simulation. It creates multicolour lens flares
+ with secondary reflections but has no animated rays.
+
+   [*]Center X:  Sets the horizontal origin of the flare.
+   [*]Center Y:  Sets the vertical origin of the flare.
+   [*]Intensity:  Sets the strength of the flare.
+   [*]Adjust lens:  Adjusts the complexity of the flare.
+   [*]Flare distance:  Adjusts the distance from the camera of the light source creating the flare.
+   [*]Flare size:  Self explanatory.
+   [*]Light scatter:  Self explanatory.
+   [*]Image content
+      [*]Use image:  A switch to enable the image to act as the flare source.
+      [*]Threshold:  Sets the threshold above which the flare will be generated.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -24,6 +36,10 @@
 //-----------------------------------------------------------------------------------------//
 //
 // Version history:
+//
+// Updated 2026-06-22 jwrl.
+// Updated header to include settings details.
+// Changed "Lens Adjustment" to "Adjust lens".
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
@@ -46,18 +62,17 @@ DeclareInput (Input);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (CENTERX, "Center", kNoGroup, "SpecifiesPointX", 0.15, 0.0, 1.0);
-DeclareFloatParam (CENTERY, "Center", kNoGroup, "SpecifiesPointY", 0.75, 0.0, 1.0);
+DeclareFloatParam (CENTERX,    "Center",         kNoGroup,        "SpecifiesPointX", 0.15, 0.0, 1.0);
+DeclareFloatParam (CENTERY,    "Center",         kNoGroup,        "SpecifiesPointY", 0.75, 0.0, 1.0);
 
-DeclareFloatParam (AMOUNT, "Intensity", kNoGroup, kNoFlags, 2.0, 0.0, 10.0);
-DeclareFloatParam (COMPLEXITY, "Lens Adjustment", kNoGroup, kNoFlags, 1.0, 0.0, 10.0);
-DeclareFloatParam (DISTANCE, "Flare Distance", kNoGroup, kNoFlags, 1.0, 0.0, 10.0);
-DeclareFloatParam (ZOOM, "Flare Size", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (SCATTER, "Light Scatter", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (AMOUNT,     "Intensity",      kNoGroup,        kNoFlags, 2.0, 0.0, 10.0);
+DeclareFloatParam (COMPLEXITY, "Adjust lens",    kNoGroup,        kNoFlags, 1.0, 0.0, 10.0);
+DeclareFloatParam (DISTANCE,   "Flare distance", kNoGroup,        kNoFlags, 1.0, 0.0, 10.0);
+DeclareFloatParam (ZOOM,       "Flare size",     kNoGroup,        kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (SCATTER,    "Light scatter",  kNoGroup,        kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareBoolParam (AFFECT, "Use Image", "Image Content", false);
-
-DeclareFloatParam (THRESH, "Threshold", "Image Content", kNoFlags, 0.0, 0.0, 1.0);
+DeclareBoolParam  (AFFECT,     "Use image",      "Image content", false);
+DeclareFloatParam (THRESH,     "Threshold",      "Image content", kNoFlags, 0.0, 0.0, 1.0);
 
 DeclareFloatParam (_Progress);
 
