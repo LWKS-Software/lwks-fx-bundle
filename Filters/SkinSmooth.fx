@@ -4,7 +4,22 @@
 // @Created 2014-07-06
 
 /**
- Smooths flesh tones to reduce visible skin blemishes.
+ Skin smooth selectively blurs skin tones and is helpful in removing skin blemishes.
+ It is similar in action to a Promist filter.
+
+   [*]Amount:  The amount of smoothed flesh tones to be mixed back into the original.
+   [*]Sample size:  Effectively a softness setting, this can be regarded as a flesh
+      tone blur.
+   [*]Internal masking
+      [*]Red mask:  Enables mask generation from red tones.
+      [*]Mask brightness:  Adjust mask brightness - similar in action to a key clip.
+      [*]Mask gamma:  Adjusts the mask gamma - similar in action to key erosion.
+      [*]Show mask:  Display just the mask to assist in setup.
+   [*]External masking
+      [*]Use external mask:  A switch to enable the use of an external mask.
+      [*]Show external mask:  Displays the external mask if any.
+      [*]Ext mask colour:  Sets the external mask colour to use.
+      [*]Ext mask mix:  Mixes the external mask with the internally generated one.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -17,6 +32,10 @@
 // Based on: http://www.blosser.org/d9/dlAviShader042.rar
 //
 // Version history:
+//
+// Updated 2026-06-22 jwrl.
+// Updated header to include settings details.
+// Created two new groups, "Internal masking" and "External masking".
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
@@ -39,21 +58,18 @@ DeclareInputs (IMG, MSK);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Amount, "Amount", kNoGroup, kNoFlags, 0.2, 0.0, 1.0);
-DeclareFloatParam (FrameSize, "Sample size", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Amount,          "Amount",      kNoGroup,           kNoFlags, 0.2, 0.0, 1.0);
+DeclareFloatParam (FrameSize,       "Sample size", kNoGroup,           kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareBoolParam (RedMask, "Red mask", kNoGroup, true);
+DeclareBoolParam  (RedMask,         "Red mask",    "Internal masking", true);
+DeclareFloatParam (MaskBrightness,  "Brightness",  "Internal masking", kNoFlags, 1.0, 0.0, 10.0);
+DeclareFloatParam (MaskGamma,       "Gamma" ,      "Internal masking", kNoFlags, 1.0, 0.0, 2.0);
+DeclareBoolParam  (ShowRedMask,     "Show mask",   "Internal masking", false);
 
-DeclareFloatParam (MaskBrightness, "Mask brightness", kNoGroup, kNoFlags, 1.0, 0.0, 10.0);
-DeclareFloatParam (MaskGamma, "Mask gamma", kNoGroup, kNoFlags, 1.0, 0.0, 2.0);
-
-DeclareBoolParam (ShowRedMask, "Show red mask", kNoGroup, false);
-DeclareBoolParam (InputMask, "Use external mask", kNoGroup, false);
-DeclareBoolParam (ShowMask, "Show external mask", kNoGroup, false);
-
-DeclareColourParam (ShowMaskColour, "Ext mask colour", kNoGroup, kNoFlags, 0.0, 1.0, 0.0, 1.0);
-
-DeclareFloatParam (ShowMaskAmount, "Ext mask mix", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareBoolParam (InputMask,        "Use mask",    "External masking", false);
+DeclareBoolParam (ShowMask,         "Show mask",   "External masking", false);
+DeclareColourParam (ShowMaskColour, "Mask colour", "External masking", kNoFlags, 0.0, 1.0, 0.0, 1.0);
+DeclareFloatParam (ShowMaskAmount,  "Ext mix",     "External masking", kNoFlags, 0.5, 0.0, 1.0);
 
 DeclareFloatParam (_OutputWidth);
 
