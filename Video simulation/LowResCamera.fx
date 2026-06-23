@@ -1,11 +1,16 @@
 // @Maintainer jwrl
-// @Released 2025-10-22
+// @Released 2026-06-23
 // @Author jwrl
 // @Created 2016-02-12
 
 /**
  This effect was designed to simulate the pixellation that you get when a low-resolution
  camera is blown up just that little too much.
+
+   [*]Blur position:  Enables blurring before sampling, after sampling or both.
+   [*]Pixelation:  Sets the pixellation size.
+   [*]Blurriness:  Adjusts the amount of blur.
+   [*]Opacity:  Mixes the low res result back over the original image.
 
  NOTE 1:  Because this effect needs to be able to precisely set mosaic sizes no matter
  what the original clip size or aspect ratio is it has not been possible to make it
@@ -19,6 +24,10 @@
 // Lightworks user effect LowResCamera.fx
 //
 // Version history:
+//
+// Updated 2026-06-23 jwrl.
+// Added settings description to header text.
+// Changed "Apply blur either side of mosaic" to "Apply blur to both sides of mosaic".
 //
 // Updated 2025-10-22 jwrl.
 // Changed the subcategory from "Video artefacts" to "Video simulation".
@@ -43,7 +52,7 @@ DeclareInput (Input);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareIntParam (SetTechnique, "Blur position", kNoGroup, 0, "Apply blur before mosaic|Apply blur after mosaic|Apply blur either side of mosaic");
+DeclareIntParam (SetTechnique, "Blur position", kNoGroup, 0, "Apply blur before mosaic|Apply blur after mosaic|Apply blur to both sides of mosaic");
 
 DeclareFloatParam (Pixelation, "Pixelation", kNoGroup, kNoFlags, 0.1, 0.0, 1.0);
 DeclareFloatParam (Blurriness, "Blurriness", kNoGroup, kNoFlags, 0.35, 0.0, 1.0);
@@ -173,7 +182,7 @@ DeclarePass (MosaicPost)
 DeclareEntryPoint (PostMosaic)
 { return fn_main (InpPost, MosaicPost, uv2); }
 
-// Apply blur either side of mosaic
+// Apply blur to both sides sides of mosaic
 
 DeclarePass (InpFull)
 { return ReadPixel (Input, uv1); }
@@ -195,4 +204,3 @@ DeclarePass (MosaicFull)
 
 DeclareEntryPoint (FullMosaic)
 { return fn_main (InpFull, MosaicFull, uv2); }
-
