@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-10-22
+// @Released 2026-06-23
 // @Author jwrl
 // @Created 2018-09-07
 
@@ -9,7 +9,27 @@
  also simulated.  A range of Ampex VTR types and modes can be emulated, as well as a
  generic RCA videotape recorder.
 
- NOTE 1: the alpha channel is turned fully on with this effect.  Also, because this
+   [*]Television standard:  Selects between 525 and 625 line television standards.
+   [*]VTR mode:  Chooses between low band and high band, valve or solid state
+      electronics.
+   [*]Crop frame to 4x3 aspect ratio:  Is more realistic when enabled.
+   [*]Tip penetrate:  Simulates the artefacts caused by poorly adjusted tip penetration.
+   [*]Guide height:  Simulates what happens when the tape guide is badly adjusted.
+   [*]Colour format:  Chooses from the full range of possible monochrome colour formats.
+   [*]Chroma errors:  Self explanatory.
+   [*]Brush noise:  Adds the sparkle caused by brush noise on early VTRs.  This only
+      functions when VTR mode is set to low band (valve) and colour format is set to
+      black and white.  This corresponds to the behaviour of Ampex VR-1000 machines.
+   [*]Oxide build up
+      [*]Head 1:  Adds oxide build up video noise to the first head.
+      [*]Head 2:  Self explanatory.
+      [*]Head 3:  Self explanatory.
+      [*]Head 4:  Self explanatory.
+   [*]Show head switching dots (Ampex VR-1000):  This is self explanatory and only
+      functions when VTR mode is set to low band (valve) and colour format is set to
+      black and white.  This corresponds to the behaviour of Ampex VR-1000 machines.
+
+ NOTE 1:  The alpha channel is turned fully on with this effect.  Also, because this
  needs to be able to precisely set line widths no matter what the original clip size
  or aspect ratio is it has not been possible to make it truly resolution independent.
  What it does is lock the clip resolution to sequence resolution instead.
@@ -25,6 +45,10 @@
 // Lightworks user effect QuadVTRsimulator.fx
 //
 // Version history:
+//
+// Updated 2026-06-23 jwrl.
+// Added settings description to header text.
+// Changed "Tip penetration" to "Tip penetrate".
 //
 // Updated 2025-10-22 jwrl.
 // Changed the subcategory from "Video artefacts" to "Video simulation".
@@ -54,25 +78,24 @@ DeclareInput (Inp);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareIntParam (Mode, "Television standard", kNoGroup, 1, "525 line|625 line");
-DeclareIntParam (VTRmode, "VTR mode", kNoGroup, 0, "Low band (valve)|Low band (solid state)|High band");
+DeclareIntParam (Mode,         "Television standard", kNoGroup, 1, "525 line|625 line");
+DeclareIntParam (VTRmode,      "VTR mode",            kNoGroup, 0, "Low band (valve)|Low band (solid state)|High band");
 
-DeclareBoolParam (Crop, "Crop frame to 4x3 aspect ratio", kNoGroup, true);
+DeclareBoolParam (Crop,        "Crop frame to 4x3 aspect ratio",        kNoGroup, true);
+DeclareFloatParam (Tip,        "Tip penetrate",       kNoGroup,         kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (Guide,      "Guide height",        kNoGroup,         kNoFlags, 0.0, -1.0, 1.0);
 
-DeclareFloatParam (Tip, "Tip penetration", kNoGroup, kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (Guide, "Guide height", kNoGroup, kNoFlags, 0.0, -1.0, 1.0);
+DeclareIntParam (SetTechnique, "Colour format",       kNoGroup, 2, "Black and white|NTSC colour (Ampex)|PAL colour (Ampex)|PAL with Hanover bars (Ampex)|Colour offset (RCA)");
 
-DeclareIntParam (SetTechnique, "Colour format", kNoGroup, 2, "Black and white|NTSC colour (Ampex)|PAL colour (Ampex)|PAL with Hanover bars (Ampex)|Colour offset (RCA)");
+DeclareFloatParam (Phase,      "Chroma errors",       kNoGroup,         kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (Brush,      "Brush noise",         kNoGroup,         kNoFlags, 0.0, 0.0, 1.0);
 
-DeclareFloatParam (Phase, "Chroma errors", kNoGroup, kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (Brush, "Brush noise", kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Head_1,     "Head 1",              "Oxide build up", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Head_2,     "Head 2",              "Oxide build up", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Head_3,     "Head 3",              "Oxide build up", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Head_4,     "Head 4",              "Oxide build up", kNoFlags, 0.0, 0.0, 1.0);
 
-DeclareFloatParam (Head_1, "Head 1", "Oxide build up", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (Head_2, "Head 2", "Oxide build up", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (Head_3, "Head 3", "Oxide build up", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (Head_4, "Head 4", "Oxide build up", kNoFlags, 0.0, 0.0, 1.0);
-
-DeclareBoolParam (HeadSwitch, "Show head switching dots (Ampex VR-1000)", kNoGroup, false);
+DeclareBoolParam (HeadSwitch,  "Show head switching dots (Ampex VR-1000)", kNoGroup, false);
 
 DeclareFloatParam (_Progress);
 
