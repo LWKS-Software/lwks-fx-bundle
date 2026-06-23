@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-10-22
+// @Released 2026-06-23
 // @Author jwrl
 // @Created 2021-12-21
 
@@ -9,6 +9,21 @@
  monochrome video formats are supported.  In monochrome mode gamma is lifted and the
  colourimetry has been adjusted to more closely approximate the look of image orthicon
  cameras.  No attempt has been made to duplicate the highlight bloom of those cameras.
+
+   [*]TV standard:  Selects the TV standard to emulate.
+   [*]Horizontal
+      [*]Skew:  Sets the amount of horizontal skew the unlocked image has.
+      [*]Offset:  Displaces the image horizontally.
+      [*]H. hold:  Emulates loss of horizontal hold.
+   [*]Vertical
+      [*]Roll:  Causes the image to roll vertically.
+      [*]V. hold:  Emulates the loss of vertical hold.
+   [*]Scan lines:  Adjusts the visibility of scan lines.
+   [*]Video noise:  Adds video noise to the picture.
+   [*]Glitches/ghosting
+      [*]Visibility:  Adjusts glitching and ghost visibility.
+      [*]Rate/ghosts:  Offsets ghosting.
+      [*]Edge jitter:  Adds jitter to the edge of frame.
 
  Scanlines can be added, and a range of video artefacts are available.  Horizontal and
  vertical lock can be set manually, or can continuously unlock.  Roll speed and horizontal
@@ -23,6 +38,11 @@
 // Lightworks user effect AnalogTVdisaster.fx
 //
 // Version history:
+//
+// Updated 2026-06-23 jwrl.
+// Added settings description to header text.
+// Renamed the group "Glitches / ghosts" to"Glitches/ghosting".
+// Renamed "Rate / ghosting" to"Rate/ghosts".
 //
 // Updated 2025-10-22 jwrl.
 // Changed the subcategory from "Video artefacts" to "Video simulation".
@@ -47,21 +67,21 @@ DeclareInput (Inp);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareIntParam (TVmode, "TV standard", kNoGroup, 0, "PAL|NTSC|625 line mono|525 line mono|409 line mono|819 line mono");
+DeclareIntParam (TVmode,       "TV standard", kNoGroup, 0, "PAL|NTSC|625 line mono|525 line mono|409 line mono|819 line mono");
 
-DeclareFloatParam (Horizontal, "Skew", "Horizontal", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (Offset, "Offset", "Horizontal", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (Hhold, "H. hold", "Horizontal", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (Horizontal, "Skew",        "Horizontal",        kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (Offset,     "Offset",      "Horizontal",        kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (Hhold,      "H. hold",     "Horizontal",        kNoFlags, 0.0, -1.0, 1.0);
 
-DeclareFloatParam (Vertical, "Roll", "Vertical", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (Vhold, "V. hold", "Vertical", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (Vertical,   "Roll",        "Vertical",          kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (Vhold,      "V. hold",     "Vertical",          kNoFlags, 0.0, -1.0, 1.0);
 
-DeclareFloatParam (ScanLines, "Scan lines", kNoGroup, kNoFlags, 0.75, 0.0, 1.0);
-DeclareFloatParam (VideoNoise, "Video noise", kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (ScanLines,  "Scan lines",  kNoGroup,            kNoFlags, 0.75, 0.0, 1.0);
+DeclareFloatParam (VideoNoise, "Video noise", kNoGroup,            kNoFlags, 0.0, 0.0, 1.0);
 
-DeclareFloatParam (Visibility, "Visibility", "Glitches / ghosts", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (GlitchRate, "Rate / ghosting", "Glitches / ghosts", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (EdgeJitter, "Edge jitter", "Glitches / ghosts", kNoFlags, 0.5, -1.0, 1.0);
+DeclareFloatParam (Visibility, "Visibility",  "Glitches/ghosting", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (GlitchRate, "Rate/ghosts", "Glitches/ghosting", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (EdgeJitter, "Edge jitter", "Glitches/ghosting", kNoFlags, 0.5, -1.0, 1.0);
 
 DeclareFloatParam (_Length);
 DeclareFloatParam (_LengthFrames);
@@ -241,4 +261,3 @@ DeclareEntryPoint (AnalogTVdisaster)
 
    return retval;
 }
-
