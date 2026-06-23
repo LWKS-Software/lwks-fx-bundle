@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-10-22
+// @Released 2026-06-23
 // @Author jwrl
 // @Created 2018-05-23
 
@@ -11,6 +11,14 @@
  always be subjective, highlight burnout, gamma, grain, softness and green saturation and
  hue are all adjustable.  Hue adjustment ranges from yellow to cyan.
 
+   [*]Filter:  Selects from one of the night vision profiles.
+   [*]Burnout:  Burns out or flattens the white levels.
+   [*]Gamma:  Adjusts the gamma of the processed image.
+   [*]Grain:  Controls the amount of video noise that is added.
+   [*]Softness:  Blurs the image slightly.
+   [*]Saturation:  Adjusts the saturation of the finished result.
+   [*]Hue:  Adjusts the green from yellow to cyan.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -18,6 +26,9 @@
 // Lightworks user effect NightVision.fx
 //
 // Version history:
+//
+// Updated 2026-06-23 jwrl.
+// Added settings description to header text.
 //
 // Updated 2025-10-22 jwrl.
 // Changed the subcategory from "Video artefacts" to "Video simulation".
@@ -242,4 +253,3 @@ DeclarePass (Glow_2)
 
 DeclareEntryPoint (nightVision_2)
 { return fn_main (Glow_2, uv2, uv1); }
-
