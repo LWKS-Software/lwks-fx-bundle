@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-10-22
+// @Released 2026-06-23
 // @Author khaver
 // @Created 2014-11-19
 
@@ -10,6 +10,22 @@
  that triggers the distortion and white, red and blue noise can be added.  There's also
  a Roll control to roll the image up or down at different speeds.
 
+   [*]Resolution:  Sets the simulated vertical resolution.
+   [*]Distortion
+      [*]X position:  Sets the vertical strip that affects the horizontal distortion.
+      [*]Negate source:  Inverts the horizontal distortion.
+      [*]Strength:  Sets the amount of distortion that will be applied.
+      [*]Threshold:  Sets the luminance threshold that will trigger distortion.
+      [*]Bias:  Adds an offset to the distortion.
+   [*]Noise
+      [*]White noise:  Mixes white noise into the image.
+      [*]Red noise:  Self explanatory.
+      [*]Blue Noise:  Self explanatory.
+   [*]Roll
+      [*]Speed multiplier:  Sets one of three multipliers for the speed of the roll.
+      [*]Speed:  Self explanatory.
+   [*]Allow video wrap around:  Self explanatory.
+
  NOTE:  This effect breaks resolution independence.  It is only suitable for use with
  Lightworks version 2023 and higher.
 */
@@ -18,6 +34,11 @@
 // Lightworks user effect VHSsimulator.fx
 //
 // Version history:
+//
+// Updated 2026-06-23 jwrl.
+// Added settings description to header text.
+// Changed "Vertical Resolution" to "Resolution".
+// Changed "Source X pos" to "X position".
 //
 // Updated 2025-10-22 jwrl.
 // Changed the subcategory from "Video artefacts" to "Video simulation".
@@ -42,24 +63,22 @@ DeclareInput (Input);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Lines, "Vertical Resolution", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (ORGX, "Source X pos", "Distortion", kNoFlags, 0.02, 0.0, 1.0);
+DeclareFloatParam (Lines,     "Resolution",       kNoGroup,     kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareBoolParam (Invert, "Negate Source", "Distortion", false);
+DeclareFloatParam (ORGX,      "X position",       "Distortion", kNoFlags, 0.02, 0.0, 1.0);
+DeclareBoolParam  (Invert,    "Negate source",    "Distortion", false);
+DeclareFloatParam (Strength,  "Strength",         "Distortion", kNoFlags, 0.1, 0.0, 1.0);
+DeclareFloatParam (Threshold, "Threshold",        "Distortion", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Bias,      "Bias",             "Distortion", kNoFlags, 0.0, -0.5, 0.5);
 
-DeclareFloatParam (Strength, "Strength", "Distortion", kNoFlags, 0.1, 0.0, 1.0);
-DeclareFloatParam (Threshold, "Threshold", "Distortion", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Bias, "Bias", "Distortion", kNoFlags, 0.0, -0.5, 0.5);
+DeclareFloatParam (WNoise,    "White noise",      "Noise",      kNoFlags, 0.1, 0.0, 1.0);
+DeclareFloatParam (RNoise,    "Red noise",        "Noise",      kNoFlags, 0.1, 0.0, 1.0);
+DeclareFloatParam (BNoise,    "Blue noise",       "Noise",      kNoFlags, 0.1, 0.0, 1.0);
 
-DeclareFloatParam (WNoise, "White Noise", "Noise", kNoFlags, 0.1, 0.0, 1.0);
-DeclareFloatParam (RNoise, "Red Noise", "Noise", kNoFlags, 0.1, 0.0, 1.0);
-DeclareFloatParam (BNoise, "Blue Noise", "Noise", kNoFlags, 0.1, 0.0, 1.0);
+DeclareIntParam   (RMult,     "Speed multiplier", "Roll",       0, "x1|x10|x100");
+DeclareFloatParam (Roll,      "Speed",            "Roll",       kNoFlags, 0.0, -10.0, 10.0);
 
-DeclareIntParam (RMult, "Speed Multiplier", "Roll", 0, "x1|x10|x100");
-
-DeclareFloatParam (Roll, "Speed", "Roll", kNoFlags, 0.0, -10.0, 10.0);
-
-DeclareBoolParam (Wrap, "Allow video wrap around", kNoGroup, false);
+DeclareBoolParam  (Wrap,      "Allow video wrap around",        kNoGroup, false);
 
 DeclareFloatParam (_Progress);
 
@@ -186,4 +205,3 @@ DeclareEntryPoint (VHSsimulator)
 
    return orig;
 }
-
