@@ -1,16 +1,17 @@
 // @Maintainer jwrl
-// @Released 2025-10-22
+// @Released 2026-06-23
 // @Author juhartik
 // @Created 2011-08-01
 
 /**
  This old monitor effect is black and white with scan lines, which are fully adjustable.
- NOTE:  Because this effect needs to be able to precisely set line widths no matter
+
+ NOTE 1:  Because this effect needs to be able to precisely set line widths no matter
  what the original clip size or aspect ratio is it has not been possible to make it
  truly resolution independent.  What it does is lock the clip resolution to sequence
  resolution instead.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+ NOTE 2:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -20,6 +21,9 @@
 // Hercules monitor
 //
 // Version history:
+//
+// Updated 2026-06-23 jwrl.
+// Renamed "Scanline count" to "Scanlines".
 //
 // Updated 2025-10-22 jwrl.
 // Changed the subcategory from "Video artefacts" to "Video simulation".
@@ -46,7 +50,7 @@ DeclareInput (Input);
 
 DeclareColourParam (LineColor, "Scanline Color", kNoGroup, kNoFlags, 1.0, 1.0, 1.0, 1.0);
 
-DeclareFloatParam (LineCount, "Scanline Count", kNoGroup, kNoFlags, 300.0, 100.0, 1080.0);
+DeclareFloatParam (LineCount, "Scanlines", kNoGroup, kNoFlags, 300.0, 100.0, 1080.0);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -67,4 +71,3 @@ DeclareEntryPoint (OldMonitor)
 
    return float4 (LineColor * intensity * multiplier.xxx, color.a);
 }
-
