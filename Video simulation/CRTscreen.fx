@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-10-22
+// @Released 2026-06-23
 // @Author jwrl
 // @Created 2017-02-22
 
@@ -10,6 +10,11 @@
  this effect.  No attempt has been made to emulate a dot matrix shadow mask tube,
  because in early tests we just lost too much luminance for the effect to be useful.
  That's pretty much why the manufacturers stopped using the real shadowmask too.
+
+   [*]Pixel scale:  Sets the size of the on-screen RGB pixels.
+   [*]Screen mask:  Selects between three different types of screen masking.
+   [*]Glow radius:  Sets the size of the glow around each pixel.
+   [*]Glow amount:  Sets the amount of glow that each pixel produces.
 
  The stabilising wires have not been emulated in the type 1 tube for anything other
  than the lowest two pixel sizes.  They just looked absurd with the larger settings.
@@ -29,6 +34,9 @@
 // Lightworks user CRTscreen.fx
 //
 // Version history:
+//
+// Updated 2026-06-23 jwrl.
+// Added settings description to header text.
 //
 // Updated 2025-10-22 jwrl.
 // Changed the subcategory from "Video artefacts" to "Video simulation".
@@ -197,4 +205,3 @@ DeclareEntryPoint (CRTscreen)
 
    return IsOutOfBounds (uv1) ? kTransparentBlack : lerp (retval, Inp, luma);
 }
-
