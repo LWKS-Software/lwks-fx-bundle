@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-06-24
 // @Author jwrl
 // @Created 2018-04-19
 
@@ -8,16 +8,16 @@
  and vibrance.  The order of the parameters has been arranged to allow two logical groups
  to be formed as well as several non-grouped settings.
 
- Video range : This allows the adjustment range to be set to BT.709 or full gamut.
- Amount      : Mixes the modified image with the original.
-
- Exposure    : Allows a plus or minus one stop exposure correction.
- S curve     : Adjusts the amount of S-curve correction.
- Halation    : Mimics the back layer light scatter of older film stocks.
-
- Colour temp : Swings colour temperature between warmer (red) and colder (blue)
- Saturation  : Increases or reduces master saturation.
- Vibrance    : Allows the midtone saturation to be increased.
+   [*]Video range : This allows the adjustment range to be set to BT.709 or full gamut.
+   [*]Amount      : Mixes the modified image with the original.
+   [*]Linearity
+      [*]Exposure    : Allows a plus or minus one stop exposure correction.
+      [*]S curve     : Adjusts the amount of S-curve correction.
+      [*]Halation    : Mimics the back layer light scatter of older film stocks.
+   [*]Colour
+      [*]Colour temp : Swings colour temperature between warmer (red) and colder (blue)
+      [*]Saturation  : Increases or reduces master saturation.
+      [*]Vibrance    : Allows the midtone saturation to be increased.
 
  Exposure is adjusted before range limiting because we need the exposure fed to the
  main effect to be correct, and this parameter is meant as a correction adjustment.
@@ -39,6 +39,9 @@
 // Lightworks user effect FilmLook.fx
 //
 // Version history:
+//
+// Updated 2026-06-24 jwrl.
+// Now uses all mask channels instead of just one.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -62,17 +65,16 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareIntParam (SetRange, "Video range", kNoGroup, 0, "Legal BT.709|Full gamut (sRGB)");
+DeclareIntParam (SetRange,     "Video range", kNoGroup, 0, "Legal BT.709|Full gamut (sRGB)");
+DeclareFloatParam (Amount,     "Amount",      kNoGroup,    kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareFloatParam (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Exposure,   "Exposure",    "Linearity", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (Curve,      "S curve",     "Linearity", kNoFlags, 0.25, 0.0, 1.0);
+DeclareFloatParam (Halation,   "Halation",    "Linearity", kNoFlags, 0.0,  0.0, 1.0);
 
-DeclareFloatParam (Exposure, "Exposure", "Linearity", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (Curve, "S curve", "Linearity", kNoFlags, 0.25, 0.0, 1.0);
-DeclareFloatParam (Halation, "Halation", "Linearity", kNoFlags, 0.0, 0.0, 1.0);
-
-DeclareFloatParam (ColTemp, "Colour temp", "Colour", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (Saturation, "Saturation", "Colour", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (Vibrance, "Vibrance", "Colour", kNoFlags, 0.25, -1.0, 1.0);
+DeclareFloatParam (ColTemp,    "Colour temp", "Colour",    kNoFlags, 0.0,  -1.0, 1.0);
+DeclareFloatParam (Saturation, "Saturation",  "Colour",    kNoFlags, 0.0,  -1.0, 1.0);
+DeclareFloatParam (Vibrance,   "Vibrance",    "Colour",    kNoFlags, 0.25, -1.0, 1.0);
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
@@ -249,6 +251,5 @@ DeclareEntryPoint (FilmLook)
       retval = lerp (retval, gloVal, amount);
    }
 
-   return lerp (source, retval, tex2D (Mask, uv1).x);
+   return lerp (source, retval, tex2D (Mask, uv1));
 }
-
