@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-24
 // @Author jwrl
 // @Created 2020-08-03
 
@@ -15,6 +15,12 @@
  the chemistry of the paper used.   Bottom line: these colour values have been
  obtained empirically.  Even with the best care and attention given, how well the
  results match can only be subjective.
+
+   [*]Toner type: Choose between sepia, two selenium toners, gold, copper and iron toners.
+   [*]Amount: Controls the amount of toning applied.
+   [*]Toner settings
+      [*]Strength: Adjusts the toner colour strength.
+      [*]Exposure: Varies the exposure of the image.
 
  I've had to rely on on-line reference images for the gold toner.  As far as I'm
  aware I've never actually seen one "in the flesh", so to speak.  If it's wrong
@@ -32,6 +38,10 @@
 // Lightworks user effect MultiToner.fx
 //
 // Version history:
+//
+// Updated 2026-06-24 jwrl.
+// Now uses all mask channels instead of just one.
+// Added settings description to header text.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
@@ -57,11 +67,10 @@ DeclareMask;
 //-----------------------------------------------------------------------------------------//
 
 DeclareIntParam (SetTechnique, "Toner type", kNoGroup, 0, "Sepia|Selenium 1|Selenium 2|Gold|Copper|Iron");
+DeclareFloatParam (Amount,     "Amount",     kNoGroup,         kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareFloatParam (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
-
-DeclareFloatParam (Tone, "Strength", "Toner settings", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Exposure, "Exposure", "Toner settings", "DisplayAsLiteral", 0.0, -1.0, 1.0);
+DeclareFloatParam (Tone,       "Strength",   "Toner settings", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Exposure,   "Exposure",   "Toner settings", "DisplayAsLiteral", 0.0, -1.0, 1.0);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -103,7 +112,7 @@ DeclareEntryPoint (MultiTonerSepia)
 
    retval = lerp (_TransparentBlack, retval, alpha);
 
-   return lerp (source, retval, tex2D (Mask, uv1).x);
+   return lerp (source, retval, tex2D (Mask, uv1));
 }
 
 DeclareEntryPoint (MultiTonerSelenium_1)
@@ -127,7 +136,7 @@ DeclareEntryPoint (MultiTonerSelenium_1)
 
    retval = lerp (_TransparentBlack, retval, alpha);
 
-   return lerp (source, retval, tex2D (Mask, uv1).x);
+   return lerp (source, retval, tex2D (Mask, uv1));
 }
 
 DeclareEntryPoint (MultiTonerSelenium_2)
@@ -151,7 +160,7 @@ DeclareEntryPoint (MultiTonerSelenium_2)
 
    retval = lerp (_TransparentBlack, retval, alpha);
 
-   return lerp (source, retval, tex2D (Mask, uv1).x);
+   return lerp (source, retval, tex2D (Mask, uv1));
 }
 
 DeclareEntryPoint (MultiTonerGold)
@@ -175,7 +184,7 @@ DeclareEntryPoint (MultiTonerGold)
 
    retval = lerp (_TransparentBlack, retval, alpha);
 
-   return lerp (source, retval, tex2D (Mask, uv1).x);
+   return lerp (source, retval, tex2D (Mask, uv1));
 }
 
 DeclareEntryPoint (MultiTonerCopper)
@@ -199,7 +208,7 @@ DeclareEntryPoint (MultiTonerCopper)
 
    retval = lerp (_TransparentBlack, retval, alpha);
 
-   return lerp (source, retval, tex2D (Mask, uv1).x);
+   return lerp (source, retval, tex2D (Mask, uv1));
 }
 
 DeclareEntryPoint (MultiTonerIron)
@@ -223,5 +232,5 @@ DeclareEntryPoint (MultiTonerIron)
 
    retval = lerp (_TransparentBlack, retval, alpha);
 
-   return lerp (source, retval, tex2D (Mask, uv1).x);
+   return lerp (source, retval, tex2D (Mask, uv1));
 }
