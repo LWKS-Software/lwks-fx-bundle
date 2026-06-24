@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-24
 // @Author jwrl
 // @Created 2016-04-12
 
@@ -13,6 +13,10 @@
 // Lightworks user effect DuotonePrint.fx
 //
 // Version history:
+//
+// Updated 2026-06-24 jwrl.
+// Now uses all mask channels instead of just one.
+// Added settings description to header text.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
@@ -37,9 +41,9 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Saturation, "Saturation", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Profile, "Colour profile", kNoGroup, kNoFlags, 1.0, -1.0, 1.0);
-DeclareFloatParam (Curve, "Dye curve", kNoGroup, kNoFlags, 0.4, 0.0, 1.0);
+DeclareFloatParam (Saturation, "Saturation",     kNoGroup, kNoFlags, 0.5,  0.0, 1.0);
+DeclareFloatParam (Profile,    "Colour profile", kNoGroup, kNoFlags, 1.0, -1.0, 1.0);
+DeclareFloatParam (Curve,      "Dye curve",      kNoGroup, kNoFlags, 0.4,  0.0, 1.0);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -95,5 +99,5 @@ DeclareEntryPoint (DuotonePrint)
 
    retval = lerp (_TransparentBlack, retval, alpha);
 
-   return lerp (source, retval, tex2D (Mask, uv1).x);
+   return lerp (source, retval, tex2D (Mask, uv1));
 }
