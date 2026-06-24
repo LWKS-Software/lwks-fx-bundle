@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-24
 // @Author jwrl
 // @Created 2016-05-14
 
@@ -13,6 +13,9 @@
 // Lightworks user effect ColourNegative.fx
 //
 // Version history:
+//
+// Updated 2026-06-24 jwrl.
+// Now uses all mask channels instead of just one.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 0.0.xxxx for Linux fix.
@@ -46,5 +49,5 @@ DeclareEntryPoint (ColourNegative)
 
    retval = lerp (0.0.xxxx, retval, retval.a);
 
-   return lerp (source, retval, tex2D (Mask, uv1).x);
+   return lerp (source, retval, tex2D (Mask, uv1));
 }
