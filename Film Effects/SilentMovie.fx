@@ -1,11 +1,11 @@
 // @Maintainer jwrl
-// @Released 2025-03-29
+// @Released 2026-06-24
 // @Author jwrl
 // @Created 2025-03-18
 
 /**
  This effect is similar to Lightworks "Old Time Movie" effect, but has some
- additions. As well as the scratch and grain settings, there is sepia tone
+ additions.  As well as the scratch and grain settings, there is sepia tone
  adjustment and jitter, which simulates worn sprocket holes.  The vignette
  amount is also adjustable.
 
@@ -25,8 +25,8 @@
       [*] Exposure:  This parameter controls exposure before applying the sepia tone.
       [*] Sepia tone:  Adjusts the sepia tone amount.
    [*] Damage.
-      [*] Neg scratches:  Controls the number of white scratches.
-      [*] Pos scratches:  Controls the number of black scratches.
+      [*] Neg scratch:  Controls the number of white scratches.
+      [*] Pos scratch:  Controls the number of black scratches.
       [*] Jitter:  Simulates worn sprocket holes by jittering the frame.
       [*] Jitter rate:  Adjusts the jitter rate.
    [*] Projection.
@@ -44,6 +44,11 @@
 // Lightworks user effect SilentMovie.fx
 //
 // Version history:
+//
+// Updated 2026-06-24 jwrl.
+// Now uses all mask channels instead of just one.
+// Changed "Neg scratches" to "Neg scratch".
+// Changed "Pos scratches" to "Pos scratch".
 //
 // Updated 2025-03-29 jwrl.
 // Rewrote sepia tone to improve dark area saturation.
@@ -70,22 +75,22 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (GrainAmount, "Amount",   "Grain", kNoFlags, 0.5,   0.0, 1.0);
-DeclareFloatParam (GrainSize,   "Size",     "Grain", kNoFlags, 0.125, 0.0, 1.0);
-DeclareFloatParam (GrainBlur,   "Softness", "Grain", kNoFlags, 0.5,   0.0, 1.0);
+DeclareFloatParam (GrainAmount,  "Amount",        "Grain",      kNoFlags, 0.5,   0.0, 1.0);
+DeclareFloatParam (GrainSize,    "Size",          "Grain",      kNoFlags, 0.125, 0.0, 1.0);
+DeclareFloatParam (GrainBlur,    "Softness",      "Grain",      kNoFlags, 0.5,   0.0, 1.0);
 
-DeclareFloatParam (Exposure,  "Exposure",   "Ageing", "DisplayAsLiteral", 0.0, -1.0, 1.0);
-DeclareFloatParam (SepiaTone, "Sepia tone", "Ageing", kNoFlags,           0.5,  0.0, 1.0);
+DeclareFloatParam (Exposure,     "Exposure",      "Ageing",     "DisplayAsLiteral", 0.0, -1.0, 1.0);
+DeclareFloatParam (SepiaTone,    "Sepia tone",    "Ageing",     kNoFlags, 0.5,  0.0, 1.0);
 
-DeclareFloatParam (NegScratches,  "Neg scratches", "Damage", kNoFlags, 0.1, 0.0, 1.0);
-DeclareFloatParam (PosScratches,  "Pos scratches", "Damage", kNoFlags, 0.2, 0.0, 1.0);
-DeclareFloatParam (JitterAmount,  "Jitter",        "Damage", kNoFlags, 0.3, 0.0, 1.0);
-DeclareFloatParam (JitterRate,    "Jitter rate",   "Damage", kNoFlags, 0.5, 0.0, 2.0);
+DeclareFloatParam (NegScratches, "Neg scratches", "Damage",     kNoFlags, 0.1, 0.0, 1.0);
+DeclareFloatParam (PosScratches, "Pos scratches", "Damage",     kNoFlags, 0.2, 0.0, 1.0);
+DeclareFloatParam (JitterAmount, "Jitter",        "Damage",     kNoFlags, 0.3, 0.0, 1.0);
+DeclareFloatParam (JitterRate,   "Jitter rate",   "Damage",     kNoFlags, 0.5, 0.0, 2.0);
 
-DeclareFloatParam (LampFalloff, "Lamp falloff", "Projection", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (FalloffSize, "Falloff size", "Projection", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (FalloffEdge, "Falloff edge", "Projection", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Flicker,     "Flicker",      "Projection", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (LampFalloff,  "Lamp falloff",  "Projection", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (FalloffSize,  "Falloff size",  "Projection", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (FalloffEdge,  "Falloff edge",  "Projection", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Flicker,      "Flicker",       "Projection", kNoFlags, 0.5, 0.0, 1.0);
 
 DeclareFloatParam (_Progress);
 DeclareFloatParam (_Length);
@@ -309,5 +314,5 @@ DeclareEntryPoint (SilentMovie)
       retval = lerp (retval, edges, (dist - (radius - midSoft)) / FalloffEdge);
    }
 
-   return lerp (BLACK, retval, tex2D (Mask, uv1).x);
+   return lerp (BLACK, retval, tex2D (Mask, uv1));
 }
