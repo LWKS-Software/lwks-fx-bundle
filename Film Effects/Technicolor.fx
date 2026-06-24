@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-24
 // @Author khaver
 // @Created 2011-04-20
 
@@ -11,6 +11,9 @@
 // Lightworks user effect Technicolor.fx
 //
 // Version history:
+//
+// Updated 2026-06-24 jwrl.
+// Now uses all mask channels instead of just one.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
@@ -61,7 +64,7 @@ DeclareEntryPoint (TechnicolorTwoStrip)
 
    output = lerp (_TransparentBlack, output, source.a);
 
-   return lerp (source, output, tex2D (Mask, uv1).x);
+   return lerp (source, output, tex2D (Mask, uv1));
 }
 
 DeclareEntryPoint (TechnicolorThreeStrip)
@@ -75,5 +78,5 @@ DeclareEntryPoint (TechnicolorThreeStrip)
 
    output = lerp (_TransparentBlack, output, source.a);
 
-   return lerp (source, output, tex2D (Mask, uv1).x);
+   return lerp (source, output, tex2D (Mask, uv1));
 }
