@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-24
 // @Author msi
 // @OriginalAuthor "Wojciech Toman (http://wtomandev.blogspot.com/2011/04/vintage-look.html)"
 // @Created 2011-05-27
@@ -7,6 +7,15 @@
 /**
  Vintage look simulates what happens when the dye layers of old colour film stock start
  to fade.
+
+   [*]Balance
+      [*]Yellow: Sets the faded yellow dye colour.
+      [*]Magenta: Sets the faded magenta dye colour.
+      [*]Cyan: Sets the faded cyan dye colour.
+   [*]Overlay
+      [*]Yellow: Controls the amount of yellow dye fading.
+      [*]Magenta: Controls the amount of magenta dye fading.
+      [*]Cyan: Controls the amount of cyan dye fading.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -18,6 +27,10 @@
 // Wojciech Toman (http://wtomandev.blogspot.com/2011/04/vintage-look.html)
 //
 // Version history:
+//
+// Updated 2026-06-24 jwrl.
+// Now uses all mask channels instead of just one.
+// Added settings description to header text.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
@@ -42,13 +55,13 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareColourParam (Yellow, "Yellow", "Balance", kNoFlags, 0.9843, 0.9490, 0.6392, 1.0);
-DeclareColourParam (Magenta, "Magenta", "Balance", kNoFlags, 0.9098, 0.3960, 0.7019, 1.0);
-DeclareColourParam (Cyan, "Cyan", "Balance", kNoFlags, 0.0352, 0.2862, 0.9137, 1.0);
+DeclareColourParam (Yellow,      "Yellow",  "Balance", kNoFlags, 0.9843, 0.9490, 0.6392, 1.0);
+DeclareColourParam (Magenta,     "Magenta", "Balance", kNoFlags, 0.9098, 0.3960, 0.7019, 1.0);
+DeclareColourParam (Cyan,        "Cyan",    "Balance", kNoFlags, 0.0352, 0.2862, 0.9137, 1.0);
 
-DeclareFloatParam (YellowLevel, "Yellow", "Overlay", kNoFlags, 0.59, 0.0, 1.0);
+DeclareFloatParam (YellowLevel,  "Yellow",  "Overlay", kNoFlags, 0.59, 0.0, 1.0);
 DeclareFloatParam (MagentaLevel, "Magenta", "Overlay", kNoFlags, 0.2, 0.0, 1.0);
-DeclareFloatParam (CyanLevel, "Cyan", "Overlay", kNoFlags, 0.17, 0.0, 1.0);
+DeclareFloatParam (CyanLevel,    "Cyan",    "Overlay", kNoFlags, 0.17, 0.0, 1.0);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -80,5 +93,5 @@ DeclareEntryPoint (VintageLook)
 
    corrected = lerp (_TransparentBlack, corrected, source.a);	
 
-   return lerp (source, corrected, tex2D (Mask, uv1).x);	
+   return lerp (source, corrected, tex2D (Mask, uv1));
 }
