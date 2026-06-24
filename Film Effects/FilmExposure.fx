@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-24
 // @Author abelmilanes
 // @Author jwrl
 // @Created 2017-03-04
@@ -9,6 +9,13 @@
  fairly accurate at the expense of requiring some reasonably complex maths.  With current
  GPU types this shouldn't be an issue.
 
+   [*]Exposure
+      [*]Master: Adjusts overall exposure.
+      [*]Cyan: Adjusts cyan/red exposure (filter / printer light setting).
+      [*]Magenta: Adjusts magenta/green exposure (filter / printer light setting).
+      [*]Yellow: Adjusts yellow/blue exposure (filter / printer light setting).
+   [*]Original: Mixes exposure adjusted image with the original.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -16,6 +23,11 @@
 // Lightworks user effect FilmExposure.fx
 //
 // Version history:
+//
+// Updated 2026-06-24 jwrl.
+// Now uses all mask channels instead of just one.
+// Now only shows film primary colours in the "Exposure" group instead of primary
+// and complementary.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
@@ -40,12 +52,12 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Exposure, "Master", "Exposure", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (CyanRed, "Cyan/red", "Exposure", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (MagGreen, "Magenta/green", "Exposure", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (YelBlue, "Yellow/blue", "Exposure", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (Exposure, "Master",  "Exposure", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (CyanRed,  "Cyan",    "Exposure", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (MagGreen, "Magenta", "Exposure", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (YelBlue,  "Yellow",  "Exposure", kNoFlags, 0.0, -1.0, 1.0);
 
-DeclareFloatParam (Amount, "Original", kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Amount, "Original",  kNoGroup,   kNoFlags, 0.0,  0.0, 1.0);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -91,5 +103,5 @@ DeclareEntryPoint (FilmExposure)
    retval = lerp (_TransparentBlack, float4 (saturate (retval.rgb), 1.0), Src.a);
    retval = lerp (retval, Src, Amount);
 
-   return lerp (Src, retval, tex2D (Mask, uv1).x);
+   return lerp (Src, retval, tex2D (Mask, uv1));
 }
