@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-24
 // @Author jwrl
 // @Created 2020-07-27
 
@@ -24,7 +24,7 @@
    Video settings:Gamma > Master effect:Gamma - no range difference.
    Video settings:Contrast > Master effect:Contrast - 50% - 150% replaces 0.6 - 1.0.
    Lab operations:Linearity > Master effect:Linearization - no range difference.
-   Lab operations:Bleach bypass > Master effect:Bleach - no range difference.
+   Lab operations:Blch bypass > Master effect:Bleach - no range difference.
    Lab operations:Film aging > Master effect:Fade - no range difference.
    Preprocessing curves:RGB > Curves:Base 1.0 - 10.0 instead of 0% - 100%
    Preprocessing curves:Red > Curves:Red 1.0 - 10.0 instead of 0% - 100%
@@ -45,6 +45,10 @@
 // Korhonen.  However this effect is new code from the ground up.
 //
 // Version history:
+//
+// Updated 2026-06-24 jwrl.
+// Now uses all mask channels instead of just one.
+// Changed "Bleach bypass" to "Blch bypass" to fit LW 2026 parameter size.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
@@ -69,25 +73,25 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Amount,     "Amount",      kNoGroup,               kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareFloatParam (Saturation, "Saturation", "Video settings", "DisplayAsPercentage", 1.0, 0.5, 1.5);
-DeclareFloatParam (Gamma, "Gamma", "Video settings", kNoFlags, 1.0, 0.1, 2.5);
-DeclareFloatParam (Contrast, "Contrast", "Video settings", "DisplayAsPercentage", 1.0, 0.5, 1.5);
+DeclareFloatParam (Saturation, "Saturation",  "Video settings",       "DisplayAsPercentage", 1.0, 0.5, 1.5);
+DeclareFloatParam (Gamma,      "Gamma",       "Video settings",       kNoFlags, 1.0, 0.1, 2.5);
+DeclareFloatParam (Contrast,   "Contrast",    "Video settings",       "DisplayAsPercentage", 1.0, 0.5, 1.5);
 
-DeclareFloatParam (Linearity, "Linearity", "Lab operations", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Bypass, "Bleach bypass", "Lab operations", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Ageing, "Film ageing", "Lab operations", kNoFlags, 0.3, 0.0, 1.0);
+DeclareFloatParam (Linearity,  "Linearity",   "Lab operations",       kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Bypass,     "Blch bypass", "Lab operations",       kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Ageing,     "Film ageing", "Lab operations",       kNoFlags, 0.3, 0.0, 1.0);
 
-DeclareFloatParam (LumaCurve, "RGB", "Preprocessing curves", kNoFlags, 1.0, 1.0, 10.0);
-DeclareFloatParam (RedCurve, "Red", "Preprocessing curves", kNoFlags, 10.0, 1.0, 10.0);
-DeclareFloatParam (GreenCurve, "Green", "Preprocessing curves", kNoFlags, 5.5, 1.0, 10.0);
-DeclareFloatParam (BlueCurve, "Blue", "Preprocessing curves", kNoFlags, 1.0, 1.0, 10.0);
+DeclareFloatParam (LumaCurve,  "RGB",         "Preprocessing curves", kNoFlags, 1.0, 1.0, 10.0);
+DeclareFloatParam (RedCurve,   "Red",         "Preprocessing curves", kNoFlags, 10.0, 1.0, 10.0);
+DeclareFloatParam (GreenCurve, "Green",       "Preprocessing curves", kNoFlags, 5.5, 1.0, 10.0);
+DeclareFloatParam (BlueCurve,  "Blue",        "Preprocessing curves", kNoFlags, 1.0, 1.0, 10.0);
 
-DeclareFloatParam (LumaGamma, "RGB", "Gamma presets", kNoFlags, 1.4, 0.1, 2.5);
-DeclareFloatParam (RedGamma, "Red", "Gamma presets", kNoFlags, 1.0, 0.1, 2.5);
-DeclareFloatParam (GreenGamma, "Green", "Gamma presets", kNoFlags, 1.0, 0.1, 2.5);
-DeclareFloatParam (BlueGamma, "Blue", "Gamma presets", kNoFlags, 1.0, 0.1, 2.5);
+DeclareFloatParam (LumaGamma,  "RGB",         "Gamma presets",        kNoFlags, 1.4, 0.1, 2.5);
+DeclareFloatParam (RedGamma,   "Red",         "Gamma presets",        kNoFlags, 1.0, 0.1, 2.5);
+DeclareFloatParam (GreenGamma, "Green",       "Gamma presets",        kNoFlags, 1.0, 0.1, 2.5);
+DeclareFloatParam (BlueGamma,  "Blue",        "Gamma presets",        kNoFlags, 1.0, 0.1, 2.5);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -154,5 +158,5 @@ DeclareEntryPoint (FilmLab)
 
    vid = lerp (_TransparentBlack, lerp (vid, lab, Amount), src.a);
 
-   return lerp (src, vid, tex2D (Mask, uv1).x);
+   return lerp (src, vid, tex2D (Mask, uv1));
 }
