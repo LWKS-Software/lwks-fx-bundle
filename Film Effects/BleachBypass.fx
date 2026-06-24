@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-11-13
+// @Released 2026-06-24
 // @Author msi
 // @Created 2011-05-27
 
@@ -7,14 +7,12 @@
  This effect emulates the altered contrast and saturation obtained by skipping the bleach
  step in classical colour film processing.  The settings are:
 
-   [*] Luminosity
-      [*] Red Channel:  Adjusts the red luminosity - unless you really need this it's
-          better to leave it on the default settings.
-      [*] Green Channel:  Adjusts the green luminosity.
-      [*] Blue Channel:  Adjusts the blue luminosity.
-   [*] Overlay
-      [*] Blend Opacity:  Varies the visibility of the bleach bypass.
-   [*] Mask:  Lightworks masking
+   [*]Luminosity
+      [*]Red:  Adjusts the red luminosity - unless you really need this it's better
+         to leave it on the default settings.
+      [*]Green:  Adjusts the green luminosity.
+      [*]Blue:  Adjusts the blue luminosity.
+   [*]Blend:  Varies the visibility of the bleach bypass.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -27,6 +25,12 @@
 // Licensed Creative Commons [BY-NC-SA].
 //
 // Version history:
+//
+// Updated 2026-06-24 jwrl.
+// Now uses all mask channels instead of just one.
+// Ungrouped "Overlay".
+// Removed "Opacity" from "Blend Opacity".  It's now' "Blend".
+// Removed "Channel" from the luminosity settings making them "Red", "Green" and "Blue".
 //
 // Updated 2025-11-13 jwrl.
 // Added descriptive text of parameters in header.
@@ -56,11 +60,11 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Red, "Red Channel", "Luminosity", kNoFlags, 0.25, 0.0, 1.0);
-DeclareFloatParam (Green, "Green Channel", "Luminosity", kNoFlags, 0.64, 0.0, 1.0);
-DeclareFloatParam (Blue, "Blue Channel", "Luminosity", kNoFlags, 0.11, 0.0, 1.0);
+DeclareFloatParam (Red,     "Red",   "Luminosity", kNoFlags, 0.25, 0.0, 1.0);
+DeclareFloatParam (Green,   "Green", "Luminosity", kNoFlags, 0.64, 0.0, 1.0);
+DeclareFloatParam (Blue,    "Blue",  "Luminosity", kNoFlags, 0.11, 0.0, 1.0);
 
-DeclareFloatParam (BlendOpacity, "Blend Opacity", "Overlay", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Opacity, "Blend", kNoGroup,     kNoFlags, 1.0,  0.0, 1.0);
 
 //-----------------------------------------------------------------------------------------//
 // Code
@@ -74,5 +78,5 @@ DeclareEntryPoint (BleachBypass)
 
    float4 retval = float4 (saturate (lum.xxx + Inp.rgb - (lum.xxx * Inp.rgb)), Inp.a);
 
-   return lerp (Inp, retval, BlendOpacity * tex2D (Mask, uv1).x);
+   return lerp (Inp, retval, Opacity * tex2D (Mask, uv1));
 }
