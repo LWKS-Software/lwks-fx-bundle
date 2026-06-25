@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-26
 // @Author jwrl
 // @Created 2023-03-25
 
@@ -8,6 +8,14 @@
  vanishing point or scroll out from one.  The vanishing point can be horizontal best
  used for rolls, or vertical, for crawls.
 
+   [*]Rotation axis:  Sets the axis at which the video connected to In_1 and the video connected to In_2 meet. They can be the same.
+   [*]Centre point:  Sets the meeting point of the two video streams. This is horizontal for a vertical rotation axis, vertical if not.
+   [*]Upper/left - In_1
+      [*]Rotate:  Rotates In_1 into the screen. Uses percentage values rather than degrees. For some reason that felt better at the time.
+      [*]Displace:  Shifts In_1 up/down with a vertical rotation axis or left/right with a horizontal one.
+      [*]Z offset:  Moves In_1 into or out of the screen.
+   [*]Lower/right - In_2 has the same three settings as In_1.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -15,6 +23,12 @@
 // Lightworks user effect TiltMirror.fx
 //
 // Version history:
+//
+// Updated 2026-06-26 jwrl.
+// Changed "Rotation" to "Rotate".
+// Changed "Displacement" to "Displace".
+// Now uses all mask channels instead of just one.
+// Added settings description to header text.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
@@ -38,16 +52,15 @@ DeclareMask;
 //-----------------------------------------------------------------------------------------//
 
 DeclareIntParam (SetTechnique, "Rotation axis", kNoGroup, 0, "Vertical|Horizontal");
+DeclareFloatParam (Centre,     "Centre point",  kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareFloatParam (Centre, "Centre point", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Rotate_1,   "Rotate",        "Upper/left - In_1", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Displace_1, "Displace",      "Upper/left - In_1", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Z_offs_1,   "Z offset",      "Upper/left - In_1", kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareFloatParam (Rotate_1, "Rotation", "Upper/left - In_1", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Displace_1, "Displacement", "Upper/left - In_1", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Z_offs_1, "Z offset", "Upper/left - In_1", kNoFlags, 0.5, 0.0, 1.0);
-
-DeclareFloatParam (Rotate_2, "Rotation", "Lower/right - In_2", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Displace_2, "Displacement", "Lower/right - In_2", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Z_offs_2, "Z offset", "Lower/right - In_2", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Rotate_2,   "Rotate",        "Lower/right - In_2", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Displace_2, "Displace",      "Lower/right - In_2", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Z_offs_2,   "Z offset",      "Lower/right - In_2", kNoFlags, 0.5, 0.0, 1.0);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -191,7 +204,7 @@ DeclareEntryPoint (Vertical)
       retval = ReadPixel (Lower, xy);
    }
 
-   return lerp (_TransparentBlack, retval, tex2D (Mask, uv3).x);
+   return lerp (_TransparentBlack, retval, tex2D (Mask, uv3));
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -222,5 +235,5 @@ DeclareEntryPoint (Horizontal)
       retval = ReadPixel (Right, xy);
    }
 
-   return lerp (_TransparentBlack, retval, tex2D (Mask, uv3).x);
+   return lerp (_TransparentBlack, retval, tex2D (Mask, uv3));
 }
