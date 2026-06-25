@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-06-26
 // @Author jwrl
 // @Created 2023-03-11
 
@@ -9,6 +9,23 @@
  colour that changes as the bar progresses, or to grow as the bar progresses.  In the
  latter mode it can also produce a colour gradient between start and end points.
 
+   [*]Progress keyframes the progress bar.
+   [*]Bar mode sets whether the bar is horizontal or vertical, static or dynamic.
+   [*]Width is self explanatory.
+   [*]Length is self explanatory.
+   [*]Position is self explanatory.
+   [*]Bar colour
+      [*]Colour gradient is a switch to enable the colour gradient or simply use
+         a flat colour.
+      [*]Start is the flat colour used if colour gradient is disabled, otherwise
+         it's the start colour.
+      [*]End is used as the background colour in flat static mode, or if in gradient
+         mode will be the end colour.
+   [*]Border
+      [*]Thickness is self explanatory.
+      [*]Colour is both the colour used for the border, and in static gradient mode
+         is inverted to also be the background colour.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -16,6 +33,9 @@
 // Lightworks user effect ProgressBar.fx
 //
 // Version history:
+//
+// Updated 2026-06-26 jwrl.
+// Added settings description to header block.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -35,23 +55,23 @@ DeclareInput (Inp);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Amount, "Progress", kNoGroup, kNoFlags, 0.1, 0.0, 1.0);
+DeclareFloatParam (Amount,        "Progress",        kNoGroup,     kNoFlags, 0.1, 0.0, 1.0);
 
-DeclareIntParam (SetTechnique, "Bar mode", kNoGroup, 0, "Bar grows vertically|Bar grows horizontally|Static vertical bar|Static horizontal bar");
+DeclareIntParam (SetTechnique,    "Bar mode",        kNoGroup, 0, "Bar grows vertically|Bar grows horizontally|Static vertical bar|Static horizontal bar");
 
-DeclareFloatParam (Width, "Width", kNoGroup, kNoFlags, 0.1, 0.0, 1.0);
-DeclareFloatParam (Length, "Length", kNoGroup, kNoFlags, 0.9, 0.0, 1.0);
+DeclareFloatParam (Width,         "Width",           kNoGroup,     kNoFlags, 0.1, 0.0, 1.0);
+DeclareFloatParam (Length,        "Length",          kNoGroup,     kNoFlags, 0.9, 0.0, 1.0);
 
-DeclareFloatParam (PosX, "Position", kNoGroup, "SpecifiesPointX", 0.1, 0.0, 1.0);
-DeclareFloatParam (PosY, "Position", kNoGroup, "SpecifiesPointY", 0.1, 0.0, 1.0);
+DeclareFloatParam (PosX,          "Position",        kNoGroup,     "SpecifiesPointX", 0.1, 0.0, 1.0);
+DeclareFloatParam (PosY,          "Position",        kNoGroup,     "SpecifiesPointY", 0.1, 0.0, 1.0);
 
-DeclareBoolParam (ColourGrad, "Colour gradient", "Bar colour", false);
+DeclareBoolParam (ColourGrad,     "Colour gradient", "Bar colour", false);
 
-DeclareColourParam (StartColour, "Start", "Bar colour", kNoFlags, 0.8, 0.6, 0.0, 1.0);
-DeclareColourParam (EndColour, "End", "Bar colour", kNoFlags, 1.0, 0.2, 0.0, 1.0);
+DeclareColourParam (StartColour,  "Start",           "Bar colour", kNoFlags, 0.8, 0.6, 0.0, 1.0);
+DeclareColourParam (EndColour,    "End",             "Bar colour", kNoFlags, 1.0, 0.2, 0.0, 1.0);
 
-DeclareFloatParam (Border, "Thickness", "Border", kNoFlags, 0.1, 0.0, 1.0);
-DeclareColourParam (BorderColour, "Colour", "Border", kNoFlags, 0.0, 0.0, 0.0, 1.0);
+DeclareFloatParam (Border,        "Thickness",       "Border",     kNoFlags, 0.1, 0.0, 1.0);
+DeclareColourParam (BorderColour, "Colour",          "Border",     kNoFlags, 0.0, 0.0, 0.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 DeclareFloatParam (_Progress);
@@ -213,4 +233,3 @@ DeclareEntryPoint (HorizStatic)
 
    return Fgnd;
 }
-
