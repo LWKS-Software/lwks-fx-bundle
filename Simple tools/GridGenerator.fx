@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-08-25
+// @Released 2026-06-26
 // @Author jwrl
 // @Created 2024-04-27
 
@@ -9,12 +9,11 @@
  across the longest image dimension, and the line weight can be adjusted for best
  visibility.  However there have been some changes since this effect was first released.
 
-   * Opacity:  Self explanatory.  Fades the grid in or out of the video input.
-   * Grid display:  Selects between add, subtract, difference and opaque (normal)
-     blend modes.
-   * Maximum lines:  Sets the maximum number of lines that will be displayed.
-   * Line weight:  Sets the thickoess of the lines in the grid.
-   * Disable video:  Shows the grid over black.
+   [*]Opacity:  Self explanatory. Fades the grid in or out of the video input.
+   [*]Grid display:  Selects between add, subtract, difference and opaque (normal) blend modes.
+   [*]Maximum lines:  Sets the maximum number of lines that will be displayed.
+   [*]Line weight:  Sets the thickness of the lines in the grid.
+   [*]Disable video:  Shows the grid over black.
 
  The most obvious change is that there is no longer a setting called "Squares across".
  Its place has been taken by the "Maximum lines" parameter, which behaves somewhat
@@ -40,6 +39,9 @@
 // Lightworks user effect GridGenerator.fx
 //
 // Version history:
+//
+// Updated 2026-06-26 jwrl.
+// Now uses all mask channels instead of just one.
 //
 // Updated 2025-08-25 jwrl.
 // Corrected a geometry bug affecting rotated media.
@@ -273,5 +275,5 @@ DeclareEntryPoint (GridGenerator)
 
    // Finally mix back the lines over the original video and quit.
 
-   return lerp (video, retval, amount * tex2D (Mask, uv1).x);;
+   return lerp (video, retval, amount * tex2D (Mask, uv1));;
 }
