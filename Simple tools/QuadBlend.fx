@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-05-26
+// @Released 2026-06-26
 // @Author jwrl
 // @Created 2026-05-25
 
@@ -29,6 +29,9 @@
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect QuadBlend.fx
+//
+// Updated 2026-06-26 jwrl.
+// Now uses all mask channels instead of just one.
 //
 // Updated 2026-05-26 by jwrl.
 // Added ability to fade mask out to reveal unmasked video.
@@ -70,7 +73,7 @@ DeclareEntryPoint (QuadBlend)
    float4 Bgd = ReadPixel (X, uv5);
    float4 ret = lerp (Bgd, FgD, FgD.a * Dopacity);
 
-   float msk = lerp (1.0, tex2D (Mask, uv6).x, MaskFade);
+   float4 msk = lerp (1.0.xxxx, tex2D (Mask, uv6), MaskFade);
 
    ret = lerp (ret, FgC, FgC.a * Copacity);
    ret = lerp (ret, FgB, FgB.a * Bopacity);
