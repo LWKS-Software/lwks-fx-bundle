@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-17
+// @Released 2026-06-25
 // @Author windsturm
 // @Author jwrl
 // @Created 2012-05-23
@@ -23,6 +23,10 @@
 // Lightworks user effect MangaPattern.fx
 //
 // Version history:
+//
+// Updated 2026-06-25 jwrl.
+// Fixed a bug that had "Greyscale derived from" shown as a member of "NoGroup" when in
+// fact it should have been flagged as kNoGroup.
 //
 // Updated 2026-06-18 jwrl.
 // All channels of Mask are now used.
@@ -51,7 +55,7 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareIntParam (skipGS, "Greyscale derived from:", NoGroup, 0, "Luminance|RGB average");
+DeclareIntParam (skipGS, "Greyscale derived from:", kNoGroup, 0, "Luminance|RGB average");
 
 DeclareFloatParam (threshold, "Pattern size",    kNoGroup,           kNoFlags, 0.5, 0.0, 1.0);
 DeclareFloatParam (td1,       "Black threshold", "Sample threshold", kNoFlags, 0.2, 0.0, 1.0);
