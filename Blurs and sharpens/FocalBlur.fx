@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-15
+// @Released 2026-06-25
 // @Author khaver
 // @Created 2015-12-08
 
@@ -15,6 +15,7 @@
       Lightworks effect mask.
    [*]Focus
       [*]Focus type:  Selects the focus interpolation method.
+      [*]Distance:  Distance to in-focus video.
       [*]DoF:  Adjusts the depth of field.
       [*]Point X, Y:  The location of the focus point - not to be confused with the
          point focus type.
@@ -35,6 +36,9 @@
 // Lightworks user effect FocalBlur.fx
 //
 // Version history:
+//
+// Updated 2026-06-25 jwrl.
+// Added distance description to header text.
 //
 // Updated 2026-06-15 jwrl.
 // Changed masking from R to RGBA.
