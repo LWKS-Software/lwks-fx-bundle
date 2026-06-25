@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-26
 // @Author jwrl
 // @Created 2021-09-01
 
@@ -11,23 +11,28 @@
 
  What do the various controls do?
 
-   Fill amount      - allows the fill outside the clip bounds to be faded in and out.
-   Fill blur        - varies the fill blurriness.  0% passes the fill through unchanged.
-   Fill/Fgd mix     - mixes the foreground with the fill colour and the fill background
-                      mix prior to the blur being applied.
-   Edge duplication - fill area can be a duplicate or a mirror of the foreground.
-   Offset direction - allows either horizontal or vertical areas to be filled.
-   Fill offset      - duplicated foreground video fill displacement.
-   Fill scale       - horizontal and/or vertical fill scaling of foreground video.
-   Fill colour      - self explanatory.
-   Background       - mixes between the fill colour and the Bg (background) input if
-                      it's connected, or fades the fill colour to black if it's not.
+   [*]Fill amount;  Allows the fill outside the clip bounds to be faded in and out.
+   [*]Fill blur:  Varies the fill blurriness.  0% passes the fill through unchanged.
+   [*]Fgd fill mode
+      [*]Fill/Fgd mix:  Mixes the foreground with the fill colour and the fill background
+         mix prior to the blur being applied.
+      [*]Edge duplication:  Fill area can be a duplicate or a mirror of the foreground.
+      [*]Offset direction:  Allows either horizontal or vertical areas to be filled.
+      [*]Fill offset:  Duplicated foreground video fill displacement.
+      [*]Fill scale:  Horizontal and/or vertical fill scaling of foreground video.
+   [*]Mix between fill colour and background
+      [*]Fill colour:  Self explanatory.
+      [*]Background:  Mixes between the fill colour and the Bg (background) input if it's
+         connected, or fades the fill colour to black if it's not.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect Autofill.fx
+//
+// Updated 2026-06-26 jwrl.
+// Reformatted header text.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with 0.0.xxxx for Linux fix.
