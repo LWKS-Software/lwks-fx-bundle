@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-06-25
 // @Author jwrl
 // @Created 2018-03-14
 
@@ -17,6 +17,9 @@
 // Lightworks user effect FlipFlop.fx
 //
 // Version history:
+//
+// Updated 2026-06-26 jwrl.
+// Now uses all mask channels instead of just one.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -50,6 +53,5 @@ DeclareEntryPoint (FlipFlop)
    float4 source = tex2D (Vid, uv2);
    float4 retval = tex2D (Vid, xy);
 
-   return lerp (source, retval, tex2D (Mask, uv2).x);
+   return lerp (source, retval, tex2D (Mask, uv2));
 }
-
