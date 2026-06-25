@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-24
+// @Released 2026-06-25
 // @Author jwrl
 // @Created 2020-07-27
 
@@ -10,30 +10,46 @@
  range overflow.  This could result in highlights becoming grey, and colours suffering
  arbitrary shifts of both hue and saturation.  This effect corrects that.
 
- The next and most obvious difference is in the order of settings.  In some case the name
- of those settings and occasionally even the range differs.  The direction of action of
- Saturation has changed to be more logical.  The Strength setting has been replaced by
- Amount for consistency with standard Lightworks effects.  The Amount settings range from
- 0% to 100%, where 0% gives the unmodified video input.  The older effect did not allow
- Strength reduction to do that.
+   [*]Amount:  Fades the effect to reveal the unmodified input.
+   [*]Video settings
+      [*]Saturation:  Adjusts the input video saturation.
+      [*]Gamma:  Adjusts the input video gamma.
+      [*]Contrast: Adjusts the input video contrast.
+   [*]Lab operations
+      [*]Linearity:  Adjusts the linearity of the video to lab colour space conversion.
+      [*]Bleach:  Short for bleach bypas, this simulates the effect of the bleach
+         process being skipped during film development.
+      [*]Film ageing: Simulates the dye fading as film stocks age.
+   [*]Preprocessing curves
+      [*]RGB:  Applies a luminance S-curve.
+      [*]Red:  Applies an S-curve to the red channel.
+      [*]Green:  Applies an S-curve to the green channel.
+      [*]Blue: Applies an S-curve to the green channel.
+   [*]Gamma presets
+      [*]RGB:  Applies gamma to the output luminance.
+      [*]Red:  Applies gamma to the red channel.
+      [*]Green:  Applies gamma to the green channel.
+      [*]Blue:  Applies gamma to the blue channel.
+   [*]Mask:  The Lightworks mask effect.
 
- The full parameter changes from Film Fx are, New > Old:
-   Amount > Master effect:Strength - no range difference.
-   Video settings:Saturation > Master effect:Saturation runs from 50% - 150%, and not
-                               -0.25 to +0.25.  Value increase lifts saturation.
-   Video settings:Gamma > Master effect:Gamma - no range difference.
-   Video settings:Contrast > Master effect:Contrast - 50% - 150% replaces 0.6 - 1.0.
-   Lab operations:Linearity > Master effect:Linearization - no range difference.
-   Lab operations:Blch bypass > Master effect:Bleach - no range difference.
-   Lab operations:Film aging > Master effect:Fade - no range difference.
-   Preprocessing curves:RGB > Curves:Base 1.0 - 10.0 instead of 0% - 100%
-   Preprocessing curves:Red > Curves:Red 1.0 - 10.0 instead of 0% - 100%
-   Preprocessing curves:Green > Curves:Green 1.0 - 10.0 instead of 0% - 100%
-   Preprocessing curves:Blue > Curves:Blue 1.0 - 10.0 instead of 0% - 100%
-   Gamma presets:RGB > Gamma:Base - no range difference.
-   Gamma presets:Red > Gamma:Red - no range difference.
-   Gamma presets:Green > Gamma:Green - no range difference.
-   Gamma presets:Blue > Gamma:Blue - no range difference.
+ There are also a collection of parameter changes.  The first and most obvious difference
+ is in the grouping and order of settings.  Often the name of a group, its settings and
+ occasionally even range differs.  The group "Master Effect" has been dropped entirely,
+ and three of the parameters that were previously in it, "Saturation", "Gamma" and
+ "Contrast" are now in a new group called "Video settings".  "Linearization", "Bleach"
+ and "Fade" have also been placed in their own group, "Lab operations".  They are now
+ named "Linearity", "Bleach" (unchanged) and "Film ageing".  The group "Curves" is now
+ called "Preprocessing curves", and "Gamma" is now "Gamma presets".  That leaves the
+ "Strength" setting ungrouped.  It has been replaced by "Amount" which ranges from 0% to
+ 100%, where 0% outputs the unmodified video input.
+
+ In "Video settings" the direction of action of "Saturation" has changed to be more
+ logical and now ranges from 50% to 150%.  "Contrast" ranges from 50% to 150% not 0.6
+ to 1, where 100% is normal contrast.  In the lab operations the "Bleach" has been
+ retained.  While not as clear as bleach bypass, it at least fits in the space allowed
+ for the setting!  The preprocessing curves range from 1 to 10 where in Film Fx they
+ ranged from 0% to 100%.  The label RGB in that group and in "Gamma presets" is used
+ in place of Base, which wasn't as clear.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -45,6 +61,9 @@
 // Korhonen.  However this effect is new code from the ground up.
 //
 // Version history:
+//
+// Updated 2026-06-25 jwrl.
+// Rewrote the headings text to match the forum text.
 //
 // Updated 2026-06-24 jwrl.
 // Now uses all mask channels instead of just one.
