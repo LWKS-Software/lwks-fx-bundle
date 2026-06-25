@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-15
+// @Released 2026-06-26
 // @Author jwrl
 // @Created 2025-04-11
 
@@ -8,6 +8,16 @@
  6, 7 or 8 arms selectable.  The star it creates can be scaled, spun and positioned.
  It can also be coloured with a basic flat colour or can be mixed with a prismatic
  spectrum for more dramatic effect.
+
+   [*]Star colour
+      [*]Rainbow mix:  Controls the amoint of rinbow to mix with the base colour.
+      [*]Base colour:  Is the main colour of the star and glints.
+   [*]Star points
+      [*]Number of points:  Should be self explanatory.
+      [*]Strength:  Sets the opacity of the star points.
+      [*]Size:  Sets the length of the points.
+      [*]Rotation:  Spins the star.
+   [*]Star position X & Y:  Is self explanatory.
 
  The four, six and eight pointed stars are possible with optical star filters and match
  the look produced by those filters reasonably closely.  The five and seven pointed
@@ -43,6 +53,9 @@
 //
 // Version history:
 //
+// Updated 2026-06-26 jwrl.
+// Added settings description to header block.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
@@ -63,18 +76,16 @@ DeclareInput (Inp);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Rainbow, "Rainbow mix", "Star colour", "DisplayAsPercentage", 0.5, 0.0, 2.0);
-
-DeclareColourParam (Colour, "Base colour", "Star colour", kNoFlags, 0.7, 0.9, 1.0, 1.0);
+DeclareFloatParam (Rainbow,    "Rainbow mix",      "Star colour", "DisplayAsPercentage", 0.5, 0.0, 2.0);
+DeclareColourParam (Colour,    "Base colour",      "Star colour", kNoFlags, 0.7, 0.9, 1.0, 1.0);
 
 DeclareIntParam (SetTechnique, "Number of points", "Star points", 0, "4|5|6|7|8");
+DeclareFloatParam (Strength,   "Strength",         "Star points", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Size,       "Size",             "Star points", kNoFlags, 0.25, 0.0, 1.0);
+DeclareFloatParam (Rotation,   "Rotation",         "Star points", kNoFlags, 0.0, -180.0, 180.0);
 
-DeclareFloatParam (Strength, "Strength", "Star points", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Size, "Size", "Star points", kNoFlags, 0.25, 0.0, 1.0);
-DeclareFloatParam (Rotation, "Rotation", "Star points", kNoFlags, 0.0, -180.0, 180.0);
-
-DeclareFloatParam (CentreX, "Star position", kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (CentreY, "Star position", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (CentreX,    "Star position",    kNoGroup,      "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (CentreY,    "Star position",    kNoGroup,      "SpecifiesPointY", 0.5, 0.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -474,4 +485,3 @@ DeclarePass (Star_8pt)
 
 DeclareEntryPoint (SimpleStar_8point)
 { return main (Star_8pt, uv2, uv1); }
-
