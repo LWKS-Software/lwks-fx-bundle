@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-08-25
+// @Released 2026-06-26
 // @Author jwrl
 // @Created 2025-08-17
 
@@ -9,31 +9,31 @@
  any resolution supported by Lightworks.  It also has a rule of thirds grid generator
  built in.  See the settings below for further details.
 
-   * Opacity:  Fades all lines in or out.
-   * Line weight:  Sets the thickness of the displayed lines.
-   * Rule of thirds:  Enables or disables rule of thirds display.  The default is off.
-   * Guide blending:  Selects between add, subtract or difference blend modes.  The
+   [*]Opacity:  Fades all lines in or out.
+   [*]Line weight:  Sets the thickness of the displayed lines.
+   [*]Rule of thirds:  Enables or disables rule of thirds display.  The default is off.
+   [*]Guide blending:  Selects between add, subtract or difference blend modes.  The
      default blend mode is difference.
-   * Horizontal
-      * Show guide 1:  Enables or disables horizontal guide line 1 display.  The default
-        is on.
-      * Guide 1:  Sets the vertical  position of horizontal guide line 1.
-      * Show guide 2:  As for show guide 1 except that the default is off.
-      * Guide 2:  As for guide 1.
-      * Show guide 3:  As for show guide 2.
-      * Guide 3:  As for guide 2.
-      * Show guide 4:  As for show guide 3.
-      * Guide 4:  As for guide 3.
-   * Vertical
-      * Show guide 1:  Enables or disables vertical guide line 1 display.  The default
-        is on.
-      * Guide 1:  Sets the horizontal position of vertical guide line 1.
-      * Show guide 2:  As for show guide 1 except that the default is off.
-      * Guide 2:  As for guide 1.
-      * Show guide 3:  As for show guide 2.
-      * Guide 3:  As for guide 2.
-      * Show guide 4:  As for show guide 3.
-      * Guide 4:  As for guide 3.
+   [*]Horizontal
+      [*]Show guide 1:  Enables or disables horizontal guide line 1 display.  The default
+         is on.
+      [*]Guide 1:  Sets the vertical  position of horizontal guide line 1.
+      [*]Show guide 2:  As for show guide 1 except that the default is off.
+      [*]Guide 2:  As for guide 1.
+      [*]Show guide 3:  As for show guide 2.
+      [*]Guide 3:  As for guide 2.
+      [*]Show guide 4:  As for show guide 3.
+      [*]Guide 4:  As for guide 3.
+   [*]Vertical
+      [*]Show guide 1:  Enables or disables vertical guide line 1 display.  The default
+         is on.
+      [*]Guide 1:  Sets the horizontal position of vertical guide line 1.
+      [*]Show guide 2:  As for show guide 1 except that the default is off.
+      [*]Guide 2:  As for guide 1.
+      [*]Show guide 3:  As for show guide 2.
+      [*]Guide 3:  As for guide 2.
+      [*]Show guide 4:  As for show guide 3.
+      [*]Guide 4:  As for guide 3.
 
  This effect works with rotated media, and works within sequence bounds.  It is NOT
  designed to lock the guides to the input media size and aspect ratio.
@@ -46,6 +46,9 @@
 // Lightworks user effect Guides.fx
 //
 // Version history:
+//
+// Updated 2026-06-26 jwrl.
+// Reformatted heading block for readability.
 //
 // Updated 2025-08-25 jwrl.
 // Corrected a geometry bug affecting rotated media.
@@ -65,30 +68,30 @@ DeclareInput (Inp);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Opacity,   "Opacity",        kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Lweight,   "Line weight",    kNoGroup, kNoFlags, 0.2, 0.0, 1.0);
+DeclareFloatParam (Opacity,   "Opacity",        kNoGroup,     kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Lweight,   "Line weight",    kNoGroup,     kNoFlags, 0.2, 0.0, 1.0);
 
-DeclareBoolParam  (Rule3rds,  "Rule of thirds", kNoGroup, false);
+DeclareBoolParam  (Rule3rds,  "Rule of thirds", kNoGroup,     false);
 
 DeclareIntParam   (BlendMode, "Guide blending", kNoGroup, 2, "Add|Subtract|Difference");
 
-DeclareBoolParam  (Show_H0, "Show guide 1", "Horizontal", true);
-DeclareFloatParam (Hguide0, "Guide 1",      "Horizontal", kNoFlags, 0.5,  0.0, 1.0);
-DeclareBoolParam  (Show_H1, "Show guide 2", "Horizontal", false);
-DeclareFloatParam (Hguide1, "Guide 2",      "Horizontal", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam  (Show_H2, "Show guide 3", "Horizontal", false);
-DeclareFloatParam (Hguide2, "Guide 3",      "Horizontal", kNoFlags, 0.75, 0.0, 1.0);
-DeclareBoolParam  (Show_H3, "Show guide 4", "Horizontal", false);
-DeclareFloatParam (Hguide3, "Guide 4",      "Horizontal", kNoFlags, 0.95, 0.0, 1.0);
+DeclareBoolParam  (Show_H0,   "Show guide 1",   "Horizontal", true);
+DeclareFloatParam (Hguide0,   "Guide 1",        "Horizontal", kNoFlags, 0.5,  0.0, 1.0);
+DeclareBoolParam  (Show_H1,   "Show guide 2",   "Horizontal", false);
+DeclareFloatParam (Hguide1,   "Guide 2",        "Horizontal", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (Show_H2,   "Show guide 3",   "Horizontal", false);
+DeclareFloatParam (Hguide2,   "Guide 3",        "Horizontal", kNoFlags, 0.75, 0.0, 1.0);
+DeclareBoolParam  (Show_H3,   "Show guide 4",   "Horizontal", false);
+DeclareFloatParam (Hguide3,   "Guide 4",        "Horizontal", kNoFlags, 0.95, 0.0, 1.0);
 
-DeclareBoolParam  (Show_V0, "Show guide 1", "Vertical", true);
-DeclareFloatParam (Vguide0, "Guide 1",      "Vertical", kNoFlags, 0.5,  0.0, 1.0);
-DeclareBoolParam  (Show_V1, "Show guide 2", "Vertical", false);
-DeclareFloatParam (Vguide1, "Guide 2",      "Vertical", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam  (Show_V2, "Show guide 3", "Vertical", false);
-DeclareFloatParam (Vguide2, "Guide 3",      "Vertical", kNoFlags, 0.75, 0.0, 1.0);
-DeclareBoolParam  (Show_V3, "Show guide 4", "Vertical", false);
-DeclareFloatParam (Vguide3, "Guide 4",      "Vertical", kNoFlags, 0.05, 0.0, 1.0);
+DeclareBoolParam  (Show_V0,   "Show guide 1",   "Vertical",   true);
+DeclareFloatParam (Vguide0,   "Guide 1",        "Vertical",   kNoFlags, 0.5,  0.0, 1.0);
+DeclareBoolParam  (Show_V1,   "Show guide 2",   "Vertical",   false);
+DeclareFloatParam (Vguide1,   "Guide 2",        "Vertical",   kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (Show_V2,   "Show guide 3",   "Vertical",   false);
+DeclareFloatParam (Vguide2,   "Guide 3",        "Vertical",   kNoFlags, 0.75, 0.0, 1.0);
+DeclareBoolParam  (Show_V3,   "Show guide 4",   "Vertical",   false);
+DeclareFloatParam (Vguide3,   "Guide 4",        "Vertical",   kNoFlags, 0.05, 0.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
