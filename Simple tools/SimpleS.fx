@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-06-26
 // @Author jwrl
 // @Created 2020-04-29
 
@@ -8,6 +8,13 @@
  components and to the luminance.  You can achieve some very dramatic visual results with
  it that are hard to get by other means.
 
+   [*]Mix amount blends the S curve modified video with the unmodified version.
+   [*]Luma curve controls the strength of the S curve applied to the luminance.
+   [*]RGB components
+      [*]Red curve is self explanatory.
+      [*]Green curve is self explanatory.
+      [*]Blue curve is self explanatory.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -15,6 +22,10 @@
 // Lightworks user effect SimpleS.fx
 //
 // Version history:
+//
+// Updated 2026-06-26 jwrl.
+// Now uses all mask channels instead of just one.
+// Added settings description to header block.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -38,12 +49,12 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Amount, "Mix amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (CurveY, "Luma curve", kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Amount, "Mix amount",  kNoGroup,         kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (CurveY, "Luma curve",  kNoGroup,         kNoFlags, 0.0, 0.0, 1.0);
 
-DeclareFloatParam (CurveR, "Red curve", "RGB components", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (CurveR, "Red curve",   "RGB components", kNoFlags, 0.0, 0.0, 1.0);
 DeclareFloatParam (CurveG, "Green curve", "RGB components", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (CurveB, "Blue curve", "RGB components", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (CurveB, "Blue curve",  "RGB components", kNoFlags, 0.0, 0.0, 1.0);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -92,6 +103,5 @@ DeclareEntryPoint (SimpleS)
 
    retval = lerp (video, retval, Amount);
 
-   return lerp (video, retval, tex2D (Mask, uv2).x);
+   return lerp (video, retval, tex2D (Mask, uv2));
 }
-
