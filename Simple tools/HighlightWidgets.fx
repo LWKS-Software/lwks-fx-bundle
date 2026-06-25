@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-07-14
+// @Released 2026-06-26
 // @Author jwrl
 // @Created 2021-11-15
 
@@ -10,18 +10,20 @@
  geometry, but there have also been slight improvements made to the circle and square
  generation.  The settings are:
 
-   * Choose widget:  Chooses whether to use a circle, square or arrow to highlight
-     the selected item.
-   * Amount:  Fades the selected widget in or out.
-   * Size:  Self explanatory.
-   * Ratio (not for circles):  Sets the aspect ratio of both the square widget and
-     the arrow.  Does not do anything to the circle.
-   * Line weight:  Adjusts the thickness of the widget.
-   * Border:  Adjusts the thickness of the border, which is always black.
-   * Rotate arrow:  Self explanatory.  It has no effect on the square or circle.
-   * Position X:  Self explanatory.
-   * Position Y:  Self explanatory.
-   * Colour:  Sets the colour of the chosen widget.
+   [*]Choose widget:  Chooses whether to use a circle, square or arrow to highlight
+      the selected item.
+   [*]Amount:  Fades the selected widget in or out.
+   [*]Size:  Self explanatory.
+   [*]Square or arrow
+      [*]Aspect ratio:  Sets the aspect ratio of both the square widget and the arrow.
+         Does not do anything to the circle widget.
+   [*]Line weight:  Adjusts the thickness of the widget.
+   [*]Border:  Adjusts the thickness of the border, which is always black.
+   [*]Arrow only
+      [*]Rotate:  Self explanatory.  It has no effect on the square or circle.
+   [*]Position X:  Self explanatory.
+   [*]Position Y:  Self explanatory.
+   [*]Colour:  Sets the colour of the chosen widget.
 
  This effect will break resolution independence.  For normal use this will make no
  difference to its operation.  It was a choice between doing that and breaking on-
@@ -37,6 +39,10 @@
 // Lightworks user effect HighlightWidgets.fx
 //
 // Version history:
+//
+// Updated 2026-06-26 jwrl.
+// Changed "Ratio (not for circles)" to "Aspect ratio" and put it in "Square or arrow".
+// Changed "Rotate arrow" to "Rotate" and put it in "Arrow only".
 //
 // Updated 2025-07-14 jwrl.
 // Corrected the update below.  The change previously listed was wrong.
@@ -65,10 +71,10 @@ DeclareIntParam (SetTechnique, "Choose widget", kNoGroup, 0, "Circle|Square|Arro
 
 DeclareFloatParam (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
 DeclareFloatParam (Size, "Size", kNoGroup, kNoFlags, 0.25, 0.0, 1.0);
-DeclareFloatParam (Aspect, "Ratio (not for circles)", kNoGroup, kNoFlags, 1.0, 0.1, 10.0);
+DeclareFloatParam (Aspect, "Aspect ratio", "Square or arrow", kNoFlags, 1.0, 0.1, 10.0);
 DeclareFloatParam (LineWeight, "Line weight", kNoGroup, kNoFlags, 0.1, 0.0, 1.0);
 DeclareFloatParam (Border, "Border", kNoGroup, kNoFlags, 0.1, 0.0, 1.0);
-DeclareFloatParam (Rotation, "Rotate arrow", kNoGroup, kNoFlags, 0.0, -180.0, 180.0);
+DeclareFloatParam (Rotation, "Rotate", "Arrow only", kNoFlags, 0.0, -180.0, 180.0);
 
 DeclareFloatParam (CentreX, "Position", kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
 DeclareFloatParam (CentreY, "Position", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
