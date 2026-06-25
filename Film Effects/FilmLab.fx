@@ -17,31 +17,30 @@
       [*]Contrast: Adjusts the input video contrast.
    [*]Lab operations
       [*]Linearity:  Adjusts the linearity of the video to lab colour space conversion.
-      [*]Bleach:  Short for bleach bypas, this simulates the effect of the bleach
+      [*]Bleach:  Short for bleach bypass, this simulates the effect of the bleach
          process being skipped during film development.
       [*]Film ageing: Simulates the dye fading as film stocks age.
    [*]Preprocessing curves
       [*]RGB:  Applies a luminance S-curve.
       [*]Red:  Applies an S-curve to the red channel.
       [*]Green:  Applies an S-curve to the green channel.
-      [*]Blue: Applies an S-curve to the green channel.
+      [*]Blue: Applies an S-curve to the blue channel.
    [*]Gamma presets
       [*]RGB:  Applies gamma to the output luminance.
       [*]Red:  Applies gamma to the red channel.
       [*]Green:  Applies gamma to the green channel.
       [*]Blue:  Applies gamma to the blue channel.
-   [*]Mask:  The Lightworks mask effect.
 
- There are also a collection of parameter changes.  The first and most obvious difference
- is in the grouping and order of settings.  Often the name of a group, its settings and
- occasionally even range differs.  The group "Master Effect" has been dropped entirely,
- and three of the parameters that were previously in it, "Saturation", "Gamma" and
- "Contrast" are now in a new group called "Video settings".  "Linearization", "Bleach"
- and "Fade" have also been placed in their own group, "Lab operations".  They are now
- named "Linearity", "Bleach" (unchanged) and "Film ageing".  The group "Curves" is now
- called "Preprocessing curves", and "Gamma" is now "Gamma presets".  That leaves the
- "Strength" setting ungrouped.  It has been replaced by "Amount" which ranges from 0% to
- 100%, where 0% outputs the unmodified video input.
+ As you can see from the list above, there are several parameter changes. The first and
+ most obvious difference is in the grouping and order of settings.  Often the name of a
+ group, its settings and occasionally even range differs.  The group "Master Effect" has
+ been dropped entirely, and three of the parameters that were previously in it,
+ "Saturation", "Gamma" and "Contrast" are now in a new group called "Video settings".
+ "Linearization", "Bleach" and "Fade" have also been placed in their own group, "Lab
+ operations".  They are now named "Linearity", "Bleach" (unchanged) and "Film ageing".
+ The group "Curves" is now called "Preprocessing curves", and "Gamma" is now "Gamma
+ presets".  That leaves the "Strength" setting ungrouped.  It has been replaced by
+ "Amount" which ranges from 0% to 100%, where 0% outputs the unmodified video input.
 
  In "Video settings" the direction of action of "Saturation" has changed to be more
  logical and now ranges from 50% to 150%.  "Contrast" ranges from 50% to 150% not 0.6
@@ -63,7 +62,7 @@
 // Version history:
 //
 // Updated 2026-06-25 jwrl.
-// Rewrote the headings text to match the forum text.
+// Rewrote the headings text to match the corrected forum text.
 //
 // Updated 2026-06-24 jwrl.
 // Now uses all mask channels instead of just one.
