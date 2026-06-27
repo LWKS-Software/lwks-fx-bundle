@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-15
+// @Released 2026-06-27
 // @Author schrauber
 // @Created 2017-11-06
 
@@ -8,6 +8,13 @@
  does.  Possibly you could regard it as adding the sort of sink error you want to your
  video!
 
+   [*]Inner whirl:  Sets the centre rotation.
+   [*]Outer whirl:  Sets the outer rotation.
+   [*]Revolutions:  Sets the number of revolutions that the whirl will execute.
+   [*]Zoom:  Scales the whirled image.
+   [*]Effect centre X:  Sets the horizontal position of the effect.
+   [*]Effect centre Y:  Sets the vertical position of the effect.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */ 
 
@@ -15,6 +22,12 @@
 // Lightworks user effect Whirl.fx
 //
 // Version history:
+//
+// Updated 2026-06-27 jwrl.
+// Changed "Whirl" to "Inner whirl".
+// Changed "Whirl, outside" to "Outer whirl".
+// Added settings description to header block.
+// Masking now uses RGBA, not R or A.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -38,13 +51,13 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (WhirlCenter, "Whirl", kNoGroup, kNoFlags, 0.0, -62.0, 62.0);
-DeclareFloatParam (WhirlOutside, "Whirl, outside", kNoGroup, kNoFlags, 0.0, -62.0, 62.0);
-DeclareFloatParam (Spin, "Revolutions", kNoGroup, kNoFlags, 0.0, -62.0, 62.0);
-DeclareFloatParam (Zoom, "Zoom", kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (WhirlCenter,  "Inner whirl",   kNoGroup, kNoFlags, 0.0, -62.0, 62.0);
+DeclareFloatParam (WhirlOutside, "Outer whirl",   kNoGroup, kNoFlags, 0.0, -62.0, 62.0);
+DeclareFloatParam (Spin,         "Revolutions",   kNoGroup, kNoFlags, 0.0, -62.0, 62.0);
+DeclareFloatParam (Zoom,         "Zoom",          kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
 
-DeclareFloatParam (XzoomPos, "Effect centre", kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (YzoomPos, "Effect centre", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (XzoomPos,     "Effect centre", kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (YzoomPos,     "Effect centre", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -104,6 +117,5 @@ DeclareEntryPoint (Whirl)
 
    float4 ret = MirrorEdge (Input, posZoom);
 
-   return lerp (ReadPixel (Input, uv1), ret, tex2D (Mask, uv1).x);        // Return the masked regional zoom over the input video.
+   return lerp (ReadPixel (Input, uv1), ret, tex2D (Mask, uv1));          // Return the masked regional zoom over the input video.
 }
-
