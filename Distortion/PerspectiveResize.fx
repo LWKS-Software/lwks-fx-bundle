@@ -1,28 +1,63 @@
 // @Maintainer jwrl
-// @Released 2024-04-28
+// @Released 2026-06-27
 // @Author jwrl
 // @Author windsturm
-// @OriginalAuthor "Evan Wallace"
+// @OriginalAuthor Evan Wallace
 // @Created 2024-04-28
 
 /**
- Based on "Fast perspective", like that effect this warps a 2D image to give it the
- appearance of perspective.  It does this by either dragging the corners of the image
- or by manually adjusting the corner settings.  In addition, unlike that effect the
- video can be scaled and positioned inside the disortion window.  The window itself
- can then be positioned, moving the corner pins with it.
+ Based on "Fast perspective", like that effect this warps a 2D image to give it
+ the appearance of perspective.  It does this by either dragging the corners of
+ the image or by manually adjusting the corner settings.  In addition, unlike that
+ effect the video can be scaled and positioned inside the distortion window.
+ The window itself can also be positioned, moving the pinned corners with it.
 
- There is an anomaly that occurs when using the X-Y position adjustment.  The four
- corner pin indicators on the record monitor will no longer line up with the actual
- corners of the video insert.  There will be an offset equivalent to the X or Y
- adjustment.  This cannot be avoided, but does not mean that the corner pin indicators
- on the record viewer will not work as expected.
+ However there is an unavoidable anomaly when using the perspective position
+ adjustment.  The four corner pin indicators on the record monitor will stay where
+ they appear on screen and will no longer line up with the actual corners of
+ the perspective shape.  There will be an offset equivalent to the X or Y
+ adjustment.  Unfortunately with present technology this cannot be avoided, but
+ it does not mean that the corner pin indicators on the record viewer will not
+ work as expected.  They will just be offset.
+
+   [*]Opacity:  Fades the foreground in or out, with the special characteristics
+      outlined above.
+   [*]View source:  Reveals the unmodified source video. This is helpful when
+      resizing the foreground image.
+   [*]Video insert
+      [*]Scale:  Magnifies the foreground image up to ten times the original size.
+      [*]Position X:  Adjusts the foreground image position horizontally inside
+         the perspective window.
+      [*]Position Y:  Adjusts the foreground image position vertically inside
+         the perspective window.
+   [*]Blend mode:  Selects a blend mode between normal (the default), screen,
+      add, darken or multiply.
+   [*]Corner pins
+      [*]High left X:  Sets the horizontal top left point of the image after
+         distortion.
+      [*]High left Y:  Sets the vertical top left point of the image after
+         distortion.
+      [*]High right X:  Sets the horizontal top right point of the image after
+         distortion.
+      [*]High right Y:  Sets the vertical top right point of the image after
+         distortion.
+      [*]Low left X:  Sets the horizontal bottom left point of the image
+         after distortion.
+      [*]Low left Y:  Sets the vertical bottom left point of the image
+         after distortion.
+      [*]Low right X:  Sets the horizontal bottom right point of the image
+         after distortion.
+      [*]Low right Y:  Sets the vertical bottom right point of the image
+         after distortion.
+      [*]Position X:  Adjusts the perspective window position horizontally.
+      [*]Position Y:  Adjusts the perspective window position vertically.
 
  Like "Fast perspective" it has the ability to blend the distorted image over
  background media using a small group of Photoshop-style blend modes.  In those
- modes the mix amount increases to 100% of the blended image at the 100% opacity
- setting, then dissolves to the normal blend overlay at the 200% point.  In normal
- blend mode the mix amount will not go above 100% no matter how high you take opacity.
+ modes the mix amount increases to 100% of the blended image at the 100%
+ opacity setting, then dissolves to the normal blend overlay at the 200% point.
+ In normal blend mode the mix amount will not go above 100% no matter how high
+ you take opacity.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -55,6 +90,12 @@
 //
 // This effect version history:
 //
+// Updated 2026-06-27 jwrl.
+// Changed "Top ..." parameters to "High ...".
+// Changed "Bottom ..." parameters to "Low ...".
+// Masking now uses RGBA, not R or A.
+// Restructured the header text.
+//
 // Created 2024-04-28 by jwrl from windsturm's original effect.
 //-----------------------------------------------------------------------------------------//
 
@@ -72,31 +113,25 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Opacity, "Opacity", kNoGroup, DisplayAsPercentage, 1.0, 0.0, 2.0);
+DeclareFloatParam (Opacity,   "Opacity",      kNoGroup,       "DisplayAsPercentage", 1.0, 0.0, 2.0);
+DeclareBoolParam (ShowInp,    "View source",  kNoGroup,       false);
 
-DeclareBoolParam (ShowInp, "View source", kNoGroup, false);
+DeclareFloatParam (Scale,     "Scale",        "Video insert", kNoFlags,              1.0, 1.0, 10.0);
+DeclareFloatParam (VidPosX,   "Position X",   "Video insert", "DisplayAsPercentage", 0.5, -1.0, 2.0);
+DeclareFloatParam (VidPosY,   "Position Y",   "Video insert", "DisplayAsPercentage", 0.5, -1.0, 2.0);
 
-DeclareFloatParam (Scale, "Scale", "Video insert", kNoFlags, 1.0, 1.0, 10.0);
+DeclareIntParam (BlendMode,   "Blend mode",   kNoGroup, 0,    "Normal|____________________|Screen|Add|Darken|Multiply");
 
-DeclareFloatParam (VidPosX, "Position X", "Video insert", DisplayAsPercentage, 0.5, -1.0, 2.0);
-DeclareFloatParam (VidPosY, "Position Y", "Video insert", DisplayAsPercentage, 0.5, -1.0, 2.0);
-
-DeclareIntParam (BlendMode, "Blend mode", kNoGroup, 0, "Normal|____________________|Screen|Add|Darken|Multiply");
-
-DeclareFloatParam (TLx, "Top left", "Corner pins", "SpecifiesPointX", 0.1, 0.0, 1.0);
-DeclareFloatParam (TLy, "Top left", "Corner pins", "SpecifiesPointY", 0.9, 0.0, 1.0);
-
-DeclareFloatParam (TRx, "Top right", "Corner pins", "SpecifiesPointX", 0.9, 0.0, 1.0);
-DeclareFloatParam (TRy, "Top right", "Corner pins", "SpecifiesPointY", 0.9, 0.0, 1.0);
-
-DeclareFloatParam (BLx, "Bottom left", "Corner pins", "SpecifiesPointX", 0.1, 0.0, 1.0);
-DeclareFloatParam (BLy, "Bottom left", "Corner pins", "SpecifiesPointY", 0.1, 0.0, 1.0);
-
-DeclareFloatParam (BRx, "Bottom right", "Corner pins", "SpecifiesPointX", 0.9, 0.0, 1.0);
-DeclareFloatParam (BRy, "Bottom right", "Corner pins", "SpecifiesPointY", 0.1, 0.0, 1.0);
-
-DeclareFloatParam (PositionX, "Position", "Corner pins", "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (PositionY, "Position", "Corner pins", "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (TLx,       "High left",     "Corner pins",  "SpecifiesPointX",     0.1, 0.0, 1.0);
+DeclareFloatParam (TLy,       "High left",     "Corner pins",  "SpecifiesPointY",     0.9, 0.0, 1.0);
+DeclareFloatParam (TRx,       "High right",    "Corner pins",  "SpecifiesPointX",     0.9, 0.0, 1.0);
+DeclareFloatParam (TRy,       "High right",    "Corner pins",  "SpecifiesPointY",     0.9, 0.0, 1.0);
+DeclareFloatParam (BLx,       "Low left",  "Corner pins",  "SpecifiesPointX",     0.1, 0.0, 1.0);
+DeclareFloatParam (BLy,       "Low left",  "Corner pins",  "SpecifiesPointY",     0.1, 0.0, 1.0);
+DeclareFloatParam (BRx,       "Low right", "Corner pins",  "SpecifiesPointX",     0.9, 0.0, 1.0);
+DeclareFloatParam (BRy,       "Low right", "Corner pins",  "SpecifiesPointY",     0.1, 0.0, 1.0);
+DeclareFloatParam (PositionX, "Position",     "Corner pins",  "SpecifiesPointX",     0.5, 0.0, 1.0);
+DeclareFloatParam (PositionY, "Position",     "Corner pins",  "SpecifiesPointY",     0.5, 0.0, 1.0);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -187,6 +222,5 @@ DeclareEntryPoint (PerspectiveResize)
       retval = lerp (Fmix, retval, saturate (Opacity - 1.0));
    }
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv3).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv3));
 }
-
