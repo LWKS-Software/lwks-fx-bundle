@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-24
+// @Released 2026-06-27
 // @Author schrauber
 // @Created 2020-10-23
 
@@ -7,6 +7,16 @@
  This is an effect that mimics the popular liquify effect in art software.  While those
  perform the distortion by means of warp meshes, this effect instead distorts by means
  of an offset from a frame reference point.  The difference in the end result is slight.
+
+   [*]Distortion area:  Sets the percentage of the frame that will be distorted.
+   [*]Strength:  Sets the amount of distortion applied.
+   [*]Edge softness:  Varies the edge of the distortion from crisp to extremely soft.
+   [*]Effect centre X:  Sets the horizontal centre point of the distortion.
+   [*]Effect centre Y:  Sets the vertical centre point of the distortion.
+   [*]Direction X:  Sets the horizontal direction of the distortion.
+   [*]Direction Y:  Sets the vertical direction of the distortion.
+   [*]Background:  Sets the area outside the distorted image to mirrored foreground,
+      opaque black or transparent black.
 
  The edge of the frame can be mirrored, the area outside the frame can be black, or can
  be made transparent for use in other blend or transform effects.  When in the two latter
@@ -19,6 +29,10 @@
 // Lightworks user effect  Liquify.fx
 //
 // Version history:
+//
+// Updated 2026-06-27 jwrl.
+// Masking now uses RGBA, not R or A.
+// Added settings description to header text.
 //
 // Updated 2023-08-24 jwrl.
 // Debugged possible NAN and/or mul issue in Linux and Mac.
@@ -51,17 +65,16 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (dArea, "Distortion Area", kNoGroup, "DisplayAsPercentage", 0.5, 0.0, 1.5);
-DeclareFloatParam (Strength, "Strength", kNoGroup, "DisplayAsPercentage", 0.5, 0.0, 1.0);
-DeclareFloatParam (eSoft, "Edge softness", kNoGroup, "DisplayAsPercentage", 0.0, -0.01, 0.2);
+DeclareFloatParam (dArea,    "Distortion area", kNoGroup, "DisplayAsPercentage", 0.5, 0.0, 1.5);
+DeclareFloatParam (Strength, "Strength",        kNoGroup, "DisplayAsPercentage", 0.5, 0.0, 1.0);
+DeclareFloatParam (eSoft,    "Edge softness",   kNoGroup, "DisplayAsPercentage", 0.0, -0.01, 0.2);
 
-DeclareFloatParam (Xcentre, "Effect centre", kNoGroup, "SpecifiesPointX", 0.9, 0.0, 1.0);
-DeclareFloatParam (Ycentre, "Effect centre", kNoGroup, "SpecifiesPointY", 0.1, 0.0, 1.0);
+DeclareFloatParam (Xcentre,  "Effect centre",   kNoGroup, "SpecifiesPointX", 0.9, 0.0, 1.0);
+DeclareFloatParam (Ycentre,  "Effect centre",   kNoGroup, "SpecifiesPointY", 0.1, 0.0, 1.0);
+DeclareFloatParam (Xdistort, "Direction",       kNoGroup, "SpecifiesPointX", 0.75, 0.0, 1.0);
+DeclareFloatParam (Ydistort, "Direction",       kNoGroup, "SpecifiesPointY", 0.6, 0.0, 1.0);
 
-DeclareFloatParam (Xdistort, "Direction", kNoGroup, "SpecifiesPointX", 0.75, 0.0, 1.0);
-DeclareFloatParam (Ydistort, "Direction", kNoGroup, "SpecifiesPointY", 0.6, 0.0, 1.0);
-
-DeclareIntParam (modeAlpha, "Background", kNoGroup, 1, "Mirrored foreground|Opaque black|Transparent");
+DeclareIntParam (modeAlpha,  "Background",      kNoGroup, 1, "Mirrored foreground|Opaque black|Transparent");
 
 DeclareFloatParam (_OutputAspectRatio);
 DeclareFloatParam (_OutputWidth);
@@ -147,6 +160,5 @@ DeclareEntryPoint (Liquify)
       }
    }
 
-   return lerp (ReadPixel (Input, uv1), retval, tex2D (Mask, uv1).x);
+   return lerp (ReadPixel (Input, uv1), retval, tex2D (Mask, uv1));
 }
-
