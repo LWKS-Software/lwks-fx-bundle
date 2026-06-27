@@ -8,8 +8,8 @@
  This simulates the distortion effect of an image seen through textured glass.  The
  rippling is derived for a random noise generator.
 
-   [*]Noise Parameter
-      [*]Phase:  This is the noise animation parameter.
+   [*]Noise parameter
+      [*]Phase:  Adjusts the phase of the animation that modulates the refraction noise.
       [*]Size:  Sets the noise size.
       [*]Strength: Adjusts the refraction strength.
       [*]Position X:  Sets the horizontal position of the refraction pattern.
