@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-06-27
 // @Author schrauber
 // @Created 2016-03-25
 
@@ -8,6 +8,19 @@
  "Ripples (manual expansion)".  This is the simple version, which is the one to use
  when you want to control the wave expansion via keyframes.
 
+   [*]Enable expansion setting:  Enables expansion timing to be set.
+   [*]Expansion:  Sets the expansion timing.
+   [*]Effect centre X:  Sets the horizontal position of the effect.
+   [*]Effect centre Y:  Sets the vertical position of the effect.
+   [*]Waveform
+      [*]Wave depth:  Sets the depth of the ripples.
+      [*]Frequency:  Sets the ripple frequency.
+      [*]Phase:  Sets the ripple phase.
+      [*]Pulsation on:  Enables ripple pulsation.
+      [*]Invert pulses:  Inverts the ripples.
+   [*]Dynamics:  Sets the wave speed.
+   [*]Flip edge:  Enables edge mirroring when the frame bounds are exceeded.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -15,6 +28,11 @@
 // Lightworks user effect RipplesManual.fx
 //
 // Version history:
+//
+// Updated 2026-06-27 jwrl.
+// Masking now uses RGBA, not R or A.
+// Changed "Wave dynamics" to "Dynamics".
+// Added settings description to header text.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -38,23 +56,20 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareBoolParam (enable_timing, "Enable expansion setting", kNoGroup, true);
+DeclareBoolParam (enable_timing,     "Enable expansion setting",  kNoGroup, true);
 
-DeclareFloatParam (expansionSetting, "Expansion", kNoGroup, kNoFlags, 0.4, 0.0, 1.0);
+DeclareFloatParam (expansionSetting, "Expansion",     kNoGroup,   kNoFlags, 0.4, 0.0, 1.0);
+DeclareFloatParam (Xcentre,          "Effect centre", kNoGroup,   "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (Ycentre,          "Effect centre", kNoGroup,   "SpecifiesPointY", 0.5, 0.0, 1.0);
 
-DeclareFloatParam (Xcentre, "Effect centre", kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (Ycentre, "Effect centre", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (zoom_lin,         "Wave depth",    "Waveform", kNoFlags, 0.3, 0.0, 1.0);
+DeclareFloatParam (Frequency,        "Frequency",     "Waveform", kNoFlags, 100.0, 0.0, 1000.0);
+DeclareFloatParam (phase_shift,      "Phase",         "Waveform", kNoFlags, 0.0, -12.0, 12.0);
+DeclareBoolParam (pulsing,           "Pulsation on",  "Waveform", false);
+DeclareBoolParam (pulse_negative,    "Invert pulses", "Waveform", false);
 
-DeclareFloatParam (zoom_lin, "Wave depth", "waveform", kNoFlags, 0.3, 0.0, 1.0);
-DeclareFloatParam (Frequency, "Frequency", "waveform", kNoFlags, 100.0, 0.0, 1000.0);
-DeclareFloatParam (phase_shift, "Phase", "waveform", kNoFlags, 0.0, -12.0, 12.0);
-
-DeclareBoolParam (pulsing, "Pulsation on", "waveform", false);
-DeclareBoolParam (pulse_negative, "Invert pulses", "waveform", false);
-
-DeclareFloatParam (speed, "Wave dynamics", kNoGroup, kNoFlags, 100.0, -5000.0, 5000.0);
-
-DeclareBoolParam (Flip_edge, "Flip edge", kNoGroup, true);
+DeclareFloatParam (speed,            "Dynamics",      kNoGroup,   kNoFlags, 100.0, -5000.0, 5000.0);
+DeclareBoolParam (Flip_edge,         "Flip edge",     kNoGroup,   true);
 
 DeclareFloatParam (_InputWidthNormalised);
 DeclareFloatParam (_OutputAspectRatio);
@@ -126,6 +141,5 @@ DeclareEntryPoint (RipplesManual)
 
    float4 retval = (!Flip_edge && IsOutOfBounds (xy1)) ? kTransparentBlack : MirrorEdge (Input, xy1);
 
-   return lerp (ReadPixel (Input, uv1), retval, tex2D (Mask, uv1).x);
+   return lerp (ReadPixel (Input, uv1), retval, tex2D (Mask, uv1));
 }
-
