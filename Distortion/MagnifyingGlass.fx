@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-11-04
+// @Released 2026-06-27
 // @Author schrauber
 // @Author jwrl
 // @Created 2017-01-05
@@ -9,32 +9,24 @@
  instead of the non-linear distortion that those effects apply a linear zoom is performed.
  The zoomed area will always be centred on the middle of the masked area.
 
- Versions released after November 3 2025 have had several substantial changes made to
- them.  In this version of "Magnifying glass" those changes include:
+ When you boot up the effect the rectangular shape setting will default to square but can
+ be made rectangular by adjusting Proportions to alter the aspect ratio.  The settings
+ range from -100% to +100%, which correspond to a range from 1:10 to 10:1.  Adjusting
+ Proportions from 0% to -100% will increase the shape width keeping the height constant,
+ while adjusting it between 0% and +100% will increase the shape height while the width
+ remains fixed.
 
-   1.  The rectangular shape setting now defaults to a square rather than as previously,
-       a rectangle with the same aspect ratio as the sequence.
-   2.  The aspect ratio settings now range from -100% to +100%, where previously they
-       ran from 0.1 to 10.0.  The same aspect ratio range as before is available with
-       the new setting.
-   3.  As a result of that change the setting no longer describes the actual ratio, so
-       "Aspect ratio" is now called "Proportions".
-   4.  Adjusting Proportions from 0% to -100% increases the shape width, thus changing
-       the aspect ratio.  Similarly, adjusting Proportions between 0% and +100%
-       increases the shape height.
-   5.  Lightworks masking has been removed and replaced with a transparency switch.
-       That changes the input background into a transparent layer for potential use in
-       downstream blending operations.  Input opacity is preserved inside the shape.
-
- The settings now are:
+ Also provided is a transparency switch which changes the input background into a
+ transparent layer for potential use in downstream blending operations.  In that mode
+ any transparency in the input is preserved inside the bulge shape.  The settings are:
 
    [*] Shape:  Selects between elliptical  or rectangular lens shape.
-   [*] Zoom:  Sets the amount of zoom.
+   [*] Zoom:  Sets the zoom or scaling amount.
    [*] Glass size
       [*] Dimensions:  Adjusts the size of the mask shape.
       [*] Proportions:  Sets the aspect ratio of the mask shape.
-   [*] Centre X:  Sets the horizontal position,
-   [*] Centre Y:  Sets the vertical position,
+   [*] Centre X:  Sets the horizontal position.
+   [*] Centre Y:  Sets the vertical position.
    [*] Transparent bg:  Enables background transparency.
 
  NOTE:  This effect will break resolution independence.
@@ -44,6 +36,9 @@
 // Lightworks user effect MagnifyingGlass.fx
 //
 // Version history:
+//
+// Updated 2026-06-27 jwrl.
+// Rewrote the comments in the header block.
 //
 // Updated 2025-11-04 jwrl.
 // Commented the code for clarity.
@@ -77,9 +72,8 @@ DeclareFloatParam (Zoom,         "Zoom",           kNoGroup,     kNoFlags, 0.5, 
 DeclareFloatParam (Dimensions,   "Dimensions",     "Glass size", kNoFlags, 0.1,  0.0, 1.0);
 DeclareFloatParam (Proportions,  "Proportions",    "Glass size", kNoFlags, 0.0, -1.0, 1.0);
 
-DeclareFloatParam (Xcentre,      "Centre",         kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (Ycentre,      "Centre",         kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
-
+DeclareFloatParam (Xcentre,      "Centre",         kNoGroup,     "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (Ycentre,      "Centre",         kNoGroup,     "SpecifiesPointY", 0.5, 0.0, 1.0);
 DeclareBoolParam  (Transparent,  "Transparent bg", kNoGroup, false);
 
 //-----------------------------------------------------------------------------------------//
