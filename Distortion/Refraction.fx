@@ -1,12 +1,24 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-06-27
 // @Author windsturm
-// @OriginalAuthor "Ian McEwan"
+// @OriginalAuthor Ian McEwan
 // @Created 2012-10-25
 
 /**
- Simulates the distortion effect of an image seen through textured glass.  The rippling
- is derived for a random noise generator.
+ This simulates the distortion effect of an image seen through textured glass.  The
+ rippling is derived for a random noise generator.
+
+   [*]Noise Parameter
+      [*]Phase:  This is the noise animation parameter.
+      [*]Size:  Sets the noise size.
+      [*]Strength: Adjusts the refraction strength.
+      [*]Position X:  Sets the horizontal position of the refraction pattern.
+      [*]Position Y:  Sets the vertical position of the refraction pattern.
+      [*]Aspect 1:x:  Sets the aspect ratio.
+   [*]Export image:  Switches the exported image between the result, the source or
+      the noise pattern.
+   [*]Use external image:  A switch to allow use of an external noise image instead
+      of the internally generated noise.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -45,6 +57,11 @@
 //
 // Version history:
 //
+// Updated 2026-06-27 jwrl.
+// Changed "AspectRatio 1:x" to "Aspect 1:x".
+// Masking now uses RGBA, not R or A.
+// Added settings description to header text.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
@@ -67,18 +84,15 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (noisePhase, "Phase", "Noise Parameter", kNoFlags, 0.0, 0.0, 100.0);
-DeclareFloatParam (noiseSize, "Size", "Noise Parameter", kNoFlags, 10.0, 0.0, 200.0);
-DeclareFloatParam (strength, "Strength", "Noise Parameter", kNoFlags, 0.1, 0.0, 2.0);
+DeclareFloatParam (noisePhase,      "Phase",              "Noise Parameter", kNoFlags, 0.0, 0.0, 100.0);
+DeclareFloatParam (noiseSize,       "Size",               "Noise Parameter", kNoFlags, 10.0, 0.0, 200.0);
+DeclareFloatParam (strength,        "Strength",           "Noise Parameter", kNoFlags, 0.1, 0.0, 2.0);
+DeclareFloatParam (noiseX,          "Position X",         "Noise Parameter", "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (noiseY,          "Position Y",         "Noise Parameter", "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (AR,              "Aspect 1:x",         "Noise Parameter", kNoFlags, 0.1, 0.01, 10.0);
 
-DeclareFloatParam (noiseX, "Position X", "Noise Parameter", "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (noiseY, "Position Y", "Noise Parameter", "SpecifiesPointY", 0.5, 0.0, 1.0);
-
-DeclareFloatParam (AR, "AspectRatio 1:x", "Noise Parameter", kNoFlags, 0.1, 0.01, 10.0);
-
-DeclareIntParam (exportImage, "Export Image", kNoGroup, 0, "Result|Source|Noise");
-
-DeclareBoolParam (useExternalImage, "Use External Image", kNoGroup, false);
+DeclareIntParam (exportImage,       "Export image",       kNoGroup, 0,       "Result|Source|Noise");
+DeclareBoolParam (useExternalImage, "Use external image", kNoGroup, false);
 
 DeclareFloatParam (_OutputAspectRatio);
 DeclareFloatParam (_OutputWidth);
@@ -257,5 +271,4 @@ DeclarePass (Refract)
 }
 
 DeclareEntryPoint (Refraction)
-{ return lerp (tex2D (Input, uv3), tex2D (Refract, uv3), tex2D (Mask, uv3).x); }
-
+{ return lerp (tex2D (Input, uv3), tex2D (Refract, uv3), tex2D (Mask, uv3)); }
