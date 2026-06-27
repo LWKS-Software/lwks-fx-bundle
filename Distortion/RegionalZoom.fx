@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-06-27
 // @Author schrauber
 // @Created 2016-03-14
 
@@ -9,6 +9,12 @@
  be varied, and the amount of distortion can be adjusted.  The edges of the image after
  distortion can optionally be mirrored out to fill the frame.
 
+   [*]Zoom:  Varies the size of the contents of the zoomed area.
+   [*]Area:  Varies the size of the area to be zoomed.
+   [*]Effect centre X:  Sets the horizontal position of the effect.
+   [*]Effect centre Y:  Sets the vertical position of the effect.
+   [*]Flip edge:  Switches between mirrored edge (flipped) or black on edge overflow.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -16,6 +22,10 @@
 // Lightworks user effect RegionalZoom.fx
 //
 // Version history.
+//
+// Updated 2026-06-27 jwrl.
+// Masking now uses RGBA, not R or A.
+// Added settings description to header text.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -39,13 +49,13 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Zoom, "zoom", kNoGroup, kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (Area, "Area", kNoGroup, kNoFlags, 0.95, 0.0, 1.0);
+DeclareFloatParam (Zoom,    "Zoom",          kNoGroup, kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (Area,    "Area",          kNoGroup, kNoFlags, 0.95, 0.0, 1.0);
 
 DeclareFloatParam (Xcentre, "Effect centre", kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
 DeclareFloatParam (Ycentre, "Effect centre", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
 
-DeclareIntParam (Mode, "Flip edge", kNoGroup, 1, "No|Yes");
+DeclareIntParam (Mode,      "Flip edge",     kNoGroup, 1, "No|Yes");
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -88,6 +98,5 @@ DeclareEntryPoint (RegionalZoom)
 
    float4 ret = Mode ? MirrorEdge (Input, xy) : ReadPixel (Input, xy);		 // ReadPixel() blanks anything outside legal addresses, which adds a border to the distorted but mirrored video
 
-   return lerp (ReadPixel (Input, uv1), ret, tex2D (Mask, uv1).x);		 // Return the masked regional zoom over the input video.
+   return lerp (ReadPixel (Input, uv1), ret, tex2D (Mask, uv1));		 // Return the masked regional zoom over the input video.
 }
-
