@@ -1,11 +1,30 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-27
 // @Author jwrl
 // @Created 2018-07-27
 
 /**
  This effect simulates a flag waving.  It incorporates a transform 3D effect to allow
  the flag to be scaled, rotated and positioned.
+
+   [*]Opacity: Fades the foreground in and/or out.
+   [*]Orientation: Selects the right edge or the left edge to flutter.
+   [*]Flag settings
+      [*]Ripples: Sets the number of ripples in the flag.
+      [*]Speed: Sets the speed at which the flag is waving.
+      [*]Depth: Sets the depth of the ripples.
+      [*]Shading: Adjusts the shading of the ripples to improve dimensionality.
+   [*]Pivot point X: Sets the horizontal pivot point around which the flag will rotate.
+   [*]Pivot point Y: Sets the vertical pivot point around which the flag will rotate.
+   [*]Rotation X: Sets the horizontal rotation.
+   [*]Rotation Y: Sets the vertical rotation.
+   [*]Rotation Z: Sets the pivot point rotation.
+   [*]Scale
+      [*]Master: Sets the overall flag size.
+      [*]Width: Adjust flag width.
+      [*]Height: Adjusts flag height.
+   [*]Position X: Sets the horizontal position of the flag.
+   [*]Position Y: Sets the vertical position of the flag.
 
  Note that the depth setting interacts with the scaling.  This is a side effect of the
  way that the waveform tracks the DVE settings.  An accident originally, it was found
@@ -19,6 +38,11 @@
 // Lightworks user effect FlagWave.fx
 //
 // Version history:
+//
+// Updated 2026-06-27 jwrl.
+// Changed "X" to "Width" and "Y" to "Height".
+// Masking now uses RGBA, not R or A.
+// Added settings description to header text.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
@@ -46,29 +70,26 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Opacity, "Opacity", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
-
+DeclareFloatParam (Opacity,   "Opacity",     kNoGroup,        kNoFlags, 1.0, 0.0, 1.0);
 DeclareIntParam (Orientation, "Orientation", kNoGroup, 0, "Right edge flutter|Left edge flutter");
 
-DeclareFloatParam (Ripples, "Ripples", "Flag settings", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Speed, "Speed", "Flag settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareFloatParam (Depth, "Depth", "Flag settings", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Shading, "Shading", "Flag settings", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Ripples,   "Ripples",     "Flag settings", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Speed,     "Speed",       "Flag settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareFloatParam (Depth,     "Depth",       "Flag settings", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Shading,   "Shading",     "Flag settings", kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareFloatParam (PivotX, "Pivot point", kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (PivotY, "Pivot point", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (PivotX,    "Pivot point", kNoGroup,        "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (PivotY,    "Pivot point", kNoGroup,        "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (RotateX,   "Rotation",    kNoGroup,        "SpecifiesPointX", -0.035, -1.0, 1.0);
+DeclareFloatParam (RotateY,   "Rotation",    kNoGroup,        "SpecifiesPointY", -0.035, -1.0, 1.0);
+DeclareFloatParam (RotateZ,   "Rotation",    kNoGroup,        "SpecifiesPointZ", 0.025, -1.0, 1.0);
 
-DeclareFloatParam (RotateX, "Rotation", kNoGroup, "SpecifiesPointX", -0.035, -1.0, 1.0);
-DeclareFloatParam (RotateY, "Rotation", kNoGroup, "SpecifiesPointY", -0.035, -1.0, 1.0);
-DeclareFloatParam (RotateZ, "Rotation", kNoGroup, "SpecifiesPointZ", 0.025, -1.0, 1.0);
+DeclareFloatParam (Scale,     "Master",      "Scale",         kNoFlags, -0.06, -1.0, 1.0);
+DeclareFloatParam (ScaleX,    "Width",       "Scale",         kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (ScaleY,    "Height",      "Scale",         kNoFlags, 0.0, -1.0, 1.0);
 
-DeclareFloatParam (Scale, "Master", "Scale", kNoFlags, -0.06, -1.0, 1.0);
-
-DeclareFloatParam (ScaleX, "X", "Scale", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (ScaleY, "Y", "Scale", kNoFlags, 0.0, -1.0, 1.0);
-
-DeclareFloatParam (PositionX, "Position", kNoGroup, "SpecifiesPointX", 0.0, -1.0, 1.0);
-DeclareFloatParam (PositionY, "Position", kNoGroup, "SpecifiesPointY", 0.035, -1.0, 1.0);
+DeclareFloatParam (PositionX, "Position",    kNoGroup,        "SpecifiesPointX", 0.0, -1.0, 1.0);
+DeclareFloatParam (PositionY, "Position",    kNoGroup,        "SpecifiesPointY", 0.035, -1.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -104,7 +125,7 @@ float4 _TransparentBlack = 0.0.xxxx;
 // These two preamble passes ensure that rotated video is handled correctly.
 
 DeclarePass (Foreground)
-{ return lerp (_TransparentBlack, ReadPixel (Fg, uv1), tex2D (Mask, uv1).x); }
+{ return lerp (_TransparentBlack, ReadPixel (Fg, uv1), tex2D (Mask, uv1)); }
 
 DeclarePass (Background)
 { return ReadPixel (Bg, uv2); }
