@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-07-23
+// @Released 2026-06-27
 // @Author jwrl
 // @Created 2024-11-17
 
@@ -9,28 +9,32 @@
  is then superimposed over a background layer, and its opacity can be adjusted.  Finally
  Lightworks effect masking can be applied.
 
-   * Opacity:  Fades the foreground into the background.
-   * Warp factor
-     * Warp compensation:  Forces warped video to stay inside frame boundaries.
-     * Upper edge:  Warps the top edge of the frame.
-     * Lower edge:  Warps the bottom edge of the frame.
-     * Left edge:  Warps the left edge of the frame.
-     * Right edge:  Warps the right edge of the frame.
-   * Skew factor
-     * Horizontal:  Skews the image horizontally.
-     * Vertical:  Skews the image vertically.
-   * Geometry
-     * Scale XY:  Master scaling.
-     * Scale X:  Scales the image horizontally.
-     * Scale Y:  Scales the image vertically.
-     * Position X:  Adjusts the horizontal position of the image.
-     * Position Y:  Adjusts the vertical position of the image.
+   [*]Opacity:  Fades the foreground into the background.
+   [*]Warp factor
+      [*]Limit bounds:  Forces warped video to stay inside frame boundaries.
+      [*]Upper edge:  Warps the top edge of the frame.
+      [*]Lower edge:  Warps the bottom edge of the frame.
+      [*]Left edge:  Warps the left edge of the frame.
+      [*]Right edge:  Warps the right edge of the frame.
+   [*]Skew factor
+      [*]Horizontal:  Skews the image horizontally.
+      [*]Vertical:  Skews the image vertically.
+   [*]Geometry
+      [*]Scale XY:  Master scaling.
+      [*]Scale X:  Scales the image horizontally.
+      [*]Scale Y:  Scales the image vertically.
+      [*]Position X:  Adjusts the horizontal position of the image.
+      [*]Position Y:  Adjusts the vertical position of the image.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect WarpTools.fx
 //
 // Version history:
+//
+// Updated 2026-06-27 jwrl.
+// Changed "Warp compensation" to "Limit bounds".
+// Masking now uses RGBA, not R or A.
 //
 // Updated 2025-07-23 jwrl.
 // Corrected a float2 max (float, float2) declaration that's legal in HLSL but not in GLSL.
@@ -56,22 +60,22 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Opacity, "Opacity", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Opacity,    "Opacity",      kNoGroup,      kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareBoolParam  (Warp_Comp, "Warp compensation", "Warp factor", true);
-DeclareFloatParam (UpperWarp, "Upper edge", "Warp factor", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (LowerWarp, "Lower edge", "Warp factor", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (Left_Warp, "Left edge",  "Warp factor", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (RightWarp, "Right edge", "Warp factor", kNoFlags, 0.0, -1.0, 1.0);
+DeclareBoolParam  (Warp_Comp,  "Limit bounds", "Warp factor", true);
+DeclareFloatParam (UpperWarp,  "Upper edge",   "Warp factor", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (LowerWarp,  "Lower edge",   "Warp factor", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (Left_Warp,  "Left edge",    "Warp factor", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (RightWarp,  "Right edge",   "Warp factor", kNoFlags, 0.0, -1.0, 1.0);
 
-DeclareFloatParam (Horizontal, "Horizontal", "Skew factor", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (Vertical,   "Vertical",   "Skew factor", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (Horizontal, "Horizontal",   "Skew factor", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (Vertical,   "Vertical",     "Skew factor", kNoFlags, 0.0, -1.0, 1.0);
 
-DeclareFloatParam (ScaleXY, "Scale XY", "Geometry", kNoFlags,          1.0, 0.01, 10.0);
-DeclareFloatParam (ScaleX,  "Scale X",  "Geometry", kNoFlags,          1.0, 0.01, 10.0);
-DeclareFloatParam (ScaleY,  "Scale Y",  "Geometry", kNoFlags,          1.0, 0.01, 10.0);
-DeclareFloatParam (Pos_X,   "Position", "Geometry", "SpecifiesPointX", 0.5, 0.0,  1.0);
-DeclareFloatParam (Pos_Y,   "Position", "Geometry", "SpecifiesPointY", 0.5, 0.0,  1.0);
+DeclareFloatParam (ScaleXY,    "Scale XY",     "Geometry",    kNoFlags, 1.0, 0.01, 10.0);
+DeclareFloatParam (ScaleX,     "Scale X",      "Geometry",    kNoFlags, 1.0, 0.01, 10.0);
+DeclareFloatParam (ScaleY,     "Scale Y",      "Geometry",    kNoFlags, 1.0, 0.01, 10.0);
+DeclareFloatParam (Pos_X,      "Position",     "Geometry",    "SpecifiesPointX", 0.5, 0.0,  1.0);
+DeclareFloatParam (Pos_Y,      "Position",     "Geometry",    "SpecifiesPointY", 0.5, 0.0,  1.0);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -144,5 +148,5 @@ DeclareEntryPoint (WarpTools)
    float4 Bgnd = tex2D (Bgd, uv3);
    float4 Warp = lerp (Bgnd, Fgnd, Fgnd.a * Opacity);
 
-   return lerp (Bgnd, Warp, tex2D (Mask, uv3).x);
+   return lerp (Bgnd, Warp, tex2D (Mask, uv3));
 }
