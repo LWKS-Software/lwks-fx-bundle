@@ -1,11 +1,18 @@
 // @Maintainer jwrl
-// @Released 2023-07-13
+// @Released 2026-06-27
 // @Author khaver
 // @Created 2011-04-21
 
 /**
  Water makes waves as well as refraction, and provides X and Y adjustment of the
  parameters.
+
+   [*]Speed:  Sets the rate at which the ripples move.
+   [*]X Frequency:  Horizontal frequency.
+   [*]X Strength:  Horizontal strength.
+   [*]Y Frequency:  Vertical frequency.
+   [*]Y Strength:  Vertical strength.
+   [*]Waves:  Rotates the ripples and waves through 90 degrees.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -14,6 +21,10 @@
 // Lightworks user effect Water.fx
 //
 // Version history:
+//
+// Updated 2026-06-27 jwrl.
+// Added settings description to header block.
+// Masking now uses RGBA, not R or A.
 //
 // Updated 2023-07-13 jwrl.
 // Corrected creation date.
@@ -40,13 +51,13 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Speed, "Speed", kNoGroup, kNoFlags, 0.0, 0.0, 1000.0);
-DeclareFloatParam (WavesX, "X Frequency", kNoGroup, kNoFlags, 0.0, 0.0, 100.0);
-DeclareFloatParam (StrengthX, "X Strength", kNoGroup, kNoFlags, 0.0, 0.0, 0.1);
-DeclareFloatParam (WavesY, "Y Frequency", kNoGroup, kNoFlags, 0.0, 0.0, 100.0);
-DeclareFloatParam (StrengthY, "Y Strength", kNoGroup, kNoFlags, 0.0, 0.0, 0.1);
+DeclareFloatParam (Speed,     "Speed",       kNoGroup, kNoFlags, 0.0, 0.0, 1000.0);
+DeclareFloatParam (WavesX,    "X Frequency", kNoGroup, kNoFlags, 0.0, 0.0, 100.0);
+DeclareFloatParam (StrengthX, "X Strength",  kNoGroup, kNoFlags, 0.0, 0.0, 0.1);
+DeclareFloatParam (WavesY,    "Y Frequency", kNoGroup, kNoFlags, 0.0, 0.0, 100.0);
+DeclareFloatParam (StrengthY, "Y Strength",  kNoGroup, kNoFlags, 0.0, 0.0, 0.1);
 
-DeclareBoolParam (Flip, "Waves", kNoGroup, false);
+DeclareBoolParam (Flip,       "Waves",       kNoGroup, false);
 
 DeclareFloatParam (_Progress);
 
@@ -75,6 +86,5 @@ DeclareEntryPoint (Water)
    float4 Color = tex2D (Input, xy);
    float4 Fgnd  = tex2D (Input, uv1);
 
-   return lerp (Fgnd, Color, tex2D (Mask, uv1).x);
+   return lerp (Fgnd, Color, tex2D (Mask, uv1));
 }
-
