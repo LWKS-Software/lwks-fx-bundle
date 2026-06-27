@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-01-24
+// @Released 2026-06-27
 // @Author schrauber
 // @Created 2016-03-16
 
@@ -7,6 +7,19 @@
  Bulge 2018 allows a variable area of the frame to have a concave or convex bulge applied.
  Optionally the background can have a radial distortion applied at the same time, or can
  be made black or transparent black.
+
+   [*]Zoom: Adjusts the size of the bulge contents.
+   [*]Bulge
+      [*]Size: Adjusts the bulge area.
+      [*]Proportions: The bulge aspect ratio.  The range -100% to +100% corresponds to
+         an aspect ratio range of 10:1 to 1:10.
+      [*]Angle: Angle works in conjunction with rotation mode - see below.
+   [*]Rotation mode: Sets whether angle affects the bulge shape, the contents
+      or the overall input texture.
+   [*]Bulge surrounds: Sets the bulge background to undistorted, distorted,
+      transparent black or opaque black.
+   [*]Effect centre X: Sets the horizontal position of the bulge.
+   [*]Effect centre Y: Sets the vertical position of the bulge.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -21,6 +34,13 @@
 //-----------------------------------------------------------------------------------------//
 //
 // Version history:
+//
+// Updated 2026-06-27 jwrl.
+// Changed "Environment of bulge" to "Bulge surrounds".  Selection labels have changed
+// from the originals to "Input video|Distorted input|Transparent black|Opaque black".
+// Changed "Aspect ratio" to "Proportions".  Its range is now shown as -100% to +100%.
+// Masking now uses RGBA, not R or A.
+// Added settings description to header text.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -44,17 +64,16 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Zoom, "Zoom", kNoGroup, kNoFlags, 1.0, -3.0, 3.0);
+DeclareFloatParam (Zoom,        "Zoom",            kNoGroup, kNoFlags, 1.0, -3.0, 3.0);
 
-DeclareFloatParam (Bulge_size, "Size","Bulge", kNoFlags, 0.25, 0.0, 0.5);
-DeclareFloatParam (AspectRatio, "Aspect Ratio","Bulge", kNoFlags, 1.0, 0.1, 10.0);
-DeclareFloatParam (Angle, "Angle","Bulge", kNoFlags, 0.0, -3600.0, 3600);
+DeclareFloatParam (Bulge_size,  "Size",            "Bulge",  kNoFlags, 0.25, 0.0, 0.5);
+DeclareFloatParam (Proportions, "Proportions",     "Bulge",  kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (Angle,       "Angle",           "Bulge",  kNoFlags, 0.0, -3600.0, 3600);
 
-DeclareIntParam (Rotation, "Rotation mode", kNoGroup, 2, "Shape (Aspect ratio should not be 1)|Only the bulge content|Bulge|Input texture");
-DeclareIntParam (Mode, "Environment of bulge", kNoGroup, 0, "Original| Distorted| Black alpha 0| Black alpha 1");
-
-DeclareFloatParam (Xcentre, "Effect centre", kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (Ycentre, "Effect centre", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareIntParam (Rotation,      "Rotation mode",   kNoGroup, 2, "Shape (Proportions 0, no rotation)|Only the bulge content|Bulge|Input video");
+DeclareIntParam (Mode,          "Bulge surrounds", kNoGroup, 0, "Input video|Distorted input|Transparent black|Opaque black");
+DeclareFloatParam (Xcentre,     "Effect centre",   kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (Ycentre,     "Effect centre",   kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
 
 DeclareFloatParam (_InputWidthNormalised);
 
@@ -77,10 +96,15 @@ float4 MirrorEdge (sampler S, float2 uv)
 
 DeclareEntryPoint (Bulge)
 {
-   float Tsin, Tcos;     // Sine and cosine of the set angle.
-
    float2 centre = float2 (Xcentre, 1.0 - Ycentre);
    float2 vcenter = uv1 - centre;    // Vector between Center and Texel
+
+   float Tsin, Tcos;     // Sine and cosine of the set angle.
+   float AspectRatio = abs (Proportions * 9.0) + 1.0; // AspectRatio is between 1 and 10.
+
+   // If Proportions is positive we need AspectRatio to be from 1 to 0.1.
+
+   if (Proportions > 0.0) { AspectRatio = 1.0 / AspectRatio; }
 
    // ------ Rotation of bulge dimensions. --------
 
@@ -128,6 +152,5 @@ DeclareEntryPoint (Bulge)
    float4 retval = MirrorEdge (Input, (distortion * (centre - xy)) + xy);
    float4 source = ReadPixel (Input, uv1);
 
-   return lerp (source, retval, tex2D (Mask, uv1).x);
+   return lerp (source, retval, tex2D (Mask, uv1));
 }
-
