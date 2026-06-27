@@ -1,8 +1,8 @@
 // @Maintainer jwrl
-// @Released 2024-01-22
+// @Released 2026-06-27
 // @Author windsturm
 // @Author jwrl
-// @OriginalAuthor "Evan Wallace"
+// @OriginalAuthor Evan Wallace
 // @Created 2023-07-15
 
 /**
@@ -11,6 +11,19 @@
  or by manually adjusting the corner settings.  If necessary the distorted image can
  also be masked to fit it into a defined area of a much larger image.  It's similar
  to the Perspective effect, but is much simpler to set up.
+
+   [*]Opacity: Mixes the distorted foreground over the background.
+   [*]Blend mode: Allows screen, add, darken and multiply blend modes as well as normal overlay
+   [*]Corner pins
+      [*]Top left X: Sets the horizontal position of the top left corner of the foreground image.
+      [*]Top left Y: Sets the vertical position of the top left corner of the foreground image.
+      [*]Top right X: Sets the horizontal top right of the foreground image.
+      [*]Top right Y: Sets the vertical top right of the foreground image.
+      [*]Bottom left X: Sets the horizontal bottom left of the foreground image.
+      [*]Bottom left Y: Sets the vertical bottom left of the foreground image.
+      [*]Bottom right X: Sets the horizontal bottom right of the foreground image.
+      [*]Bottom right Y: Sets the vertical bottom right of the foreground image.
+   [*]View source: Reveals the unmodified foreground video.
 
  The effect includes the ability to blend the distorted image over the background
  media.  To do this it provides a small group of Photoshop-style blend modes.  In
@@ -50,6 +63,10 @@
 //
 // This modified version history:
 //
+// Updated 2026-06-27 jwrl.
+// Masking now uses RGBA, not R or A.
+// Added settings description to header text.
+//
 // Updated 2024-01-22 jwrl.
 // Changed name from "Perspective overlay" to "Fast Perspective".
 // Changed Amount parameter to Overlay.
@@ -78,23 +95,19 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Opacity, "Opacity", kNoGroup, DisplayAsPercentage, 1.0, 0.0, 2.0);
+DeclareFloatParam (Opacity, "Opacity",      kNoGroup,      "DisplayAsPercentage", 1.0, 0.0, 2.0);
+DeclareIntParam (BlendMode, "Blend mode",   kNoGroup, 0,   "Normal|____________________|Screen|Add|Darken|Multiply");
 
-DeclareIntParam (BlendMode, "Blend mode", kNoGroup, 0, "Normal|____________________|Screen|Add|Darken|Multiply");
+DeclareFloatParam (TLx,     "Top left",     "Corner pins", "SpecifiesPointX", 0.1, 0.0, 1.0);
+DeclareFloatParam (TLy,     "Top left",     "Corner pins", "SpecifiesPointY", 0.9, 0.0, 1.0);
+DeclareFloatParam (TRx,     "Top right",    "Corner pins", "SpecifiesPointX", 0.9, 0.0, 1.0);
+DeclareFloatParam (TRy,     "Top right",    "Corner pins", "SpecifiesPointY", 0.9, 0.0, 1.0);
+DeclareFloatParam (BLx,     "Bottom left",  "Corner pins", "SpecifiesPointX", 0.1, 0.0, 1.0);
+DeclareFloatParam (BLy,     "Bottom left",  "Corner pins", "SpecifiesPointY", 0.1, 0.0, 1.0);
+DeclareFloatParam (BRx,     "Bottom right", "Corner pins", "SpecifiesPointX", 0.9, 0.0, 1.0);
+DeclareFloatParam (BRy,     "Bottom right", "Corner pins", "SpecifiesPointY", 0.1, 0.0, 1.0);
 
-DeclareFloatParam (TLx, "Top left", "Corner pins", "SpecifiesPointX", 0.1, 0.0, 1.0);
-DeclareFloatParam (TLy, "Top left", "Corner pins", "SpecifiesPointY", 0.9, 0.0, 1.0);
-
-DeclareFloatParam (TRx, "Top right", "Corner pins", "SpecifiesPointX", 0.9, 0.0, 1.0);
-DeclareFloatParam (TRy, "Top right", "Corner pins", "SpecifiesPointY", 0.9, 0.0, 1.0);
-
-DeclareFloatParam (BLx, "Bottom left", "Corner pins", "SpecifiesPointX", 0.1, 0.0, 1.0);
-DeclareFloatParam (BLy, "Bottom left", "Corner pins", "SpecifiesPointY", 0.1, 0.0, 1.0);
-
-DeclareFloatParam (BRx, "Bottom right", "Corner pins", "SpecifiesPointX", 0.9, 0.0, 1.0);
-DeclareFloatParam (BRy, "Bottom right", "Corner pins", "SpecifiesPointY", 0.1, 0.0, 1.0);
-
-DeclareBoolParam (ShowInp, "View source", kNoGroup, false);
+DeclareBoolParam (ShowInp,  "View source",  kNoGroup,      false);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -174,5 +187,5 @@ DeclareEntryPoint (FastPerspective)
       retval = lerp (Fmix, retval, saturate (Opacity - 1.0));
    }
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv3).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv3));
 }
