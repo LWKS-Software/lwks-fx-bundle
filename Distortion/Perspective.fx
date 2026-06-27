@@ -1,12 +1,33 @@
 // @Maintainer jwrl
-// @Released 2023-07-12
+// @Released 2026-06-27
 // @Author windsturm
-// @OriginalAuthor "Evan Wallace"
+// @OriginalAuthor Evan Wallace
 // @Created 2012-08-14
 
 /**
  This effect warps one rectangular area to another with a perspective transform.  It can be
  used to make a 2D image look 3D or to flatten a 2D image captured in a 3D environment.
+
+   [*]View source:  Reveals the unmodified source video.
+   [*]Image wrap:  Wraps the image when outside boundaries are exceeded.
+   [*]Before
+      [*]High left X:  Sets the reference horizontal top left point of the image prior to
+         distortion.
+      [*]High left Y:  Sets the reference vertical top left point of the image prior to
+         distortion.
+      [*]High right X:  Sets the reference horizontal top right point of the image prior
+         to distortion.
+      [*]High right Y:  Sets the reference vertical top right point of the image prior to
+         distortion.
+      [*]Low left X:  Sets the reference horizontal bottom left point of the image
+         prior to distortion.
+      [*]Low left Y:  Sets the reference vertical bottom left point of the image prior
+         to distortion.
+      [*]Low right X:  Sets the reference horizontal bottom right point of the image
+         prior to distortion.
+      [*]Low right Y:  Sets the reference vertical bottom right point of the image
+         prior to distortion.
+   [*]After:  Same settings as Before, but sets the destination position.
 
  With current resolution independence, the image wrap display will only wrap to the edges
  of the undistorted image.  If the aspect ratio of the input video is such that it doesn't
@@ -52,6 +73,12 @@ THE SOFTWARE.
 //
 // Version history:
 //
+// Updated 2026-06-27 jwrl.
+// Changed "Top ..." parameters to "High ...".
+// Changed "Bottom ..." parameters to "Low ...".
+// Masking now uses RGBA, not R or A.
+// Added settings description to header text.
+//
 // Updated 2023-07-12 jwrl.
 // Corrected creation date.
 //
@@ -77,33 +104,26 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareBoolParam (viewSsource, "View source", kNoGroup, false);
+DeclareBoolParam (viewSsource, "View source",  kNoGroup, false);
+DeclareBoolParam (modeWrap,    "Image wrap",   kNoGroup, false);
 
-DeclareBoolParam (modeWrap, "Image Wrap", kNoGroup, false);
+DeclareFloatParam (bTLX,       "High left",     "Before", "SpecifiesPointX", 0.1, 0.0, 1.0);
+DeclareFloatParam (bTLY,       "High left",     "Before", "SpecifiesPointY", 0.9, 0.0, 1.0);
+DeclareFloatParam (bTRX,       "High right",    "Before", "SpecifiesPointX", 0.9, 0.0, 1.0);
+DeclareFloatParam (bTRY,       "High right",    "Before", "SpecifiesPointY", 0.9, 0.0, 1.0);
+DeclareFloatParam (bBLX,       "Low left",  "Before", "SpecifiesPointX", 0.1, 0.0, 1.0);
+DeclareFloatParam (bBLY,       "Low left",  "Before", "SpecifiesPointY", 0.1, 0.0, 1.0);
+DeclareFloatParam (bBRX,       "Low right", "Before", "SpecifiesPointX", 0.9, 0.0, 1.0);
+DeclareFloatParam (bBRY,       "Low right", "Before", "SpecifiesPointY", 0.1, 0.0, 1.0);
 
-DeclareFloatParam (bTLX, "Top Left", "Before", "SpecifiesPointX", 0.1, 0.0, 1.0);
-DeclareFloatParam (bTLY, "Top Left", "Before", "SpecifiesPointY", 0.9, 0.0, 1.0);
-
-DeclareFloatParam (bTRX, "Top Right", "Before", "SpecifiesPointX", 0.9, 0.0, 1.0);
-DeclareFloatParam (bTRY, "Top Right", "Before", "SpecifiesPointY", 0.9, 0.0, 1.0);
-
-DeclareFloatParam (bBLX, "Bottom Left", "Before", "SpecifiesPointX", 0.1, 0.0, 1.0);
-DeclareFloatParam (bBLY, "Bottom Left", "Before", "SpecifiesPointY", 0.1, 0.0, 1.0);
-
-DeclareFloatParam (bBRX, "Bottom Right", "Before", "SpecifiesPointX", 0.9, 0.0, 1.0);
-DeclareFloatParam (bBRY, "Bottom Right", "Before", "SpecifiesPointY", 0.1, 0.0, 1.0);
-
-DeclareFloatParam (aTLX, "Top Left", "After", "SpecifiesPointX", 0.2, 0.0, 1.0);
-DeclareFloatParam (aTLY, "Top Left", "After", "SpecifiesPointY", 0.8, 0.0, 1.0);
-
-DeclareFloatParam (aTRX, "Top Right", "After", "SpecifiesPointX", 0.8, 0.0, 1.0);
-DeclareFloatParam (aTRY, "Top Right", "After", "SpecifiesPointY", 0.8, 0.0, 1.0);
-
-DeclareFloatParam (aBLX, "Bottom Left", "After", "SpecifiesPointX", 0.2, 0.0, 1.0);
-DeclareFloatParam (aBLY, "Bottom Left", "After", "SpecifiesPointY", 0.2, 0.0, 1.0);
-
-DeclareFloatParam (aBRX, "Bottom Right", "After", "SpecifiesPointX", 0.8, 0.0, 1.0);
-DeclareFloatParam (aBRY, "Bottom Right", "After", "SpecifiesPointY", 0.2, 0.0, 1.0);
+DeclareFloatParam (aTLX,       "High left",     "After", "SpecifiesPointX", 0.2, 0.0, 1.0);
+DeclareFloatParam (aTLY,       "High left",     "After", "SpecifiesPointY", 0.8, 0.0, 1.0);
+DeclareFloatParam (aTRX,       "High right",    "After", "SpecifiesPointX", 0.8, 0.0, 1.0);
+DeclareFloatParam (aTRY,       "High right",    "After", "SpecifiesPointY", 0.8, 0.0, 1.0);
+DeclareFloatParam (aBLX,       "Low left",  "After", "SpecifiesPointX", 0.2, 0.0, 1.0);
+DeclareFloatParam (aBLY,       "Low left",  "After", "SpecifiesPointY", 0.2, 0.0, 1.0);
+DeclareFloatParam (aBRX,       "Low right", "After", "SpecifiesPointX", 0.8, 0.0, 1.0);
+DeclareFloatParam (aBRY,       "Low right", "After", "SpecifiesPointY", 0.2, 0.0, 1.0);
 
 //-----------------------------------------------------------------------------------------//
 // Functions
@@ -191,6 +211,5 @@ DeclareEntryPoint (PerspectiveFx)
 
    float4 retval = modeWrap ? tex2D (Inp, coord) : any (xy - coord) ? kTransparentBlack : tex2D (Inp, xy);
 
-   return lerp (Fgnd, retval, tex2D (Mask, uv2).x);
+   return lerp (Fgnd, retval, tex2D (Mask, uv2));
 }
-
