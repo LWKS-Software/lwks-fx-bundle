@@ -13,16 +13,19 @@
  to the Perspective effect, but is much simpler to set up.
 
    [*]Opacity: Mixes the distorted foreground over the background.
-   [*]Blend mode: Allows screen, add, darken and multiply blend modes as well as normal overlay
+   [*]Blend mode: Allows screen, add, darken and multiply blend modes as well as
+      normal overlay.
    [*]Corner pins
-      [*]Top left X: Sets the horizontal position of the top left corner of the foreground image.
-      [*]Top left Y: Sets the vertical position of the top left corner of the foreground image.
-      [*]Top right X: Sets the horizontal top right of the foreground image.
-      [*]Top right Y: Sets the vertical top right of the foreground image.
-      [*]Bottom left X: Sets the horizontal bottom left of the foreground image.
-      [*]Bottom left Y: Sets the vertical bottom left of the foreground image.
-      [*]Bottom right X: Sets the horizontal bottom right of the foreground image.
-      [*]Bottom right Y: Sets the vertical bottom right of the foreground image.
+      [*]High left X: Sets the horizontal position of the top left corner of the
+      foreground image.
+      [*]High left Y: Sets the vertical position of the top left corner of the
+         foreground image.
+      [*]High right X: Sets the horizontal top right of the foreground image.
+      [*]High right Y: Sets the vertical top right of the foreground image.
+      [*]Low left X: Sets the horizontal bottom left of the foreground image.
+      [*]Low left Y: Sets the vertical bottom left of the foreground image.
+      [*]Low right X: Sets the horizontal bottom right of the foreground image.
+      [*]Low right Y: Sets the vertical bottom right of the foreground image.
    [*]View source: Reveals the unmodified foreground video.
 
  The effect includes the ability to blend the distorted image over the background
@@ -64,6 +67,8 @@
 // This modified version history:
 //
 // Updated 2026-06-27 jwrl.
+// Changed "Top ..." parameters to "High ...".
+// Changed "Bottom ..." parameters to "Low ...".
 // Masking now uses RGBA, not R or A.
 // Added settings description to header text.
 //
@@ -98,14 +103,14 @@ DeclareMask;
 DeclareFloatParam (Opacity, "Opacity",      kNoGroup,      "DisplayAsPercentage", 1.0, 0.0, 2.0);
 DeclareIntParam (BlendMode, "Blend mode",   kNoGroup, 0,   "Normal|____________________|Screen|Add|Darken|Multiply");
 
-DeclareFloatParam (TLx,     "Top left",     "Corner pins", "SpecifiesPointX", 0.1, 0.0, 1.0);
-DeclareFloatParam (TLy,     "Top left",     "Corner pins", "SpecifiesPointY", 0.9, 0.0, 1.0);
-DeclareFloatParam (TRx,     "Top right",    "Corner pins", "SpecifiesPointX", 0.9, 0.0, 1.0);
-DeclareFloatParam (TRy,     "Top right",    "Corner pins", "SpecifiesPointY", 0.9, 0.0, 1.0);
-DeclareFloatParam (BLx,     "Bottom left",  "Corner pins", "SpecifiesPointX", 0.1, 0.0, 1.0);
-DeclareFloatParam (BLy,     "Bottom left",  "Corner pins", "SpecifiesPointY", 0.1, 0.0, 1.0);
-DeclareFloatParam (BRx,     "Bottom right", "Corner pins", "SpecifiesPointX", 0.9, 0.0, 1.0);
-DeclareFloatParam (BRy,     "Bottom right", "Corner pins", "SpecifiesPointY", 0.1, 0.0, 1.0);
+DeclareFloatParam (TLx,     "High left",    "Corner pins", "SpecifiesPointX", 0.1, 0.0, 1.0);
+DeclareFloatParam (TLy,     "High left",    "Corner pins", "SpecifiesPointY", 0.9, 0.0, 1.0);
+DeclareFloatParam (TRx,     "High right",   "Corner pins", "SpecifiesPointX", 0.9, 0.0, 1.0);
+DeclareFloatParam (TRy,     "High right",   "Corner pins", "SpecifiesPointY", 0.9, 0.0, 1.0);
+DeclareFloatParam (BLx,     "Low left",     "Corner pins", "SpecifiesPointX", 0.1, 0.0, 1.0);
+DeclareFloatParam (BLy,     "Low left",     "Corner pins", "SpecifiesPointY", 0.1, 0.0, 1.0);
+DeclareFloatParam (BRx,     "Low right",    "Corner pins", "SpecifiesPointX", 0.9, 0.0, 1.0);
+DeclareFloatParam (BRy,     "Low right",    "Corner pins", "SpecifiesPointY", 0.1, 0.0, 1.0);
 
 DeclareBoolParam (ShowInp,  "View source",  kNoGroup,      false);
 
