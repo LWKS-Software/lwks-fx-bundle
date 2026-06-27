@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-27
 // @Author khaver
 // @Created 2011-06-27
 
@@ -10,12 +10,30 @@
  plane.  With resolution independence, the image will only wrap to the boundaries
  of the undistorted image.  If the aspect ratio of the input video is such that it
  doesn't fill the frame, neither will the warped image.
+
+   [*]Show grid:  Shows a grid of the distorted image.
+   [*]Top left X:  Sets the distorted horizontal top left point of the image.
+   [*]Top left Y:  Sets the distorted vertical top left point of the image.
+   [*]Top right X:  Sets the distorted horizontal top right point of the image.
+   [*]Top right Y:  Sets the distorted vertical top right point of the image.
+   [*]Bottom left X:  Sets the distorted horizontal bottom left point of the image.
+   [*]Bottom left Y:  Sets the distorted vertical bottom left point of the image.
+   [*]Bottom right X:  Sets the distorted horizontal bottom right point of the image.
+   [*]Bottom right Y:  Sets the distorted vertical bottom right point of the image.
+   [*]Pan X:  Adjusts the horizontal position of the skewed image.
+   [*]Pan Y:  Adjusts the vertical position of the skewed image.
+   [*]Zoom:  Adjusts the size of the distorted image.
+
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect Skew.fx
 //
 // Version history:
+//
+// Updated 2026-06-27 jwrl.
+// Masking now uses RGBA, not R or A.
+// Added settings description to header text.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
@@ -41,24 +59,22 @@ DeclareMask;
 // Parameters 
 //-----------------------------------------------------------------------------------------//
 
-DeclareBoolParam (showGrid, "Show grid", kNoGroup, false);
+DeclareBoolParam (showGrid, "Show grid",    kNoGroup, false);
 
-DeclareFloatParam (TLX, "Top Left", kNoGroup, "SpecifiesPointX", 0.1, 0.0, 1.0);
-DeclareFloatParam (TLY, "Top Left", kNoGroup, "SpecifiesPointY", 0.9, 0.0, 1.0);
+DeclareFloatParam (TLX,     "Top left",     kNoGroup, "SpecifiesPointX", 0.1, 0.0, 1.0);
+DeclareFloatParam (TLY,     "Top left",     kNoGroup, "SpecifiesPointY", 0.9, 0.0, 1.0);
+DeclareFloatParam (TRX,     "Top right",    kNoGroup, "SpecifiesPointX", 0.9, 0.0, 1.0);
+DeclareFloatParam (TRY,     "Top right",    kNoGroup, "SpecifiesPointY", 0.9, 0.0, 1.0);
 
-DeclareFloatParam (TRX, "Top Right", kNoGroup, "SpecifiesPointX", 0.9, 0.0, 1.0);
-DeclareFloatParam (TRY, "Top Right", kNoGroup, "SpecifiesPointY", 0.9, 0.0, 1.0);
+DeclareFloatParam (BLX,     "Bottom left",  kNoGroup, "SpecifiesPointX", 0.1, 0.0, 1.0);
+DeclareFloatParam (BLY,     "Bottom left",  kNoGroup, "SpecifiesPointY", 0.1, 0.0, 1.0);
+DeclareFloatParam (BRX,     "Bottom right", kNoGroup, "SpecifiesPointX", 0.9, 0.0, 1.0);
+DeclareFloatParam (BRY,     "Bottom right", kNoGroup, "SpecifiesPointY", 0.1, 0.0, 1.0);
 
-DeclareFloatParam (BLX, "Bottom Left", kNoGroup, "SpecifiesPointX", 0.1, 0.0, 1.0);
-DeclareFloatParam (BLY, "Bottom Left", kNoGroup, "SpecifiesPointY", 0.1, 0.0, 1.0);
+DeclareFloatParam (ORGX,    "Pan",          kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (ORGY,    "Pan",          kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
 
-DeclareFloatParam (BRX, "Bottom Right", kNoGroup, "SpecifiesPointX", 0.9, 0.0, 1.0);
-DeclareFloatParam (BRY, "Bottom Right", kNoGroup, "SpecifiesPointY", 0.1, 0.0, 1.0);
-
-DeclareFloatParam (ORGX, "Pan", kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (ORGY, "Pan", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
-
-DeclareFloatParam (Zoom, "Zoom", kNoGroup, kNoFlags, 1.0, 0.0, 2.0);
+DeclareFloatParam (Zoom,    "Zoom",         kNoGroup, kNoFlags,          1.0, 0.0, 2.0);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -103,5 +119,5 @@ DeclareEntryPoint (Perspective)
          color = _OpaqueWhite - color;
    }
 
-   return lerp (_TransparentBlack, color, tex2D (Mask, uv2).x);
+   return lerp (_TransparentBlack, color, tex2D (Mask, uv2));
 }
