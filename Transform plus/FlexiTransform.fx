@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-02-01
+// @Released 2026-06-30
 // @Author jwrl
 // @Created 2023-02-17
 
@@ -20,21 +20,21 @@
 
  Here are the settings.
 
-   [*] Position
-      [*] Pos X:  Adjusts the horizontal position.
-      [*] Pos Y:  Adjusts the vertical position.
-   [*] Rotation
-      [*] Degrees:  Adjusts the rotation over two full revolutions.
-      [*] Revolutions:  Adjusts the number of revolutions from -40 to +40.
-   [*] Scaling
-      [*] Master:  Adjusts the master size.
-      [*] Scale X:  Adjusts the horizontal size.
-      [*] Scale Y:  Adjusts the vertical size.
-      [*] Antialiasing:  Corrects the foreground image aliasing.
-   [*] Shadow
-      [*] Opacity:  Self explanatory.
-      [*] X Offset:  Sets the horizontal width of the drop shadow.
-      [*] Y Offset:  Sets the vertical width of the drop shadow.
+   [*]Position
+      [*]Pos X:  Adjusts the horizontal position.
+      [*]Pos Y:  Adjusts the vertical position.
+   [*]Rotation
+      [*]Degrees:  Adjusts the rotation over two full revolutions.
+      [*]Revolutions:  Adjusts the number of revolutions from -40 to +40.
+   [*]Scaling
+      [*]Scale XY:  Adjusts the master size.
+      [*]Scale X:  Adjusts the horizontal size.
+      [*]Scale Y:  Adjusts the vertical size.
+      [*]Antialiasing:  Corrects the foreground image aliasing.
+   [*]Shadow
+      [*]Opacity:  Self explanatory.
+      [*]X Offset:  Sets the horizontal width of the drop shadow.
+      [*]Y Offset:  Sets the vertical width of the drop shadow.
 
  The rotation provided is Z-axis only.  Because I don't have access to the rotation
  widgets that Lightworks has used, faders set the angle and number of rotations.
@@ -47,6 +47,10 @@
 // Lightworks user effect FlexiTransform.fx
 //
 // Version history:
+//
+// Updated 2026-06-30 jwrl.
+// Changed "Master" to "Scale XY".
+// Now uses Mask.rgba for masking rather than Mask.r.
 //
 // Updated 2025-02-01 jwrl.
 // Moved masking to the foreground output, where it always should have been.
@@ -79,20 +83,20 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Xpos, "Pos", "Position", "SpecifiesPointX|DisplayAsPercentage", 0.5, -1.0, 2.0);
-DeclareFloatParam (Ypos, "Pos", "Position", "SpecifiesPointY|DisplayAsPercentage", 0.5, -1.0, 2.0);
+DeclareFloatParam (Xpos,          "Pos",          "Position", "SpecifiesPointX|DisplayAsPercentage", 0.5, -1.0, 2.0);
+DeclareFloatParam (Ypos,          "Pos",          "Position", "SpecifiesPointY|DisplayAsPercentage", 0.5, -1.0, 2.0);
 
-DeclareFloatParam (Degrees, "Degrees", "Rotation", "SpecifiesAngle", 0.0, -360.0, 360.0);
-DeclareFloatParam (Revolutions, "Revolutions", "Rotation", kNoFlags, 0.0, -20.0, 20.0);
+DeclareFloatParam (Degrees,       "Degrees",      "Rotation", "SpecifiesAngle", 0.0, -360.0, 360.0);
+DeclareFloatParam (Revolutions,   "Revolutions",  "Rotation", kNoFlags, 0.0, -20.0, 20.0);
 
-DeclareFloatParam (MasterScale, "Master", "Scaling", "DisplayAsPercentage", 1.0, 0.0, 10.0);
-DeclareFloatParam (XScale, "Scale X", "Scaling", "DisplayAsPercentage", 1.0, 0.0, 10.0);
-DeclareFloatParam (YScale, "Scale Y", "Scaling", "DisplayAsPercentage", 1.0, 0.0, 10.0);
-DeclareFloatParam (Antialias, "Antialiasing", "Scaling", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (MasterScale,   "Scale XY",     "Scaling",  "DisplayAsPercentage", 1.0, 0.0, 10.0);
+DeclareFloatParam (XScale,        "Scale X",      "Scaling",  "DisplayAsPercentage", 1.0, 0.0, 10.0);
+DeclareFloatParam (YScale,        "Scale Y",      "Scaling",  "DisplayAsPercentage", 1.0, 0.0, 10.0);
+DeclareFloatParam (Antialias,     "Antialiasing", "Scaling",  kNoFlags, 0.0, 0.0, 1.0);
 
-DeclareFloatParam (ShadowOpacity, "Opacity", "Shadow", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (ShadeX, "X Offset", "Shadow", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (ShadeY, "Y Offset", "Shadow", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (ShadowOpacity, "Opacity",      "Shadow",   kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (ShadeX,        "X Offset",     "Shadow",   kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (ShadeY,        "Y Offset",     "Shadow",   kNoFlags, 0.0, -1.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -164,8 +168,7 @@ DeclarePass (Dve)
 
    float4 Fgnd = ReadPixel (Fgd, xy1);
    float4 Bgnd = tex2D (Bgd, uv3);
-
-   float Shdw = ReadPixel (Fgd, xy2).a * tex2D (Mask, xy0).x;
+   float4 Shdw = ReadPixel (Fgd, xy2).a * tex2D (Mask, xy0);
 
    // Create the drop shadow over the background.  Throughout the rest of this
    // process the background RGB data is retained, but the background is
@@ -177,7 +180,6 @@ DeclarePass (Dve)
 
    Fgnd.a  *= ReadPixel (Mask, uv3).x;
    Fgnd.rgb = lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a);
-   Fgnd.a   = max (Fgnd.a, Shdw);
 
    return Fgnd;
 }
