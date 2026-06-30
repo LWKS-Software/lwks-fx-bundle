@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-09-22
+// @Released 2026-06-30
 // @Author jwrl
 // @Created 2025-09-21
 
@@ -37,6 +37,11 @@
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect VideoFeedback.fx
 //
+// Version history:
+//
+// Updated 2026-06-30 jwrl.
+// Now uses Mask.rgba for masking rather than Mask.r.
+//
 // Updated 2025-09-22 jwrl.
 // Added four darken blend functions plus hard light and vivid light.
 // Added to the descriptive text to improve the explanation.
@@ -56,19 +61,19 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Amount,     "Foreground", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
-DeclareIntParam (SetTechnique, "Blend mode", kNoGroup, 0, "Normal|Lighten|Screen|Add|Lighter Colour|Overlay|Soft Light|Darken|Multiply|Linear Burn|Darker Colour|Hard Light|Vivid Light");
+DeclareFloatParam (Amount,     "Foreground", kNoGroup,     kNoFlags, 1.0, 0.0, 1.0);
+DeclareIntParam (SetTechnique, "Blend mode", kNoGroup, 0,  "Normal|Lighten|Screen|Add|Lighter Colour|Overlay|Soft Light|Darken|Multiply|Linear Burn|Darker Colour|Hard Light|Vivid Light");
 
-DeclareFloatParam (Opacity,  "Opacity",  "Background", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Softness, "Softness", "Background", kNoFlags, 0.2, 0.0, 1.0);
-DeclareFloatParam (Scale,    "Scale",    "Background", "DisplayAsPercentage", 1.0, 0.5, 2.0);
-DeclareFloatParam (Pos_X,    "Position", "Background", "SpecifiesPointX|DisplayAsPercentage", 0.5, -1.0, 2.0);
-DeclareFloatParam (Pos_Y,    "Position", "Background", "SpecifiesPointY|DisplayAsPercentage", 0.5, -1.0, 2.0);
+DeclareFloatParam (Opacity,    "Opacity",    "Background", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Softness,   "Softness",   "Background", kNoFlags, 0.2, 0.0, 1.0);
+DeclareFloatParam (Scale,      "Scale",      "Background", "DisplayAsPercentage", 1.0, 0.5, 2.0);
+DeclareFloatParam (Pos_X,      "Position",   "Background", "SpecifiesPointX|DisplayAsPercentage", 0.5, -1.0, 2.0);
+DeclareFloatParam (Pos_Y,      "Position",   "Background", "SpecifiesPointY|DisplayAsPercentage", 0.5, -1.0, 2.0);
 
-DeclareFloatParam (CropLeft,   "Left",   "Crop", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (CropTop,    "Top",    "Crop", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (CropRight,  "Right",  "Crop", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (CropBottom, "Bottom", "Crop", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (CropLeft,   "Left",       "Crop",       kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (CropTop,    "Top",        "Crop",       kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (CropRight,  "Right",      "Crop",       kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (CropBottom, "Bottom",     "Crop",       kNoFlags, 0.0, 0.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -198,7 +203,7 @@ DeclareEntryPoint (Normal)
 
    float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1) * Amount);
 }
 
 //-----  Lighten  -------------------------------------------------------------------------//
@@ -214,7 +219,7 @@ DeclareEntryPoint (Lighten)
 
    float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1) * Amount);
 }
 
 //-----  Screen  --------------------------------------------------------------------------//
@@ -230,7 +235,7 @@ DeclareEntryPoint (Screen)
 
    float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1) * Amount);
 }
 
 //-----  Add  -----------------------------------------------------------------------------//
@@ -248,7 +253,7 @@ DeclareEntryPoint (Add)
 
    float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1) * Amount);
 }
 
 //-----  Lighter Colour  ------------------------------------------------------------------//
@@ -267,7 +272,7 @@ DeclareEntryPoint (LighterColour)
 
    float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1) * Amount);
 }
 
 //-----  Overlay  -------------------------------------------------------------------------//
@@ -285,7 +290,7 @@ DeclareEntryPoint (Overlay)
 
    float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1) * Amount);
 }
 
 //-----  Soft Light  ----------------------------------------------------------------------//
@@ -303,7 +308,7 @@ DeclareEntryPoint (SoftLight)
 
    float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1) * Amount);
 }
 
 //-----  Darken  --------------------------------------------------------------------------//
@@ -319,7 +324,7 @@ DeclareEntryPoint (Darken)
 
    float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1) * Amount);
 }
 
 //-----  Multiply  ------------------------------------------------------------------------//
@@ -335,7 +340,7 @@ DeclareEntryPoint (Multiply)
 
    float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1) * Amount);
 }
 
 //-----  Linear Burn  ---------------------------------------------------------------------//
@@ -353,7 +358,7 @@ DeclareEntryPoint (LinearBurn)
 
    float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1) * Amount);
 }
 
 //-----  Darker Colour  -------------------------------------------------------------------//
@@ -372,7 +377,7 @@ DeclareEntryPoint (DarkerColour)
 
    float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1) * Amount);
 }
 
 //-----  Hard Light  ----------------------------------------------------------------------//
@@ -390,7 +395,7 @@ DeclareEntryPoint (HardLight)
 
    float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1) * Amount);
 }
 
 //-----  Vivid Light  ---------------------------------------------------------------------//
@@ -408,5 +413,5 @@ DeclareEntryPoint (VividLight)
 
    float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1) * Amount);
 }
