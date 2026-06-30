@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-06-19
+// @Released 2026-06-30
 // @Author schrauber
 // @Created 2017-10-22
 
@@ -9,6 +9,16 @@
  you a simple functionality, and adds the ability to mirror or duplicate the image as you
  zoom out.  If you only need rotation and zoom, then you only need this effect.  The
  rotation axis is automatically adjusted in the same way as the transform 3D does.
+
+   [*]Rotation
+      [*]Revolutions:  Keyframes the number of revolutions that the spin will have.
+      [*]Angle:  The coarse angular setting.
+      [*]Fine angle:  The fine angular setting for improved precision.
+   [*]Zoom
+      [*]Scale:  The coarse zoom setting.
+      [*]Fine scale:  The fine zoom setting.
+      [*]Centre:  Sets the centre point around which the spin zoom takes place.
+   [*]Edge mode:  Sets the edges to bordered, reflected or tiled.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -50,6 +60,13 @@
 //
 // Version history:
 //
+// Updated 2026-06-30 jwrl.
+// Added settings description to header block.
+// Changed "Angle Fine" to "Fine angle"
+// Changed "Strength" to "Scale".
+// Changed "Fine" to "Fine scale".
+// Changed "Zoom centre" to "Centre".
+//
 // Updated 2023-06-19 jwrl.
 // Changed DVE references to transform.
 // Changed subcategory from "DVE Extras" to "Transform plus".
@@ -74,17 +91,16 @@ DeclareInput (Input);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Spin, "Revolutions", "Rotation", kNoFlags, 0.0, -62.0, 62.0);
-DeclareFloatParam (Angle, "Angle", "Rotation", kNoFlags, 0.0, -360.0, 360.0);
-DeclareFloatParam (AngleFine, "Angle Fine", "Rotation", kNoFlags, 0.0, -12.0, 12.0);
+DeclareFloatParam (Spin,      "Revolutions", "Rotation",  kNoFlags, 0.0, -62.0, 62.0);
+DeclareFloatParam (Angle,     "Angle",       "Rotation",  kNoFlags, 0.0, -360.0, 360.0);
+DeclareFloatParam (AngleFine, "Fine angle",  "Rotation",  kNoFlags, 0.0, -12.0, 12.0);
 
-DeclareFloatParam (Zoom, "Strength", "Zoom", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (ZoomFine, "Fine", "Zoom", kNoFlags, 0.0, -5.0, 5.0);
+DeclareFloatParam (Zoom,      "Scale",       "Zoom",      kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (ZoomFine,  "Fine scale",  "Zoom",      kNoFlags, 0.0, -5.0, 5.0);
+DeclareFloatParam (XzoomPos,  "Centre",      "Zoom",      "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (YzoomPos,  "Centre",      "Zoom",      "SpecifiesPointY", 0.5, 0.0, 1.0);
 
-DeclareFloatParam (XzoomPos, "Zoom centre", "Zoom", "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (YzoomPos, "Zoom centre", "Zoom", "SpecifiesPointY", 0.5, 0.0, 1.0);
-
-DeclareIntParam (EdgeMode, "Edge mode", kNoGroup, 0, "Bordered/transparent|Reflected image|Tiled image");
+DeclareIntParam (EdgeMode,    "Edge mode",   kNoGroup, 0, "Bordered/transparent|Reflected image|Tiled image");
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -161,4 +177,3 @@ DeclareEntryPoint (SpinZoom)
 
    return ReadPixel (Input, posOut);
 }
-
