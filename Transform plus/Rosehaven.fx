@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-06-19
+// @Released 2026-06-30
 // @Author jwrl
 // @Created 2020-05-08
 
@@ -9,6 +9,15 @@
  moved to vary the effect.  The image can also be scaled, positioned, flipped and
  rotated to control the area mirrored.  There is a simpler version of this effect
  called Mirrors available, which lacks the ability to flip and rotate the image.
+
+   [*]Mirror settings
+      [*]Orientation:  Can be either horizontal or vertical.
+      [*]Axis position:  Sets the axis around which mirroring will take place.
+   [*]Input image
+      [*]Orientation:  Switches the orientation between normal, flipped, flopped or
+         rotated, or any combination of those.
+      [*]Scale:  Self explanatory.
+      [*]Position:  Self explanatory.
 
  Any black areas visible outside the active picture area are transparent, and can be
  blended with other effects to add complexity.
@@ -27,6 +36,9 @@
 // active code.  Adding the ability to rotate and flip the image changed that though!
 //
 // Version history:
+//
+// Updated 2026-06-30 jwrl.
+// Added settings description to header block.
 //
 // Updated 2023-06-19 jwrl.
 // Changed subcategory from "DVE Extras" to "Transform plus".
@@ -51,14 +63,13 @@ DeclareInput (Inp);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareIntParam (Mode, "Orientation", "Mirror settings", 1, "Horizontal|Vertical");
-DeclareFloatParam (Centre, "Axis position", "Mirror settings", kNoFlags, 0.5, 0.0, 1.0);
+DeclareIntParam (Mode,        "Orientation",   "Mirror settings", 1, "Horizontal|Vertical");
+DeclareFloatParam (Centre,    "Axis position", "Mirror settings", kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareIntParam (Orientation, "Orientation", "Input image", 0, "Normal|Flipped|Flopped|Flip-flopped|Rotated|Flip / rotate|Flop / rotate|Flip-flop / rotate");
-
-DeclareFloatParam (Scale, "Scale", "Input image", "DisplayAsPercentage", 1.0, 0.25, 4.0);
-DeclareFloatParam (PosX, "Position", "Input image", "SpecifiesPointX", 0.0, -1.0, 1.0);
-DeclareFloatParam (PosY, "Position", "Input image", "SpecifiesPointY", 0.0, -1.0, 1.0);
+DeclareIntParam (Orientation, "Orientation",   "Input image", 0,  "Normal|Flipped|Flopped|Flip-flopped|Rotated|Flip / rotate|Flop / rotate|Flip-flop / rotate");
+DeclareFloatParam (Scale,     "Scale",         "Input image",     "DisplayAsPercentage", 1.0, 0.25, 4.0);
+DeclareFloatParam (PosX,      "Position",      "Input image",     "SpecifiesPointX", 0.0, -1.0, 1.0);
+DeclareFloatParam (PosY,      "Position",      "Input image",     "SpecifiesPointY", 0.0, -1.0, 1.0);
 
 DeclareIntParam (_FgOrientation);
 
@@ -121,4 +132,3 @@ DeclareEntryPoint (Rosehaven)
 
    return ReadPixel (Mirrored, abs (uv2 - xy));
 }
-
