@@ -1,42 +1,71 @@
-// @Maintainer jwrl
-// @Released 2023-09-05
-// @Author jwrl
-// @Created 2020-11-29
-
-/**
- This transform effect performs in the same way as the Lightworks version does, but
- with some significant differences.  First, there is no drop shadow support.  Second,
- instead of the drop shadow you get a border.  This can be set to either eat into the
- foreground or surround the foreground image.  This allows for those cases where the
- border is invisible because the image isn't cropped.  This has been provided at the
- expense of the masking provided in current versions of the LW transform.
-
- Also added in this version is the ability to rotate the image.  And fourth, the
- image can be duplicated as you zoom out either directly or as a mirrored image.
- Mirroring can be horizontal or vertical only, or on both axes.  Fifth, all size
- adjustment follows a square law.  The range you will see in your sequence is the
- same as you see in the Lightworks effect, but the adjustment settings are from
- zero to the square root of ten - a little over three.  This has been done to make
- size reduction more easily controllable.
-
- The final image that the effect produces has a composite alpha channel built from
- a combination of the background and foreground.  If the background has transparency
- it will be preserved wherever the foreground isn't present.
-
- There is one final difference when compared with the Lightworks transform effect: the
- background can be faded to opaque black.
-
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
-*/
-
-//-----------------------------------------------------------------------------------------//
-// Lightworks user effect RepeatTransform.fx
-//
-// Version history:
-//
-// Updated 2023-09-05 jwrl.
-// Corrected Linux/Mac bug.
-//
+// @Maintainer jwrl
+// @Released 2026-06-30
+// @Author jwrl
+// @Created 2020-11-29
+
+/**
+ This transform effect performs in the same way as the Lightworks version does, but
+ with some significant differences.  First, there is no drop shadow support.  Second,
+ instead of the drop shadow you get a border.  This can be set to either eat into the
+ foreground or surround the foreground image.  This allows for those cases where the
+ border is invisible because the image isn't cropped.  This has been provided at the
+ expense of the masking provided in current versions of the LW transform.
+
+   [*]Repeat:  Mode selects whether repeats will be used or not and whether they
+      will mirror or not.
+   [*]Position:  Moves the repeats.
+   [*]Angle:  Rotates the repeats.
+   [*]Scale
+      [*]Scale XY:  Self explanatory.
+      [*]Scale X:  Self explanatory.
+      [*]Scale Y:  Self explanatory.
+   [*]Crop
+      [*]Left:  Self explanatory.
+      [*]Top:  Self explanatory.
+      [*]Right:  Self explanatory.
+      [*]Bottom:  Self explanatory.
+   [*]Border
+      [*]Width:  Self explanatory.
+      [*]Colour:  Self explanatory.
+      [*]Border outside foreground:  Selects whether the border is inside the
+         bounds of the cropped and sized foreground or not.
+   [*]Opacity:  Self explanatory.
+   [*]Background:  Fades the background to black if desired.
+
+ Also added in this version is the ability to rotate the image.  And fourth, the
+ image can be duplicated as you zoom out either directly or as a mirrored image.
+ Mirroring can be horizontal or vertical only, or on both axes.  Fifth, all size
+ adjustment follows a square law.  The range you will see in your sequence is the
+ same as you see in the Lightworks effect, but the adjustment settings are from
+ zero to the square root of ten - a little over three.  This has been done to make
+ size reduction more easily controllable.
+
+ The final image that the effect produces has a composite alpha channel built from
+ a combination of the background and foreground.  If the background has transparency
+ it will be preserved wherever the foreground isn't present.
+
+ There is one final difference when compared with the Lightworks transform effect: the
+ background can be faded to opaque black.
+
+ NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+*/
+
+//-----------------------------------------------------------------------------------------//
+// Lightworks user effect RepeatTransform.fx
+//
+// Version history:
+//
+// Updated 2026-06-30 jwrl.
+// Changed "Border colour" to "Colour".
+// Now uses Mask.rgba for masking rather than Mask.r.
+// Changed "Master" to "Scale XY".
+// Changed "X" to "Scale X".
+// Changed "Y" to "Scale Y".
+// Added settings description to header block.
+//
+// Updated 2023-09-05 jwrl.
+// Corrected Linux/Mac bug.
+//
 // Updated 2023-06-24 jwrl.
 // Changed foreground autocrop to masking.
 //
@@ -67,27 +96,26 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareIntParam (Repeats, "Repeat mode", kNoGroup, 0, "No repeats|Repeat duplicated|Repeat mirrored|Horizontal mirror|Vertical mirror");
+DeclareIntParam (Repeats,       "Repeat mode", kNoGroup, 0, "No repeats|Repeat duplicated|Repeat mirrored|Horizontal mirror|Vertical mirror");
+DeclareFloatParam (PosX,        "Position",    kNoGroup, "SpecifiesPointX", 0.5, -1.0, 2.0);
+DeclareFloatParam (PosY,        "Position",    kNoGroup, "SpecifiesPointY", 0.5, -1.0, 2.0);
+DeclareFloatParam (Angle,       "Angle",       kNoGroup, kNoFlags, 0.0, -180.0, 180.0);
 
-DeclareFloatParam (PosX, "Position", kNoGroup, "SpecifiesPointX", 0.5, -1.0, 2.0);
-DeclareFloatParam (PosY, "Position", kNoGroup, "SpecifiesPointY", 0.5, -1.0, 2.0);
-DeclareFloatParam (Angle, "Angle", kNoGroup, kNoFlags, 0.0, -180.0, 180.0);
+DeclareFloatParam (MasterScale, "Scale XY",    "Scale",  kNoFlags, 1.0, 0.0, 3.16227766);
+DeclareFloatParam (XScale,      "Scale X",     "Scale",  kNoFlags, 1.0, 0.0, 3.16227766);
+DeclareFloatParam (YScale,      "Scale Y",     "Scale",  kNoFlags, 1.0, 0.0, 3.16227766);
 
-DeclareFloatParam (MasterScale, "Master", "Scale", kNoFlags, 1.0, 0.0, 3.16227766);
-DeclareFloatParam (XScale, "X", "Scale", kNoFlags, 1.0, 0.0, 3.16227766);
-DeclareFloatParam (YScale, "Y", "Scale", kNoFlags, 1.0, 0.0, 3.16227766);
+DeclareFloatParam (CropLeft,    "Left",        "Crop",   kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (CropTop,     "Top",         "Crop",   kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (CropRight,   "Right",       "Crop",   kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (CropBottom,  "Bottom",      "Crop",   kNoFlags, 0.0, 0.0, 1.0);
 
-DeclareFloatParam (CropLeft, "Left", "Crop", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (CropTop, "Top", "Crop", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (CropRight, "Right", "Crop", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (CropBottom, "Bottom", "Crop", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Border,      "Width",       "Border", kNoFlags, 0.0, 0.0, 1.0);
+DeclareColourParam (Colour,     "Colour",      "Border", kNoFlags, 0.49, 0.561, 1.0, 1.0);
+DeclareIntParam (OuterBorder,   "Border outside foreground", "Border", 1, "No|Yes");
 
-DeclareFloatParam (Border, "Width", "Border", kNoFlags, 0.0, 0.0, 1.0);
-DeclareColourParam (Colour, "Border colour", "Border", kNoFlags, 0.49, 0.561, 1.0, 1.0);
-DeclareIntParam (OuterBorder, "Border outside foreground", "Border", 1, "No|Yes");
-
-DeclareFloatParam (Opacity, "Opacity", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Background, "Background", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Opacity,     "Opacity",     kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Background,  "Background",  kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
 
 DeclareIntParam (_FgOrientation);
 
@@ -252,6 +280,5 @@ DeclareEntryPoint (RepeatTransform)
    float4 Bgnd = lerp (0.0.xxxx, ReadPixel (Bg, uv2), Background);
    float4 retval = lerp (Bgnd, Fgnd, Fgnd.a * Opacity);
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv3).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv3));
 }
-
