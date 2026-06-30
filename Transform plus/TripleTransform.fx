@@ -1,13 +1,44 @@
 // @Maintainer jwrl
-// @Released 2023-06-24
+// @Released 2026-06-30
 // @Author jwrl
 // @Created 2017-06-06
 
 /**
- This is a a combination of three transform effects.  The foreground transform and
+ This is a combination of three transform effects.  The foreground transform and
  background transform operate independently of each other.  The foreground can be
  cropped with rounded corners and given a bi-colour border.  Both the edges and
  borders can be feathered, and a drop shadow can be applied.
+
+   [*]Master transform
+      [*]Position X:  The main transform horizontal position adjustment.
+      [*]Position Y:  The vertical position adjustment.
+      [*]Scale XY:  Square law frame size adjustment.
+      [*]Scale X:  Square law width adjustment.
+      [*]Scale Y:  Square law height adjustment.
+      [*]Opacity sets the master transform opacity.
+   [*]Crop
+      [*]Top:  Crops the master transform top of screen.
+      [*]Bottom:  Crops the master transform bottom of screen.
+      [*]Left:  Crops the master transform left of screen.
+      [*]Right:  Crops the master transform right of screen.
+      [*]Round:  Makes the corners of the cropped image round.
+      [*]Softness:  Adjusts the softness of the crop edges.
+   [*]Border
+      [*]Width:  Self explanatory.
+      [*]Colour 1:  The inner border colour.
+      [*]Colour 2:  The outer border colour.
+   [*]Shadow
+      [*]Opacity:  Self explanatory.
+      [*]Softness:  Self explanatory.
+      [*]X offset:  Self explanatory.
+      [*]Y offset:  Self explanatory.
+   [*]Foreground
+      [*]Position X:  Sets the foreground horizontal position feeding the master transform.
+      [*]Position Y:  Sets the foreground vertical position.
+      [*]Scale XY:  Sets the foreground size feeding the master transform.
+      [*]Scale X:  Sets the foreground width feeding the master transform.
+      [*]Scale Y:  Sets the foreground height feeding the master transform.
+   [*]Background has the same settings as the foreground.
 
  The master DVE takes the cropped, bordered output of the transformed background and
  foreground as its input.  This means that it's possible to scale the background and
@@ -27,6 +58,11 @@
 // Lightworks user effect TripleTransform.fx
 //
 // Version history:
+//
+// Updated 2026-06-30 jwrl.
+// Now uses Mask.rgba for masking rather than Mask.r.
+// Added settings description to header block.
+// Changed "Master scale" to "Scale XY".
 //
 // Updated 2023-06-24 jwrl.
 // Changed foreground autocrop to masking.
@@ -59,40 +95,40 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (PosX_3, "Position", "Master transform", "SpecifiesPointX|DisplayAsPercentage", 0.5, -1.0, 2.0);
-DeclareFloatParam (PosY_3, "Position", "Master transform", "SpecifiesPointY|DisplayAsPercentage", 0.5, -1.0, 2.0);
-DeclareFloatParam (Scale_3, "Master scale", "Master transform", kNoFlags, 1.0, 0.0, 3.16227766);
-DeclareFloatParam (ScaleX_3, "Scale X", "Master transform", kNoFlags, 1.0, 0.0, 3.16227766);
-DeclareFloatParam (ScaleY_3, "Scale Y", "Master transform", kNoFlags, 1.0, 0.0, 3.16227766);
-DeclareFloatParam (Amt_3, "Opacity", "Master transform", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (PosX_3,          "Position",      "Master transform", "SpecifiesPointX|DisplayAsPercentage", 0.5, -1.0, 2.0);
+DeclareFloatParam (PosY_3,          "Position",      "Master transform", "SpecifiesPointY|DisplayAsPercentage", 0.5, -1.0, 2.0);
+DeclareFloatParam (Scale_3,         "Scale  XY",     "Master transform", kNoFlags, 1.0, 0.0, 3.16227766);
+DeclareFloatParam (ScaleX_3,        "Scale X",       "Master transform", kNoFlags, 1.0, 0.0, 3.16227766);
+DeclareFloatParam (ScaleY_3,        "Scale Y",       "Master transform", kNoFlags, 1.0, 0.0, 3.16227766);
+DeclareFloatParam (Amt_3,           "Opacity",       "Master transform", kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareFloatParam (CropT, "Top", "Crop", kNoFlags, 0.1, 0.0, 1.0);
-DeclareFloatParam (CropB, "Bottom", "Crop", kNoFlags, 0.9, 0.0, 1.0);
-DeclareFloatParam (CropL, "Left", "Crop", kNoFlags, 0.1, 0.0, 1.0);
-DeclareFloatParam (CropR, "Right", "Crop", kNoFlags, 0.9, 0.0, 1.0);
-DeclareFloatParam (CropRadius, "Rounding", "Crop", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (BorderFeather, "Edge softness", "Crop", kNoFlags, 0.05, 0.0, 1.0);
+DeclareFloatParam (CropT,           "Top",           "Crop",             kNoFlags, 0.1, 0.0, 1.0);
+DeclareFloatParam (CropB,           "Bottom",        "Crop",             kNoFlags, 0.9, 0.0, 1.0);
+DeclareFloatParam (CropL,           "Left",          "Crop",             kNoFlags, 0.1, 0.0, 1.0);
+DeclareFloatParam (CropR,           "Right",         "Crop",             kNoFlags, 0.9, 0.0, 1.0);
+DeclareFloatParam (CropRadius,      "Rounding",      "Crop",             kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (BorderFeather,   "Edge softness", "Crop",             kNoFlags, 0.05, 0.0, 1.0);
 
-DeclareFloatParam (BorderWidth, "Width", "Border", kNoFlags, 0.25, 0.0, 1.0);
-DeclareColourParam (BorderColour_1, "Colour 1", "Border", kNoFlags, 0.855, 0.855, 0.855);
-DeclareColourParam (BorderColour_2, "Colour 2", "Border", kNoFlags, 0.345, 0.655, 0.926);
+DeclareFloatParam (BorderWidth,     "Width",         "Border",           kNoFlags, 0.25, 0.0, 1.0);
+DeclareColourParam (BorderColour_1, "Colour 1",      "Border",           kNoFlags, 0.855, 0.855, 0.855);
+DeclareColourParam (BorderColour_2, "Colour 2",      "Border",           kNoFlags, 0.345, 0.655, 0.926);
 
-DeclareFloatParam (Shadow, "Opacity", "Shadow", kNoFlags, 0.50, 0.0, 1.0);
-DeclareFloatParam (ShadowSoft, "Softness", "Shadow", kNoFlags, 0.2, 0.0, 1.0);
-DeclareFloatParam (ShadowX, "X offset", "Shadow", kNoFlags, 0.5, -1.0, 1.0);
-DeclareFloatParam (ShadowY, "Y offset", "Shadow", kNoFlags, -0.5, -1.0, 1.0);
+DeclareFloatParam (Shadow,          "Opacity",       "Shadow",           kNoFlags, 0.50, 0.0, 1.0);
+DeclareFloatParam (ShadowSoft,      "Softness",      "Shadow",           kNoFlags, 0.2, 0.0, 1.0);
+DeclareFloatParam (ShadowX,         "X offset",      "Shadow",           kNoFlags, 0.5, -1.0, 1.0);
+DeclareFloatParam (ShadowY,         "Y offset",      "Shadow",           kNoFlags, -0.5, -1.0, 1.0);
 
-DeclareFloatParam (PosX_1, "Position", "Foreground", "SpecifiesPointX|DisplayAsPercentage", 0.5, -1.0, 2.0);
-DeclareFloatParam (PosY_1, "Position", "Foreground", "SpecifiesPointY|DisplayAsPercentage", 0.5, -1.0, 2.0);
-DeclareFloatParam (Scale_1, "Master scale", "Foreground", kNoFlags, 1.0, 0.0, 3.16227766);
-DeclareFloatParam (ScaleX_1, "Scale X", "Foreground", kNoFlags, 1.0, 0.0, 3.16227766);
-DeclareFloatParam (ScaleY_1, "Scale Y", "Foreground", kNoFlags, 1.0, 0.0, 3.16227766);
+DeclareFloatParam (PosX_1,          "Position",      "Foreground",       "SpecifiesPointX|DisplayAsPercentage", 0.5, -1.0, 2.0);
+DeclareFloatParam (PosY_1,          "Position",      "Foreground",       "SpecifiesPointY|DisplayAsPercentage", 0.5, -1.0, 2.0);
+DeclareFloatParam (Scale_1,         "Scale XY",      "Foreground",       kNoFlags, 1.0, 0.0, 3.16227766);
+DeclareFloatParam (ScaleX_1,        "Scale X",       "Foreground",       kNoFlags, 1.0, 0.0, 3.16227766);
+DeclareFloatParam (ScaleY_1,        "Scale Y",       "Foreground",       kNoFlags, 1.0, 0.0, 3.16227766);
 
-DeclareFloatParam (PosX_2, "Position", "Background", "SpecifiesPointX|DisplayAsPercentage", 0.5, -1.0, 2.0);
-DeclareFloatParam (PosY_2, "Position", "Background", "SpecifiesPointY|DisplayAsPercentage", 0.5, -1.0, 2.0);
-DeclareFloatParam (Scale_2, "Master scale", "Background", kNoFlags, 1.0, 0.0, 3.16227766);
-DeclareFloatParam (ScaleX_2, "Scale X", "Background", kNoFlags, 1.0, 0.0, 3.16227766);
-DeclareFloatParam (ScaleY_2, "Scale Y", "Background", kNoFlags, 1.0, 0.0, 3.16227766);
+DeclareFloatParam (PosX_2,          "Position",      "Background",       "SpecifiesPointX|DisplayAsPercentage", 0.5, -1.0, 2.0);
+DeclareFloatParam (PosY_2,          "Position",      "Background",       "SpecifiesPointY|DisplayAsPercentage", 0.5, -1.0, 2.0);
+DeclareFloatParam (Scale_2,         "Scale XY",      "Background",       kNoFlags, 1.0, 0.0, 3.16227766);
+DeclareFloatParam (ScaleX_2,        "Scale X",       "Background",       kNoFlags, 1.0, 0.0, 3.16227766);
+DeclareFloatParam (ScaleY_2,        "Scale Y",       "Background",       kNoFlags, 1.0, 0.0, 3.16227766);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -216,6 +252,5 @@ DeclareEntryPoint (TripleDVE)
 
    retval = lerp (retval, Fgnd, MaskIt.x);
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv3).x * Amt_3);
+   return lerp (Bgnd, retval, tex2D (Mask, uv3) * Amt_3);
 }
-
