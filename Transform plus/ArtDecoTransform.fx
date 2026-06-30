@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-06-30
 // @Author jwrl
 // @Created 2017-04-27
 
@@ -7,6 +7,33 @@
  This is an Art Deco take on a classic transform.  It produces two independently
  adjustable borders around the foreground image.  It also produces corner flash lines
  inside the crop which are independently adjustable.
+
+   [*]Position:  Self explanatory.
+   [*]Scale
+      [*]Scale XY:  Adjusts master size using a quadratic law so that area changes linearly.
+      [*]Scale X:  Adjusts width using a quadratic law.
+      [*]Scale Y:  Adjusts height using a quadratic law.
+   [*]Crop
+      [*]Left:  Crops the left of frame.
+      [*]Top:  Crops the top of frame.
+      [*]Right:  Crops the right of frame.
+      [*]Bottom:  Crops the bottom of frame.
+   [*]Border settings
+      [*]Border width:  Self explanatory.
+      [*]Outer gap:  Adjusts the space between the border and the outer line.
+      [*]Outer gap fill:  Selects between background, foreground or black.
+      [*]Outer width:  Sets the thickness of the outer line.
+   [*]Flash line settings
+      [*]Gap:  Sets the space between the border and the inner flash lines.
+      [*]Line width:  Sets the width of the flash lines.
+      [*]Line position:  Selects between top left / bottom right and top right / bottom left for the flash lines.
+      [*]Upper A:  Sets the vertical length of the upper flash line.
+      [*]Upper B:  Sets the horizontal length of the upper flash line.
+      [*]Lower A:  Sets the vertical length of the lower flash line.
+      [*]Lower B:  Sets the horizontal length of the lower flash line.
+   [*]Border colour:  Self explanatory.
+   [*]Opacity:  Self explanatory.
+   [*]Background:  Self explanatory.
 
  This version is a complete rebuild of DecoDVE to support the effects resolution
  independence available with Lightworks v2021 and higher.  A consequence of that is
@@ -26,6 +53,18 @@
 // Lightworks user effect ArtDecoTransform.fx
 //
 // Version history:
+//
+// Updated 2026-06-30 jwrl.
+// Changed "Master" to "Scale XY".
+// Changed "X" to "Scale X".
+// Changed "Y" to "Scale Y".
+// Changed "Outer bdr width" to "Outer width".
+// Changed "Upper flash A" to "Upper A".
+// Changed "Upper flash B" to "Upper B".
+// Changed "Lower flash A" to "Lower A".
+// Changed "Lower flash B" to "Lower B".
+// Now uses Mask.rgba for masking rather than Mask.r.
+// Added settings description to header block.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
@@ -58,35 +97,34 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (PosX, "Position", kNoGroup, "SpecifiesPointX", 0.5, -1.0, 2.0);
-DeclareFloatParam (PosY, "Position", kNoGroup, "SpecifiesPointY", 0.5, -1.0, 2.0);
+DeclareFloatParam (PosX,        "Position",       kNoGroup,              "SpecifiesPointX", 0.5, -1.0, 2.0);
+DeclareFloatParam (PosY,        "Position",       kNoGroup,              "SpecifiesPointY", 0.5, -1.0, 2.0);
 
-DeclareFloatParam (MasterScale, "Master", "Scale", kNoFlags, 1.0, 0.0, 3.16227766);
-DeclareFloatParam (XScale, "X", "Scale", kNoFlags, 1.0, 0.0, 3.16227766);
-DeclareFloatParam (YScale, "Y", "Scale", kNoFlags, 1.0, 0.0, 3.16227766);
+DeclareFloatParam (MasterScale, "Scale XY",       "Scale",               kNoFlags, 1.0, 0.0, 3.16227766);
+DeclareFloatParam (XScale,      "Scale X",        "Scale",               kNoFlags, 1.0, 0.0, 3.16227766);
+DeclareFloatParam (YScale,      "Scale Y",        "Scale",               kNoFlags, 1.0, 0.0, 3.16227766);
 
-DeclareFloatParam (Left, "Left", "Crop", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (Top, "Top", "Crop", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (Right, "Right", "Crop", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (Bottom, "Bottom", "Crop", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Left,        "Left",           "Crop",                kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Top,         "Top",            "Crop",                kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Right,       "Right",          "Crop",                kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Bottom,      "Bottom",         "Crop",                kNoFlags, 0.0, 0.0, 1.0);
 
-DeclareFloatParam (Border_1, "Border width", "Border settings", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (BorderGap, "Outer gap", "Border settings", kNoFlags, 0.2, 0.0, 1.0);
-DeclareIntParam (GapFill, "Outer gap fill", "Border settings", 0, "Background|Foreground|Black");
-DeclareFloatParam (Border_2, "Outer bdr width", "Border settings", kNoFlags, 0.1, 0.0, 1.0);
+DeclareFloatParam (Border_1,    "Border width",   "Border settings",     kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (BorderGap,   "Outer gap",      "Border settings",     kNoFlags, 0.2, 0.0, 1.0);
+DeclareIntParam (GapFill,       "Outer gap fill", "Border settings", 0,  "Background|Foreground|Black");
+DeclareFloatParam (Border_2,    "Outer width",    "Border settings",     kNoFlags, 0.1, 0.0, 1.0);
 
-DeclareFloatParam (InnerSpace, "Gap", "Flash line settings", kNoFlags, 0.2, 0.0, 1.0);
-DeclareFloatParam (InnerWidth, "Line width", "Flash line settings", kNoFlags, 0.1, 0.0, 1.0);
-DeclareIntParam (InnerPos, "Line position", "Flash line settings", 0, "Top left / bottom right|Top right / bottom left");
-DeclareFloatParam (Flash_L, "Upper flash A", "Flash line settings", kNoFlags, 0.75, 0.0, 1.0);
-DeclareFloatParam (Flash_T, "Upper flash B", "Flash line settings", kNoFlags, 0.75, 0.0, 1.0);
-DeclareFloatParam (Flash_R, "Lower flash A", "Flash line settings", kNoFlags, 0.125, 0.0, 1.0);
-DeclareFloatParam (Flash_B, "Lower flash B", "Flash line settings", kNoFlags, 0.125, 0.0, 1.0);
+DeclareFloatParam (InnerSpace,  "Gap",            "Flash line settings", kNoFlags, 0.2, 0.0, 1.0);
+DeclareFloatParam (InnerWidth,  "Line width",     "Flash line settings", kNoFlags, 0.1, 0.0, 1.0);
+DeclareIntParam (InnerPos,      "Line position",  "Flash line settings", 0, "Top left / bottom right|Top right / bottom left");
+DeclareFloatParam (Flash_L,     "Upper A",        "Flash line settings", kNoFlags, 0.75, 0.0, 1.0);
+DeclareFloatParam (Flash_T,     "Upper B",        "Flash line settings", kNoFlags, 0.75, 0.0, 1.0);
+DeclareFloatParam (Flash_R,     "Lower A",        "Flash line settings", kNoFlags, 0.125, 0.0, 1.0);
+DeclareFloatParam (Flash_B,     "Lower B",        "Flash line settings", kNoFlags, 0.125, 0.0, 1.0);
 
-DeclareColourParam (Colour, "Border colour", kNoGroup, kNoFlags, 1.0, 1.0, 1.0);
-
-DeclareFloatParam (Opacity, "Opacity", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Background, "Background", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareColourParam (Colour,     "Border colour",  kNoGroup,              kNoFlags, 1.0, 1.0, 1.0);
+DeclareFloatParam (Opacity,     "Opacity",        kNoGroup,              kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Background,  "Background",     kNoGroup,              kNoFlags, 1.0, 0.0, 1.0);
 
 DeclareIntParam (_FgOrientation);
 
@@ -245,5 +283,5 @@ DeclareEntryPoint (ArtDecoTransform)
    float4 Bgnd = lerp (_TransparentBlack, ReadPixel (Bg, uv2), Background);
    float4 retval = lerp (Bgnd, Fgnd, Fgnd.a * Opacity);
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv3).x);
+   return lerp (Bgnd, retval, tex2D (Mask, uv3));
 }
