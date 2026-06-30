@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-10-10
+// @Released 2026-06-30
 // @Author jwrl
 // @Created 2024-07-31
 
@@ -17,6 +17,42 @@
  but it was felt that the settings were complex enough without it and that masking
  also provided it.  Masking is applied before the drop shadow is generated, so that
  the masked area of the foregound is tracked by the shadow.
+
+   [*]Position X:  Standard Lightworks position setting.
+   [*]Position Y:  As above.
+   [*]Scale
+      [*]Scale XY:  Adjusts X and Y scaling simultaneously.
+      [*]Scale X:  Adjusts only the X scaling.
+      [*]Scale Y:  Adjusts only the Y scaling.
+   [*]Shadow
+      [*]Fade:  Sets the transparency of the drop shadow. Note that to see this
+         one or both of the offsets must be moved off default.
+      [*]X offset:  Adjusts the horizontal displacement of the drop shadow.
+         Negative values move the shadow left.
+      [*]Y offset:  Adjusts the vertical displacement of the drop shadow.
+         Negative values move the shadow down.
+   [*]Opacity:  Fades the quad split in or out of the background video.
+   [*]Video 1
+      [*]Opacity:  Fades video 1 in or out of the quad split.
+      [*]Position X:  Standard Lightworks position setting applied to video 1.
+      [*]Position Y:  Standard Lightworks position setting applied to video 1.
+   [*]Video 1 > Scale
+      [*]Scale XY:  Adjusts X and Y scaling of video 1 simultaneously.
+      [*]Scale X:  Adjusts the video 1 X scaling.
+      [*]Scale Y:  Adjusts the video 1 Y scaling.
+   [*]Video > Crop
+      [*]Top:  Self explanatory.
+      [*]Left:  Self explanatory.
+      [*]Right:  Self explanatory.
+      [*]Bottom:  Self explanatory.
+   [*]Video 2:  Same settings as for video 1
+   [*]Video 3:  Same settings as for video 1
+   [*]Video 4:  Same settings as for video 1
+   [*]Background
+      [*]Show bounds:  Greys out the area on screen outside the zoom boundaries.
+      [*]Zoom:  Zooms from actual size to 10x size.
+      [*]Position X and Y:  Self explanatory.
+   [*]Soften borders:  Softens the frame edges of each of V1 to V4.
 
  The individual quad split settings default to give a standard quad split when first
  applied. They provide positioning, scaling and masking.  The order of priority of
@@ -43,6 +79,14 @@
 // Lightworks user effect QuadSplitTransform.fx
 //
 // Version history:
+//
+// Updated 2026-06-30 jwrl.
+// Now uses Mask.rgba for masking rather than Mask.r.
+// Added settings description to header block.
+// Changed "Master" to "Scale XY".
+// Changed "X Scale" to "Scale X".
+// Changed "Y Scale" to "Scale Y".
+// Changed "Transparency" to "Fade".
 //
 // Updated 2024-10-10 jwrl.
 // Doubled edge softness range.
@@ -76,81 +120,77 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Xpos, "Position", kNoGroup, "SpecifiesPointX|DisplayAsPercentage", 0.5, -1.0, 2.0);
-DeclareFloatParam (Ypos, "Position", kNoGroup, "SpecifiesPointY|DisplayAsPercentage", 0.5, -1.0, 2.0);
+DeclareFloatParam (Xpos,         "Position",        kNoGroup,         "SpecifiesPointX|DisplayAsPercentage", 0.5, -1.0, 2.0);
+DeclareFloatParam (Ypos,         "Position",        kNoGroup,         "SpecifiesPointY|DisplayAsPercentage", 0.5, -1.0, 2.0);
 
-DeclareFloatParam (MasterScale, "Master", "Scale", "DisplayAsPercentage", 1.0, 0.0, 10.0);
-DeclareFloatParam (XScale, "X Scale", "Scale", "DisplayAsPercentage", 1.0, 0.0, 10.0);
-DeclareFloatParam (YScale, "Y Scale", "Scale", "DisplayAsPercentage", 1.0, 0.0, 10.0);
+DeclareFloatParam (MasterScale,  "Scale XY",        "Scale",          "DisplayAsPercentage", 1.0, 0.0, 10.0);
+DeclareFloatParam (XScale,       "Scale X",         "Scale",          "DisplayAsPercentage", 1.0, 0.0, 10.0);
+DeclareFloatParam (YScale,       "Scale Y",         "Scale",          "DisplayAsPercentage", 1.0, 0.0, 10.0);
 
-DeclareFloatParam (Transparency, "Transparency", "Shadow", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (ShadeX, "X offset", "Shadow", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (ShadeY, "Y offset", "Shadow", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (Transparency, "Fade",            "Shadow",          kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (ShadeX,       "X offset",        "Shadow",          kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (ShadeY,       "Y offset",        "Shadow",          kNoFlags, 0.0, -1.0, 1.0);
 
-DeclareFloatParam (Opacity, "Opacity", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Opacity,      "Opacity",         kNoGroup,          kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareFloatParam (OpacityV1, "Opacity", "Video 1", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (OpacityV1,    "Opacity",         "Video 1",         kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Xpos1,        "Position",        "Video 1",         "SpecifiesPointX", 0.25, 0.0, 1.0);
+DeclareFloatParam (Ypos1,        "Position",        "Video 1",         "SpecifiesPointY", 0.75, 0.0, 1.0);
 
-DeclareFloatParam (Xpos1, "Position", "Video 1", "SpecifiesPointX", 0.25, 0.0, 1.0);
-DeclareFloatParam (Ypos1, "Position", "Video 1", "SpecifiesPointY", 0.75, 0.0, 1.0);
+DeclareFloatParam (FullScale1,    "Scale XY",       "Video 1 > Scale", "DisplayAsPercentage", 0.5, 0.0, 10.0);
+DeclareFloatParam (XScale1,       "Scale X",        "Video 1 > Scale", "DisplayAsPercentage", 1.0, 0.0, 10.0);
+DeclareFloatParam (YScale1,       "Scale Y",        "Video 1 > Scale", "DisplayAsPercentage", 1.0, 0.0, 10.0);
 
-DeclareFloatParam (FullScale1, "Master", "Video 1 > Scale", "DisplayAsPercentage", 0.5, 0.0, 10.0);
-DeclareFloatParam (XScale1, "X scale", "Video 1 > Scale", "DisplayAsPercentage", 1.0, 0.0, 10.0);
-DeclareFloatParam (YScale1, "Y scale", "Video 1 > Scale", "DisplayAsPercentage", 1.0, 0.0, 10.0);
+DeclareFloatParam (Tcrop1,        "Top",            "Video 1 > Crop",  kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Lcrop1,        "Left",           "Video 1 > Crop",  kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Rcrop1,        "Right",          "Video 1 > Crop",  kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Bcrop1,        "Bottom",         "Video 1 > Crop",  kNoFlags, 0.0, 0.0, 1.0);
 
-DeclareFloatParam (Tcrop1, "Top", "Video 1 > Crop", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Lcrop1, "Left", "Video 1 > Crop", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (Rcrop1, "Right", "Video 1 > Crop", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Bcrop1, "Bottom", "Video 1 > Crop", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (OpacityV2,    "Opacity",         "Video 2",         kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Xpos2,        "Position",        "Video 2",         "SpecifiesPointX", 0.75, 0.0, 1.0);
+DeclareFloatParam (Ypos2,        "Position",        "Video 2",         "SpecifiesPointY", 0.75, 0.0, 1.0);
 
-DeclareFloatParam (OpacityV2, "Opacity", "Video 2", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (FullScale2,    "Scale XY",       "Video 2 > Scale", "DisplayAsPercentage", 0.5, 0.0, 10.0);
+DeclareFloatParam (XScale2,       "Scale X",        "Video 2 > Scale", "DisplayAsPercentage", 1.0, 0.0, 10.0);
+DeclareFloatParam (YScale2,       "Scale Y",        "Video 2 > Scale", "DisplayAsPercentage", 1.0, 0.0, 10.0);
 
-DeclareFloatParam (Xpos2, "Position", "Video 2", "SpecifiesPointX", 0.75, 0.0, 1.0);
-DeclareFloatParam (Ypos2, "Position", "Video 2", "SpecifiesPointY", 0.75, 0.0, 1.0);
+DeclareFloatParam (Tcrop2,        "Top",            "Video 2 > Crop",  kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Lcrop2,        "Left",           "Video 2 > Crop",  kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Rcrop2,        "Right",          "Video 2 > Crop",  kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Bcrop2,        "Bottom",         "Video 2 > Crop",  kNoFlags, 0.0, 0.0, 1.0);
 
-DeclareFloatParam (FullScale2, "Master", "Video 2 > Scale", "DisplayAsPercentage", 0.5, 0.0, 10.0);
-DeclareFloatParam (XScale2, "X scale", "Video 2 > Scale", "DisplayAsPercentage", 1.0, 0.0, 10.0);
-DeclareFloatParam (YScale2, "Y scale", "Video 2 > Scale", "DisplayAsPercentage", 1.0, 0.0, 10.0);
+DeclareFloatParam (OpacityV3,    "Opacity",         "Video 3",         kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Xpos3,        "Position",        "Video 3",         "SpecifiesPointX", 0.25, 0.0, 1.0);
+DeclareFloatParam (Ypos3,        "Position",        "Video 3",         "SpecifiesPointY", 0.25, 0.0, 1.0);
 
-DeclareFloatParam (Tcrop2, "Top", "Video 2 > Crop", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Lcrop2, "Left", "Video 2 > Crop", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (Rcrop2, "Right", "Video 2 > Crop", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Bcrop2, "Bottom", "Video 2 > Crop", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (FullScale3,    "Scale XY",       "Video 3 > Scale", "DisplayAsPercentage", 0.5, 0.0, 10.0);
+DeclareFloatParam (XScale3,       "Scale X",        "Video 3 > Scale", "DisplayAsPercentage", 1.0, 0.0, 10.0);
+DeclareFloatParam (YScale3,       "Scale Y",        "Video 3 > Scale", "DisplayAsPercentage", 1.0, 0.0, 10.0);
 
-DeclareFloatParam (OpacityV3, "Opacity", "Video 3", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Tcrop3,        "Top",            "Video 3 > Crop",  kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Lcrop3,        "Left",           "Video 3 > Crop",  kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Rcrop3,        "Right",          "Video 3 > Crop",  kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Bcrop3,        "Bottom",         "Video 3 > Crop",  kNoFlags, 0.0, 0.0, 1.0);
 
-DeclareFloatParam (Xpos3, "Position", "Video 3", "SpecifiesPointX", 0.25, 0.0, 1.0);
-DeclareFloatParam (Ypos3, "Position", "Video 3", "SpecifiesPointY", 0.25, 0.0, 1.0);
+DeclareFloatParam (OpacityV4,    "Opacity",         "Video 4",         kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Xpos4,        "Position",        "Video 4",         "SpecifiesPointX", 0.75, 0.0, 1.0);
+DeclareFloatParam (Ypos4,        "Position",        "Video 4",         "SpecifiesPointY", 0.25, 0.0, 1.0);
 
-DeclareFloatParam (FullScale3, "Master", "Video 3 > Scale", "DisplayAsPercentage", 0.5, 0.0, 10.0);
-DeclareFloatParam (XScale3, "X scale", "Video 3 > Scale", "DisplayAsPercentage", 1.0, 0.0, 10.0);
-DeclareFloatParam (YScale3, "Y scale", "Video 3 > Scale", "DisplayAsPercentage", 1.0, 0.0, 10.0);
+DeclareFloatParam (FullScale4,    "Scale XY",       "Video 4 > Scale", "DisplayAsPercentage", 0.5, 0.0, 10.0);
+DeclareFloatParam (XScale4,       "Scale X",        "Video 4 > Scale", "DisplayAsPercentage", 1.0, 0.0, 10.0);
+DeclareFloatParam (YScale4,       "Scale Y",        "Video 4 > Scale", "DisplayAsPercentage", 1.0, 0.0, 10.0);
 
-DeclareFloatParam (Tcrop3, "Top", "Video 3 > Crop", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Lcrop3, "Left", "Video 3 > Crop", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (Rcrop3, "Right", "Video 3 > Crop", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Bcrop3, "Bottom", "Video 3 > Crop", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Tcrop4,        "Top",            "Video 4 > Crop",  kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Lcrop4,        "Left",           "Video 4 > Crop",  kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Rcrop4,        "Right",          "Video 4 > Crop",  kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Bcrop4,        "Bottom",         "Video 4 > Crop",  kNoFlags, 0.0, 0.0, 1.0);
 
-DeclareFloatParam (OpacityV4, "Opacity", "Video 4", kNoFlags, 1.0, 0.0, 1.0);
+DeclareBoolParam (ShowBounds,     "Show bounds",    "Background",      false);
+DeclareFloatParam (BgZoom,        "Zoom",           "Background",      kNoFlags, 1.0, 1.0, 10.0);
+DeclareFloatParam (BgXpos,        "Position",       "Background",      "SpecifiesPointX", 0.5, -5.0, 5.0);
+DeclareFloatParam (BgYpos,        "Position",       "Background",      "SpecifiesPointY", 0.5, -5.0, 5.0);
 
-DeclareFloatParam (Xpos4, "Position", "Video 4", "SpecifiesPointX", 0.75, 0.0, 1.0);
-DeclareFloatParam (Ypos4, "Position", "Video 4", "SpecifiesPointY", 0.25, 0.0, 1.0);
-
-DeclareFloatParam (FullScale4, "Master", "Video 4 > Scale", "DisplayAsPercentage", 0.5, 0.0, 10.0);
-DeclareFloatParam (XScale4, "X scale", "Video 4 > Scale", "DisplayAsPercentage", 1.0, 0.0, 10.0);
-DeclareFloatParam (YScale4, "Y scale", "Video 4 > Scale", "DisplayAsPercentage", 1.0, 0.0, 10.0);
-
-DeclareFloatParam (Tcrop4, "Top", "Video 4 > Crop", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Lcrop4, "Left", "Video 4 > Crop", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (Rcrop4, "Right", "Video 4 > Crop", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Bcrop4, "Bottom", "Video 4 > Crop", kNoFlags, 0.0, 0.0, 1.0);
-
-DeclareBoolParam (ShowBounds, "Show bounds", "Background", false);
-DeclareFloatParam (BgZoom, "Zoom", "Background", kNoFlags, 1.0, 1.0, 10.0);
-DeclareFloatParam (BgXpos, "Position", "Background", "SpecifiesPointX", 0.5, -5.0, 5.0);
-DeclareFloatParam (BgYpos, "Position", "Background", "SpecifiesPointY", 0.5, -5.0, 5.0);
-
-DeclareFloatParam (Soften, "Soften borders", kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Soften,        "Soften borders", kNoGroup,          kNoFlags, 0.0, 0.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -339,7 +379,7 @@ DeclarePass (Fgd)
    // Because we're getting the last layer we also apply any masking that we need.
    // Doing it here means that the drop shadow will include the mask.
 
-   return ReadVideo (V1, uv1, OpacityV1, Vn, cTL, cBR, soft, pos, scl) * Vmask.x;
+   return ReadVideo (V1, uv1, OpacityV1, Vn, cTL, cBR, soft, pos, scl) * Vmask;
 }
 
 DeclareEntryPoint (QuadSplitTransform)
