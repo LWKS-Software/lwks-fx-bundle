@@ -1,10 +1,12 @@
 // @Maintainer jwrl
-// @Released 2023-06-19
+// @Released 2026-06-30
 // @Author windsturm
 // @Created 2012-05-12
 
 /**
- This effect tiles an image and rotates those tiles to create abstract backgrounds.
+ This effect tiles an image and rotates those tiles to create abstract backgrounds. It
+ can be thought of as an extremely cut down version of the spin zoom or repeated
+ transform effects.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -26,6 +28,9 @@
 //-----------------------------------------------------------------------------------------//
 //
 // Version history:
+//
+// Updated 2026-06-30 jwrl.
+// Bought header into sync with forum information.
 //
 // Updated 2023-06-19 jwrl.
 // Changed subcategory from "DVE Extras" to "Transform plus".
@@ -49,7 +54,7 @@ DeclareInput (Input);
 //-----------------------------------------------------------------------------------------//
 
 DeclareFloatParam (Threshold, "Threshold", kNoGroup, kNoFlags, 0.5, -1.0, 1.0);
-DeclareFloatParam (Angle, "Angle", kNoGroup, kNoFlags, 0.0, 0.0, 360.0);
+DeclareFloatParam (Angle,     "Angle",     kNoGroup, kNoFlags, 0.0, 0.0, 360.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -83,4 +88,3 @@ DeclareEntryPoint (RotateTiles)
 
    return tex2D (Inp, frac ((angXY - 0.5.xx) / (1.0 - Threshold) + 0.5.xx));
 }
-
