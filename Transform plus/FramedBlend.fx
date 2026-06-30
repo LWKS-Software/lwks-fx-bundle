@@ -1,35 +1,35 @@
 // @Maintainer jwrl
-// @Released 2025-02-04
+// @Released 2026-06-30
 // @Author jwrl
 // @Created 2025-02-03
 
 /**
  Framed blend is very similar to the Lightworks framing effect in operation.
  However unlike framing, this effect is designed with blending in mind.  The
- blend mode provided is the standard normal blend. Cropping has been expanded
+ blend mode provided is the standard normal blend.  Cropping has been expanded
  and can also be performed using masking.  This allows the exact shape needed
  for the blend to be built.
 
  The settings are:
 
-   [*] Position X:  Adjusts the horizontal position of the foreground.
-   [*] Position Y:  Adjusts the vertical position of the foreground.
-   [*] Size:  Scales the foreground.  The range is the same as in framing.
-   [*] Cropping
-      [*] Upper crop X:  Crop the left side of the foreground.
-      [*] Upper crop Y:  Crop the top of the foreground.
-      [*] Lower crop X:  Crop the right side of the foreground.
-      [*] Lower crop Y:  Crop the bottom of the foreground.
-   [*] Softness
-      [*] Master soften:  Soften all sides of the crop equally.
-      [*] Upper left X:  Soften the left side of the crop.
-      [*] Upper left Y:  Soften the top edge of the crop.
-      [*] Lower right X:  Soften the right side of the crop.
-      [*] Lower right Y:  Soften the bottom of the crop.
-   [*] Tilt:  Rotates the foreground.  The range matches the framing effect.
-   [*] Opacity:  Fades foreground in and out.
+   [*]Position X:  Adjusts the horizontal position of the foreground.
+   [*]Position Y:  Adjusts the vertical position of the foreground.
+   [*]Size:  Scales the foreground.  The range is the same as in framing.
+   [*]Cropping
+      [*]Upper X:  Crop the left side of the foreground.
+      [*]Upper Y:  Crop the top of the foreground.
+      [*]Lower X:  Crop the right side of the foreground.
+      [*]Lower Y:  Crop the bottom of the foreground.
+   [*]Softness
+      [*]Master:  Soften all sides of the crop equally.
+      [*]High left X:  Soften the left side of the crop.
+      [*]High left Y:  Soften the top edge of the crop.
+      [*]Low right X:  Soften the right side of the crop.
+      [*]Low right Y:  Soften the bottom of the crop.
+   [*]Tilt:  Rotates the foreground.  The range matches the framing effect.
+   [*]Opacity:  Fades foreground in and out.
 
- Master soften will soften all crop edges, but master and individual softness
+ Master will soften all crop edges, but master and individual softness
  settings are not additive.  The highest master and individual value set is
  the value that will be used for a given crop.  For example if the master
  value is 25%, the left is 50% and the right 10%, left softness will override
@@ -41,6 +41,12 @@
 // Lightworks user effect FramedBlend.fx
 //
 // Version history:
+//
+// Updated 2026-06-30 jwrl.
+// Changed "Upper crop" to "Upper" and "Lower crop" to "Lower".
+// Changed "Master soften" to "Master".
+// Changed "Upper left" to "High left" and "Lower right" to "Low right".
+// Now uses Mask.rgba for masking rather than Mask.r.
 //
 // Modified 2025-02-04 by jwrl.
 // Added opacity adjustment.
@@ -64,23 +70,23 @@ DeclareMask;
 // Parameters
 //--------------------------------------------------------------//
 
-DeclareFloatParam (Xpos, "Position", kNoGroup, "SpecifiesPointX",     0.5, -0.5,  1.5);
-DeclareFloatParam (Ypos, "Position", kNoGroup, "SpecifiesPointY",     0.5, -0.5,  1.5);
-DeclareFloatParam (Size, "Size",     kNoGroup, "DisplayAsPercentage", 1.0,  0.25, 3.5);
+DeclareFloatParam (Xpos, "Position",       kNoGroup,   "SpecifiesPointX",     0.5, -0.5,  1.5);
+DeclareFloatParam (Ypos, "Position",       kNoGroup,   "SpecifiesPointY",     0.5, -0.5,  1.5);
+DeclareFloatParam (Size, "Size",           kNoGroup,   "DisplayAsPercentage", 1.0,  0.25, 3.5);
 
-DeclareFloatParam (XcropTL, "Upper crop", "Cropping", "SpecifiesPointX", 0.0, 0.0, 1.0);
-DeclareFloatParam (YcropTL, "Upper crop", "Cropping", "SpecifiesPointY", 1.0, 0.0, 1.0);
-DeclareFloatParam (XcropBR, "Lower crop", "Cropping", "SpecifiesPointX", 1.0, 0.0, 1.0);
-DeclareFloatParam (YcropBR, "Lower crop", "Cropping", "SpecifiesPointY", 0.0, 0.0, 1.0);
+DeclareFloatParam (XcropTL, "Upper",       "Cropping", "SpecifiesPointX",     0.0, 0.0, 1.0);
+DeclareFloatParam (YcropTL, "Upper",       "Cropping", "SpecifiesPointY",     1.0, 0.0, 1.0);
+DeclareFloatParam (XcropBR, "Lower",       "Cropping", "SpecifiesPointX",     1.0, 0.0, 1.0);
+DeclareFloatParam (YcropBR, "Lower",       "Cropping", "SpecifiesPointY",     0.0, 0.0, 1.0);
 
-DeclareFloatParam (Master , "Master soften", "Softness", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (XsoftTL, "Upper left X",  "Softness", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (YsoftTL, "Upper left Y",  "Softness", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (XsoftBR, "Lower right X", "Softness", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (YsoftBR, "Lower right Y", "Softness", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Master , "Master",      "Softness", kNoFlags,              0.0, 0.0, 1.0);
+DeclareFloatParam (XsoftTL, "High left X", "Softness", kNoFlags,              0.0, 0.0, 1.0);
+DeclareFloatParam (YsoftTL, "High left Y", "Softness", kNoFlags,              0.0, 0.0, 1.0);
+DeclareFloatParam (XsoftBR, "Low right X", "Softness", kNoFlags,              0.0, 0.0, 1.0);
+DeclareFloatParam (YsoftBR, "Low right Y", "Softness", kNoFlags,              0.0, 0.0, 1.0);
 
-DeclareFloatParam (Tilt,    "Tilt",    kNoGroup, "SpecifiesAngle",  0.0, -10.0, 10.0);
-DeclareFloatParam (Opacity, "Opacity", kNoGroup, kNoFlags,          1.0,   0.0,  1.0);
+DeclareFloatParam (Tilt,    "Tilt",        kNoGroup,   "SpecifiesAngle",      0.0, -10.0, 10.0);
+DeclareFloatParam (Opacity, "Opacity",     kNoGroup,   kNoFlags,              1.0,   0.0,  1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -169,5 +175,5 @@ DeclareEntryPoint (FramedOverlay)
 
    float4 retval = lerp (Bgnd, Fgnd, Fgnd.a * Opacity);
 
-   return lerp (Bgnd, retval, tex2D (Msk, uv4).x);
+   return lerp (Bgnd, retval, tex2D (Msk, uv4));
 }
