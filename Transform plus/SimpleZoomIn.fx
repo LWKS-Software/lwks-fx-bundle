@@ -1,27 +1,33 @@
 // @Maintainer jwrl
-// @Released 2023-06-19
+// @Released 2026-06-30
 // @Author schrauber
 // @Created 2021-01-21
 
 /**
- Designed for simple zooming in.
- Not recommended for stronger negative scaling because the effect comes without minimizing
- scaling filter.
- No background input.
+ Designed for simple zooming in.  It's not recommended for stronger negative scaling
+ because the effect comes without a minimizing scaling filter.  There's also no
+ background input.
+
+   [*]Zoom:  Moves the frame in or out.
+   [*]Positioning
+      [*]Method:  Allows the positioning to have full control or be limited by
+         the zoom size.
+      [*]Position:  Self explanatory.
+   [*]Mode:  Sets the background to be either transparent or opaque black.
 
  Features:
  - Supports the resolution in the effect chain from LWKS version 2021.
 
  - Three scaling modes:
    - "Standard" (similar with the standard LWKS transform effects)
-   - Two "zoom center" modes, which also keep edge positions in focus during dynamic zooming.
-     In this mode, you should fine-tune the position with the maximum zoom used to ensure the
-     best centering when zooming in.
+   - Two "zoom center" modes, which also keep edge positions in focus during
+     dynamic zooming.  In this mode, you should fine-tune the position with the
+     maximum zoom used to ensure the best centering when zooming in.
 
  - Two backgrounds can be selected: opaque black and transparency.
-     In the transparent mode, the frame edge interpolation is only applied to the alpha value
-     in order to avoid double interpolation when other effects replace this transparency.
-     Therefore, this mode should only be used if you really need transparency.
+   - In the transparent mode, the frame edge interpolation is only applied to the
+     alpha channel in order to avoid double interpolation when other effects replace
+     this transparency.  This mode should only be used if you really need transparency.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -30,6 +36,10 @@
 // Lightworks user effect SimpleZoomIn.fx
 //
 // Version history:
+//
+// Updated 2026-06-30 jwrl.
+// Now uses Mask.rgba for masking rather than Mask.r.
+// Added settings description to header block.
 //
 // Updated 2023-06-19 jwrl.
 // Changed subcategory from "DVE Extras" to "Transform plus".
@@ -54,13 +64,13 @@ DeclareMask;
 // Parameters
 //--------------------------------------------------------------//
 
-DeclareFloatParam (ScaleExp2, "Zoom", kNoGroup, "DisplayAsPercentage", 0.0, -0.5, 2.0);
+DeclareFloatParam (ScaleExp2, "Zoom",     kNoGroup,      "DisplayAsPercentage", 0.0, -0.5, 2.0);
 
-DeclareIntParam (PosMethod, "Method", "Positioning", 0, "Standard|Zoom centre (inactive if original scaling)|Zoom centre;    Offset: +200% zoom");
-DeclareFloatParam (Point1x, "Position", "Positioning", "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (Point1y, "Position", "Positioning", "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareIntParam (PosMethod,   "Method",   "Positioning", 0, "Standard|Zoom centre (inactive if original scaling)|Zoom centre;    Offset: +200% zoom");
+DeclareFloatParam (Point1x,   "Position", "Positioning", "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (Point1y,   "Position", "Positioning", "SpecifiesPointY", 0.5, 0.0, 1.0);
 
-DeclareIntParam (modeAlpha, "Mode", kNoGroup, 1,  "Background: Transparent|Background: Opaque black");
+DeclareIntParam (modeAlpha,   "Mode",     kNoGroup, 1,   "Background: Transparent|Background: Opaque black");
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
@@ -143,60 +153,5 @@ DeclareEntryPoint (ZoomInSimple)
 
    // Aded LW mask at exit - jwrl.
 
-   return lerp (tex2D (FixInp, uv2), retval, tex2D (Mask, uv2).x);
+   return lerp (tex2D (FixInp, uv2), retval, tex2D (Mask, uv2));
 }
-
-// ******************************************************************
-
-// ****** END of the effect, following only descriptions ************
-
-// ******************************************************************
-
-//--------------------------------------------------------------
-// Code descriptions
-//--------------------------------------------------------------
-
-/* ---------------------------------------
-
-   This version has been restructured to support the new effects compiler library.  This
-   means that the code does not look the same as the original in every respect.  There is
-   now no shader header, nor are techniques defined.  There is new preamble code designed
-   to initialise the effect in a way that ensures that rotated images behave consistently.
-   This means that pixel coordinates used in the main body of the effect must reference
-   uv2 and not as would normally be expected, uv1 - jwrl.
-
-   `float zoom = (1.0 + (-1.0 / max (1.0e-9, scale )));` 
-     // Provides zoom control values whose intentional non-linearity compensates for the unintentional non-linearity in the later zoom code.
-
-     // Maximum output value range of "zoom":
-        // zoom -1e9 (nearly negative infinite) ; Designed to generate scaling 0%
-        // zoom  nearly 1 ; Designed to generate scaling nearly  infinite
-
-     // Characteristic of this formula:
-        // scale 0   rescaled to zoom -1e9 (nearly negative infinite) ; Designed to generate a 0% scaling
-        // scale 0.5 rescaled to zoom -1   ; Designed to generate a 50% scaling
-        // scale 1   rescaled to zoom  0   ; Designed to generate a 100% scaling
-        // scale 2   rescaled to zoom  0.5 ; Designed to generate a 200% scaling
-        // scale 10  rescaled to zoom  0.9 ; Designed to generate a 1000% scaling
-
-   `float2 zoomVector = zoom * (point1b - uv2);`                // Zoom direction vector. 
-      // Non-linear scaling, which can be linearized by the previously shown compensation code of the variable zoom. 
-      // The Code `(point1b - uv2)` is the direction vector between the corrected adjusted point1, and the respective calculated texel / pixel.
-
-
-*/
-
-/* -------------------------------------------------------------------
-
-   `exp2(ScaleExp)` 
-   Do the same as `pow (2.0, ScaleExp)`.
-   Causes an exponential slider characteristic 
-
-   // Setting characteristic of the exponential zoom slider
-   //         The dimensions will be doubled or halved in setting steps of 100%:
-   //           0% No change
-   //          100% Double dimensions
-   //          200% Dimensions * 4
-
-*/
-
