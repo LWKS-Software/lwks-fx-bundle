@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-07-01
 // @Author hugly
 // @Author flyingrub https://www.shadertoy.com/view/wsBXWW
 // @Created 2019-09-07
@@ -16,6 +16,9 @@
 // Lightworks user effect Screenshake.fx
 //
 // Version history:
+//
+// Updated 2026-07-01 jwrl.
+// Masking uses RGBA channels, not R.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with 0.0.xxxx for Linux fix.
@@ -107,5 +110,5 @@ DeclareEntryPoint (Screenshake)
    xy += float2 (simplex3d (p3), simplex3d (p3 + 10.0.xxx)) * strength / 30.0;
 
    return IsOutOfBounds (uv1) ? kTransparentBlack
-                              : lerp (0.0.xxxx, tex2D (Fg, xy), tex2D (Mask, uv1).x);
+                              : lerp (0.0.xxxx, tex2D (Fg, xy), tex2D (Mask, uv1));
 }
