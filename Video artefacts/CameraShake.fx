@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-06-24
+// @Released 2026-07-01
 // @Author Gary Hango (khaver)
 // @Created 2012-12-04
 
@@ -7,6 +7,23 @@
  Camera Shake uses luminance variations in a clip to add motion horizontally, vertically
  and/or rotationally.  That clip can be either the source track or another video layer,
  and that second video layer may contain motion content or be a still frame.
+
+   [*]Motion track:  Selects the source video or the background video to be used as
+      tracking data.
+   [*]Show motion track:  Displays the vertical, horizontal and rotation tracking lines.
+   [*]Master
+      [*]Zoom:  Used to make sure that the jitter doesn't reveal the edge of frame.
+      [*]Rotate:  See text below.
+      [*]Pan:  See text below.
+   [*]Horizontal
+      [*]Bias:  Provides an offset to the horizontal jitter.
+      [*]Strength:  Controls the amount of horizontal jitter to apply.
+      [*]Reverse:  Swaps the horizontal jitter direction.
+      [*]Smooth:  When switched on, smooths the horizontal jitter motion.
+      [*]H-Start:  Sets the start point of the horizontal jitter track.
+      [*]H-End:  Sets the end point of the horizontal jitter track.
+   [*]Vertical has the same settings as the horizontal group.
+   [*]Rotation has the same settings as the horizontal group.
 
  The motion source track is set up using the "Show motion track" box.  This will display
  the motion track source in the viewer overlaid with red, green and blue lines and three
@@ -33,6 +50,9 @@
 // Lightworks user effect CameraShake.fx
 //
 // Version history:
+//
+// Updated 2026-07-01 jwrl.
+// Added settings description to header block.
 //
 // Updated 2023-06-24 jwrl.
 // Corrected a grouping bug.
@@ -273,4 +293,3 @@ DeclareEntryPoint (CameraShake)
 
    return MoTrack ? tex2D (motrack, uv3) : ReadPixel (src, xy); //Add shake to input video
 }
-
