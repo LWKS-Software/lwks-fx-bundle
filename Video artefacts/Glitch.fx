@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-10-23
+// @Released 2026-07-01
 // @Author jwrl
 // @Created 2020-10-02
 
@@ -7,24 +7,24 @@
  To use this effect just apply it, select the colours to affect, then the spread and
  the amount of edge roughness that you need.  That really is all that there is to it.
 
-   [*] Opacity is self explanatory.
-   [*] Glitch mode switches the glitch to apply to either standard video or a blended
-       foreground.
-   [*] Glitch settings
-       [*] Glitch channels can be red/cyan, green/magenta, blue/yellow or the full
-           video colour.
-       [*] Glitch rate is self explanatory.
-       [*] Modulation sets the amount of glitched shading applied.
-       [*] Rotation is normally horizontal but can be rotated through 360 degrees.
-       [*] Spread sets the spacing between glitches.
-       [*] Edge roughen sets the amount of roughness applied to the edges.
-       [*] Edge jitter is self explanatory.
-   [*] Key settings
-       [*] Blend mode sets up a delta key, shows it, can instead use the alpha channel,
-           or operate with normal video as a luma key.
-       [*] Key clip adjusts the difference detection or functions as a luma key clip
-           or tolerance setting.
-       [*] Key gain fine tunes the key detection and cleanup.
+   [*]Opacity:  Self explanatory.
+   [*]Glitch mode:  Switches the glitch to apply to either standard video or a blended
+      foreground.
+   [*]Glitch settings
+       [*]Glitch channels:  Can be red/cyan, green/magenta, blue/yellow or the full
+          video colour.
+       [*]Rate:  Self explanatory.
+       [*]Modulation:  Sets the amount of glitched shading applied.
+       [*]Rotation:  Normally horizontal but can be rotated through 360 degrees.
+       [*]Spread:  Sets the spacing between glitches.
+       [*]Roughness:  Sets the amount of roughness applied to the edges.
+       [*]Edge jitter:  Self explanatory.
+   [*]Key settings
+       [*]Blend mode:  Sets up a delta key, shows it, can instead use the alpha
+          channel, or operate with normal video as a luma key.
+       [*]Key clip:  Adjusts the difference detection or functions as a luma key
+          clip or tolerance setting.
+       [*]Key gain:  Fine tunes the key detection and cleanup.
 
  You can also control the edge jitter, the glitch rate and angle and the amount of
  video modulation that is applied to the image.  If you are just glitching standard
@@ -46,6 +46,11 @@
 // Lightworks user effect Glitch.fx
 //
 // Version history:
+//
+// Updated 2026-07-01 jwrl.
+// Masking uses RGBA channels, not R.
+// Changed "Glitch rate" to "Rate".
+// Changed "Edge roughen" to "Roughness".
 //
 // Updated 2025-10-23 jwrl.
 // Changed the subcategory from "Special Effects" to "Video artefacts".
@@ -75,11 +80,11 @@ DeclareFloatParam (Opacity, "Opacity", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
 DeclareIntParam (SetTechnique, "Glitch mode", kNoFlags, 0, "Standard video|Blended image");
 DeclareIntParam (Mode, "Glitch channels", "Glitch settings", 3, "Red - cyan|Green - magenta|Blue - yellow|Full colour");
 
-DeclareFloatParam (GlitchRate, "Glitch rate", "Glitch settings", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (GlitchRate, "Rate", "Glitch settings", kNoFlags, 1.0, 0.0, 1.0);
 DeclareFloatParam (Modulation, "Modulation", "Glitch settings", kNoFlags, 0.5, 0.0, 1.0);
 DeclareFloatParam (Rotation, "Rotation", "Glitch settings", kNoFlags, 0.0, -180.0, 180.0);
 DeclareFloatParam (Spread, "Spread", "Glitch settings", kNoFlags, 0.5, -1.0, 1.0);
-DeclareFloatParam (EdgeRoughen, "Edge roughen", "Glitch settings", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (EdgeRoughen, "Roughness", "Glitch settings", kNoFlags, 0.5, 0.0, 1.0);
 DeclareFloatParam (EdgeJitter, "Edge jitter", "Glitch settings", kNoFlags, 0.0, 0.0, 1.0);
 
 DeclareIntParam (ShowKey, "Blend mode", "Key settings", 3, "Delta key|Show delta key|Use foreground alpha|Normal video");
@@ -174,7 +179,7 @@ DeclareEntryPoint (VideoGlitch)
 
    glitch = lerp (video, glitch, video.a * Opacity);
 
-   return lerp (fill, glitch, tex2D (Mask, uv3).x);
+   return lerp (fill, glitch, tex2D (Mask, uv3));
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -243,7 +248,5 @@ DeclareEntryPoint (BlendedGlitch)
 
    glitch = lerp (video, glitch, Opacity);
 
-   return lerp (video, glitch, tex2D (Mask, uv3).x);
+   return lerp (video, glitch, tex2D (Mask, uv3));
 }
-
-
