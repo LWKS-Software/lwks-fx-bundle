@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-09-05
+// @Released 2026-07-01
 // @Author jwrl
 // @Created 2016-03-12
 
@@ -8,6 +8,21 @@
  anamorphic adjustment to an image.  The centre of action of the effect can also be
  adjusted.  It can be used to simulate camera distortion or possibly even correct it,
  and can also be used as an effect in its own right.
+
+   [*]Distortion
+      [*]Enable basic distortion autoscaling:  Self explanatory.
+      [*]Basic:  The amount of basic (linear) distortion to apply.
+      [*]Cubic:  The amount of cubic distortion to apply.
+      [*]Scale:  Adjusts the overall image size to correct for size variation
+         caused by the distortion.
+      [*]Anamorphic:  Emulates anamorphic distortion.
+   [*]Chromatic aberration
+      [*]Camera type:  Selects the camera from three chip or single chip,
+         landscape or portrait.
+      [*]Optical errors:  Adjusts lens errors.
+      [*]Chip errors:  Adjusts registration errors.
+   [*]Effect position
+      [*]Centre:  Positions the effect centring.
 
  NOTE:  This effect breaks resolution independence.  It is only suitable for use with
  Lightworks version 2023 and higher.
@@ -62,6 +77,10 @@
 //
 // Version history:
 //
+// Updated 2026-07-01 jwrl.
+// Added settings description to header block.
+// Changed "Electronic errors" to "Chip errors".
+//
 // Updated 2023-09-05 jwrl.
 // Optimised the code to resolve a Linux/Mac compatibility issue.
 //
@@ -94,7 +113,7 @@ DeclareFloatParam (AnamorphicDistortion, "Anamorphic", "Distortion", kNoFlags, 0
 
 DeclareIntParam (SetTechnique, "Camera type", "Chromatic aberration", 0, "Single chip|Single chip (portrait)|Three chip|Three chip (portrait)");
 DeclareFloatParam (OpticalErrors, "Optical errors", "Chromatic aberration", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (ElectronicErrors, "Electronic errors", "Chromatic aberration", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (ElectronicErrors, "Chip errors", "Chromatic aberration", kNoFlags, 0.0, -1.0, 1.0);
 
 DeclareFloatParam (Xcentre, "Centre", "Effect position", "SpecifiesPointX", 0.5, 0.0, 1.0);
 DeclareFloatParam (Ycentre, "Centre", "Effect position", "SpecifiesPointY", 0.5, 0.0, 1.0);
@@ -315,4 +334,3 @@ DeclareEntryPoint (CameraDistortion_Dichroic_V)
 
    return retval;
 }
-
