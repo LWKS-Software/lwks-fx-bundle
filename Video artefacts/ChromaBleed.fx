@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-07-01
 // @Author jwrl
 // @Created 2018-09-06
 
@@ -8,6 +8,10 @@
  It does this by blurring the image chroma and re-applying it to the luminance.  This
  effect is resolution locked to the sequence in which it is used.
 
+   [*]Amount:  Self explanatory.
+   [*]Smear:  Sets the amount of chroma displacement.
+   [*]Chroma boost:  Boosts just the chroma level - effectively a saturation adjustment.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -15,6 +19,12 @@
 // Lightworks user effect ChromaBleed.fx
 //
 // Version history:
+//
+// Updated 2026-07-01 jwrl.
+// Added settings description to header block.
+//
+// Updated 2026-07-01 jwrl.
+// Added settings description to header block.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -117,4 +127,3 @@ DeclareEntryPoint (ChromaBleed)
 
    return IsOutOfBounds (uv1) ? kTransparentBlack : retval;
 }
-
