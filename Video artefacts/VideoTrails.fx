@@ -18,38 +18,38 @@
  The combined output of the effect can be zoomed and / or positioned in a similar way
  to the Lightworks zoom effect.
 
-   [*] Foreground:  Adjusts the mix of the foreground over the transformed background.
-   [*] Key clip:  Self explanatory.  Only active in the key modes.
-   [*] Key softness:  Self explanatory.  Only active in the key modes.
-   [*] Key invert:  Self explanatory.  Only active in the key modes.
-   [*] Key colour:  Self explanatory.  Only active in chromakey mode.
-   [*] Fg blend mode:  Selects from Normal, Lumakey, Chromakey, Darken, Multiply,
-       Colour Burn, Linear burn, Darker colour, Lighten, Screen, Colour Dodge, Add,
-       Lighter Colour, Overlay, Soft Light, Hard Light, Linear Light, Pin Light or
-       Hard Mix blend modes.
-   [*] Backgrounds
-      [*] Bg blend mode:  Uses the foreground blend settings or else independently
-          selects from the same range of blends available to the foreground.
-      [*] Use bg tracks:  Allows enabling or disabling B2 and / or B3 layers.
-      [*] Bg levels:  Adjusts the background opacity.
-      [*] Softness:  Softens the background slightly or the softens the lumakey.  It's
-          not intended to produce really strong blurs because this would destroy multi
-          layer versions of the effect.
-      [*] Scale:  Scales the backgrounds.  This has the same reduction range of the
-          transform effect, but can only double enlargement size.
-      [*] Position X:  Adjusts the horizontal position of the background.
-      [*] Position Y:  Adjusts the vertical position of the background.
-      [*] Opaque output:  Disables or enables blend result transparency.  When enabled it
-          will make the lowest active background layer opaque, full size and uncropped.
-   [*] Crop
-      [*] Left:  Crops the left side of the background.
-      [*] Top:  Crops the top edge of the background.
-      [*] Right:  Crops the right side of the background.
-      [*] Bottom:  Crops the bottom edge of the background.
-   [*] Zoom
-      [*] Size:  Zooms in up to ten times on the master effect.
-      [*] Position X:  Adjusts the horizontal position of the master effect.
-      [*] Position Y:  Adjusts the vertical position of the master effect.
+   [*]Foreground:  Adjusts the mix of the foreground over the transformed background.
+   [*]Key clip:  Self explanatory.  Only active in the key modes.
+   [*]Key softness:  Self explanatory.  Only active in the key modes.
+   [*]Key invert:  Self explanatory.  Only active in the key modes.
+   [*]Key colour:  Self explanatory.  Only active in chromakey mode.
+   [*]Fg blend mode:  Selects from Normal, Lumakey, Chromakey, Darken, Multiply,
+      Colour Burn, Linear burn, Darker colour, Lighten, Screen, Colour Dodge, Add,
+      Lighter Colour, Overlay, Soft Light, Hard Light, Linear Light, Pin Light or
+      Hard Mix blend modes.
+   [*]Backgrounds
+      [*]Bg blend mode:  Uses the foreground blend settings or else independently
+         selects from the same range of blends available to the foreground.
+      [*]Use bg tracks:  Allows enabling or disabling B2 and / or B3 layers.
+      [*]Bg levels:  Adjusts the background opacity.
+      [*]Softness:  Softens the background slightly or the softens the lumakey.  It's
+         not intended to produce really strong blurs because this would destroy multi
+         layer versions of the effect.
+      [*]Scale:  Scales the backgrounds.  This has the same reduction range of the
+         transform effect, but can only double enlargement size.
+      [*]Position X:  Adjusts the horizontal position of the background.
+      [*]Position Y:  Adjusts the vertical position of the background.
+      [*]Opaque output:  Disables or enables blend result transparency.  When enabled it
+         will make the lowest active background layer opaque, full size and uncropped.
+   [*]Crop
+      [*]Left:  Crops the left side of the background.
+      [*]Top:  Crops the top edge of the background.
+      [*]Right:  Crops the right side of the background.
+      [*]Bottom:  Crops the bottom edge of the background.
+   [*]Zoom
+      [*]Size:  Zooms in up to ten times on the master effect.
+      [*]Position X:  Adjusts the horizontal position of the master effect.
+      [*]Position Y:  Adjusts the vertical position of the master effect.
 
  The luminance key is similar to, but not the same as the Lightworks luminance effect.
  Because it's accessed via the blend mode settings it can be applied to all four layers,
@@ -66,6 +66,11 @@
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect VideoTrails.fx
+//
+// Version history:
+//
+// Updated 2026-07-01 jwrl.
+// Masking uses RGBA channels, not R.
 //
 // Modified 2025-10-14 jwrl.
 // Removed SetTechnique, which in turn enabled the removal of a heap of functions.  The
@@ -597,7 +602,7 @@ DeclareEntryPoint (VideoTrails)
 
    float4 Bgnd   = tex2D (Bgd, xy);
    float4 Fgnd   = tex2D (Fgd, xy);
-   float4 retval = lerp (_TransparentBlack, Fgnd, tex2D (Mask, uv5).x);
+   float4 retval = lerp (_TransparentBlack, Fgnd, tex2D (Mask, uv5));
 
    retval = BlendMode (Bgnd, Fgnd, FgOpacity, FgTechnique);
 
