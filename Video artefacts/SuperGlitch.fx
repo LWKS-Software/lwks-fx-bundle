@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-10-24
+// @Released 2026-07-01
 // @Author jwrl
 // @Created 2025-10-24
 
@@ -10,22 +10,22 @@
  designed for use with image keys or titles.  That's not to say that you can't use it
  that way, but you will need to use an external blend effect with it if you do.
 
-   [*] Visibility:  Fades the glitched area in or out of the video.
-   [*] Masking:  Switches whether the masking boundaries are affected by the glitch
+   [*]Visibility:  Fades the glitched area in or out of the video.
+   [* Masking:  Switches whether the masking boundaries are affected by the glitch
        or not.
-   [*] Glitch settings
-       [*] Glitch channels:  Selects between red/cyan, green/magenta, blue/yellow
-           or the full video input.
-       [*] Glitch rate:  Sets the speed at which the glitch operates.
-       [*] Glitch spacing:  Sets the spacing between glitches.  Effectively it
-           changes the height of each glitch line.
-       [*] Glitch width:  Sets the amount of horizontal spread in the glitch.
-   [*] Video settings
-       [*] Rotation:  The video displacement in the glitch can be rotated through
-           360 degrees.
-       [*] Offset:  This offsets the video inside the glitch.
-       [*] Modulation:  Sets the amount of glitched shading applied.
-       [*] Mod centre:  Adjusts the modulation centring.
+   [*]Glitch settings
+       [*]Glitch channels:  Selects between red/cyan, green/magenta, blue/yellow
+          or the full video input.
+       [*]Rate:  Sets the speed at which the glitch operates.
+       [*]Spacing:  Sets the spacing between glitches.  Effectively it
+          changes the height of each glitch line.
+       [*]Width:  Sets the amount of horizontal spread in the glitch.
+   [*]Video settings
+       [*]Rotation:  The video displacement in the glitch can be rotated through
+          360 degrees.
+       [*]Offset:  This offsets the video inside the glitch.
+       [*]Modulation:  Sets the amount of glitched shading applied.
+       [*]Mod centre:  Adjusts the modulation centring.
 
  This effect is designed to be extreme.  If you need subtle glitching this is not going
  to be your best choice.  Use Glitch instead.  Also, when modulating mask boundaries it's
@@ -36,6 +36,12 @@
 // Lightworks user effect SuperGlitch.fx
 //
 // Version history:
+//
+// Updated 2026-07-01 jwrl.
+// Masking uses RGBA channels, not R.
+// Changed "Glitch rate" to "Rate".
+// Changed "Glitch spacing" to "Spacing".
+// Changed "Glitch width" to "Width".
 //
 // Created 2025-10-24 by jwrl.
 //-----------------------------------------------------------------------------------------//
@@ -54,14 +60,14 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Visibility,   "Visibility",      kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Visibility,   "Visibility",      kNoGroup,          kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareIntParam   (SetTechnique, "Masking",         kNoFlags, 1, "Static edges|Modulated edges");
+DeclareIntParam   (SetTechnique, "Masking",         kNoFlags, 1,       "Static edges|Modulated edges");
 
 DeclareIntParam   (Channels,     "Glitch channels", "Glitch settings", 0, "Red - cyan|Green - magenta|Blue - yellow|Full video");
-DeclareFloatParam (GlitchRate,   "Glitch rate",     "Glitch settings", kNoFlags, 1.0,  0.0, 1.0);
-DeclareFloatParam (GlitchSpace,  "Glitch spacing",  "Glitch settings", kNoFlags, 0.0,  0.0, 1.0);
-DeclareFloatParam (GlitchWidth,  "Glitch width",    "Glitch settings", kNoFlags, 0.1, -1.0, 1.0);
+DeclareFloatParam (GlitchRate,   "Rate",            "Glitch settings", kNoFlags, 1.0,  0.0, 1.0);
+DeclareFloatParam (GlitchSpace,  "Spacing",         "Glitch settings", kNoFlags, 0.0,  0.0, 1.0);
+DeclareFloatParam (GlitchWidth,  "Width",           "Glitch settings", kNoFlags, 0.1, -1.0, 1.0);
 
 DeclareFloatParam (Rotation,     "Rotation",        "Video settings",  kNoFlags, 0.0, -180, 180);
 DeclareFloatParam (VidOffset,    "Offset",          "Video settings",  kNoFlags, 0.5,  0.0, 1.0);
@@ -170,7 +176,7 @@ DeclareEntryPoint (SuperGlitch)
 
    glitch = lerp (video, glitch, video.a * Visibility);
 
-   return lerp (video, glitch, tex2D (Mask, uv1).x);
+   return lerp (video, glitch, tex2D (Mask, uv1));
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -179,7 +185,7 @@ DeclarePass (Fg)
 {
    float4 Fgd = ReadPixel (Inp, uv1);
 
-   return lerp (_TransparentBlack, Fgd, tex2D (Mask, uv1).x);
+   return lerp (_TransparentBlack, Fgd, tex2D (Mask, uv1));
 }
 
 DeclareEntryPoint (SuperGlitchMask)
@@ -200,6 +206,3 @@ DeclareEntryPoint (SuperGlitchMask)
 
    return lerp (video, glitch, glitch.a * Visibility);
 }
-
-
-
