@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-10-22
+// @Released 2026-07-01
 // @Author jwrl
 // @Created 2025-09-21
 
@@ -9,22 +9,22 @@
  can be blended with the processed background using normal blend mode or Lighten, Screen,
  Add, Lighter Colour, Overlay or Soft Light blends.  It can can be masked as well.
 
-   [*] Foreground:  Adjusts the mix of the foreground over the transformed background.
-   [*] Blend mode:  Selects from Normal, Lighten, Screen, Add, Lighter Colour, Overlay
-       or Soft Light blend modes.
-   [*] Background
-      [*] Opacity:  Adjusts the background opacity.
-      [*] Softness:  Softens the background slightly.  It's not intended to produce
-          really strong blurs because this would destroy multi layer versions of the effect.
-      [*] Scale:  Scales the background.  This has the same reduction range of the
-          background, but can only double enlargement size.
-      [*] Position X:  Adjusts the horizontal position of the background.
-      [*] Position Y:  Adjusts the vertical position of the background.
-   [*] Crop
-      [*] Left:  Crops the left side of the background.
-      [*] Top:  Crops the top edge of the background.
-      [*] Right:  Crops the right side of the background.
-      [*] Bottom:  Crops the bottom edge of the background.
+   [*]Foreground:  Adjusts the mix of the foreground over the transformed background.
+   [*]Blend mode:  Selects from Normal, Lighten, Screen, Add, Lighter Colour, Overlay
+      or Soft Light blend modes.
+   [*]Background
+      [*]Opacity:  Adjusts the background opacity.
+      [*]Softness:  Softens the background slightly.  It's not intended to produce
+         really strong blurs because this would destroy multi layer versions of the effect.
+      [*]Scale:  Scales the background.  This has the same reduction range of the
+         background, but can only double enlargement size.
+      [*]Position X:  Adjusts the horizontal position of the background.
+      [*]Position Y:  Adjusts the vertical position of the background.
+   [*]Crop
+      [*]Left:  Crops the left side of the background.
+      [*]Top:  Crops the top edge of the background.
+      [*]Right:  Crops the right side of the background.
+      [*]Bottom:  Crops the bottom edge of the background.
 
  The intention is to use multiple versions of this effect with a series of delayed
  video sources to create the classic video feedback effect.
@@ -32,6 +32,11 @@
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect VideoFeedback.fx
+//
+// Version history:
+//
+// Updated 2026-07-01 jwrl.
+// Masking uses RGBA channels, not R.
 //
 // Updated 2025-10-22 jwrl.
 // Changed the category from "DVE" to "Stylize".
@@ -52,19 +57,19 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Amount,     "Foreground", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
-DeclareIntParam (SetTechnique, "Blend mode", kNoGroup, 0, "Normal|Lighten|Screen|Add|Lighter Colour|Overlay|Soft Light");
+DeclareFloatParam (Amount,     "Foreground", kNoGroup,     kNoFlags, 1.0, 0.0, 1.0);
+DeclareIntParam (SetTechnique, "Blend mode", kNoGroup, 0,  "Normal|Lighten|Screen|Add|Lighter Colour|Overlay|Soft Light");
 
-DeclareFloatParam (Opacity,  "Opacity",  "Background", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Softness, "Softness", "Background", kNoFlags, 0.2, 0.0, 1.0);
-DeclareFloatParam (Scale,    "Scale",    "Background", "DisplayAsPercentage", 1.0, 0.5, 2.0);
-DeclareFloatParam (Pos_X,    "Position", "Background", "SpecifiesPointX|DisplayAsPercentage", 0.5, -1.0, 2.0);
-DeclareFloatParam (Pos_Y,    "Position", "Background", "SpecifiesPointY|DisplayAsPercentage", 0.5, -1.0, 2.0);
+DeclareFloatParam (Opacity,    "Opacity",    "Background", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Softness,   "Softness",   "Background", kNoFlags, 0.2, 0.0, 1.0);
+DeclareFloatParam (Scale,      "Scale",      "Background", "DisplayAsPercentage", 1.0, 0.5, 2.0);
+DeclareFloatParam (Pos_X,      "Position",   "Background", "SpecifiesPointX|DisplayAsPercentage", 0.5, -1.0, 2.0);
+DeclareFloatParam (Pos_Y,      "Position",   "Background", "SpecifiesPointY|DisplayAsPercentage", 0.5, -1.0, 2.0);
 
-DeclareFloatParam (CropLeft,   "Left",   "Crop", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (CropTop,    "Top",    "Crop", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (CropRight,  "Right",  "Crop", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (CropBottom, "Bottom", "Crop", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (CropLeft,   "Left",       "Crop",       kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (CropTop,    "Top",        "Crop",       kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (CropRight,  "Right",      "Crop",       kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (CropBottom, "Bottom",     "Crop",       kNoFlags, 0.0, 0.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -175,7 +180,7 @@ DeclareEntryPoint (Normal)
 
    float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1) * Amount);
 }
 
 //-----  Lighten  -------------------------------------------------------------------------//
@@ -191,7 +196,7 @@ DeclareEntryPoint (Lighten)
 
    float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1) * Amount);
 }
 
 //-----  Screen  --------------------------------------------------------------------------//
@@ -207,7 +212,7 @@ DeclareEntryPoint (Screen)
 
    float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1) * Amount);
 }
 
 //-----  Add  -----------------------------------------------------------------------------//
@@ -225,7 +230,7 @@ DeclareEntryPoint (Add)
 
    float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1) * Amount);
 }
 
 //-----  Lighter Colour  ------------------------------------------------------------------//
@@ -244,7 +249,7 @@ DeclareEntryPoint (LighterColour)
 
    float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1) * Amount);
 }
 
 //-----  Overlay  -------------------------------------------------------------------------//
@@ -262,7 +267,7 @@ DeclareEntryPoint (Overlay)
 
    float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1) * Amount);
 }
 
 //-----  Soft Light  ----------------------------------------------------------------------//
@@ -280,7 +285,5 @@ DeclareEntryPoint (SoftLight)
 
    float4 retval = float4 (lerp (Bgnd.rgb, Fgnd.rgb, Fgnd.a), max (Bgnd.a, Fgnd.a));
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv1).x * Amount);
+   return lerp (Bgnd, retval, tex2D (Mask, uv1) * Amount);
 }
-
-
