@@ -19,7 +19,7 @@
    [*]Chromatic aberration
       [*]Camera type:  Selects the camera from three chip or single chip,
          landscape or portrait.
-      [*]Optical errors:  Adjusts lens errors.
+      [*]Optic errors:  Adjusts lens errors.
       [*]Chip errors:  Adjusts registration errors.
    [*]Effect position
       [*]Centre:  Positions the effect centring.
@@ -79,6 +79,7 @@
 //
 // Updated 2026-07-01 jwrl.
 // Added settings description to header block.
+// Changed "Optical errors" to "Optic errors".
 // Changed "Electronic errors" to "Chip errors".
 //
 // Updated 2023-09-05 jwrl.
@@ -112,7 +113,7 @@ DeclareFloatParam (Scale, "Scale", "Distortion", kNoFlags, 0.0, -1.0, 1.0);
 DeclareFloatParam (AnamorphicDistortion, "Anamorphic", "Distortion", kNoFlags, 0.0, -1.0, 1.0);
 
 DeclareIntParam (SetTechnique, "Camera type", "Chromatic aberration", 0, "Single chip|Single chip (portrait)|Three chip|Three chip (portrait)");
-DeclareFloatParam (OpticalErrors, "Optical errors", "Chromatic aberration", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (OpticalErrors, "Optic errors", "Chromatic aberration", kNoFlags, 0.0, -1.0, 1.0);
 DeclareFloatParam (ElectronicErrors, "Chip errors", "Chromatic aberration", kNoFlags, 0.0, -1.0, 1.0);
 
 DeclareFloatParam (Xcentre, "Centre", "Effect position", "SpecifiesPointX", 0.5, 0.0, 1.0);
