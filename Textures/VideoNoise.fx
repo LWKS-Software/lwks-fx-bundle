@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-07-03
 // @Author windsturm
 // @Created 2012-08-02
 
@@ -10,6 +10,12 @@
  resolution independent.  What it does is lock the clip resolution to sequence
  resolution instead.
 
+   [*]Grain type:  Selects between black and white and coloured grain.
+   [*]Size:  Sets the grain size only, not the image size.
+   [*]Opacity:  Adjusts the visibility of the grain.
+   [*]Alpha:  Adjusts the transparency of the image plus grain if for some reason you need that ability.
+   [*]Random seed:  Varies the noise pattern.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -18,13 +24,15 @@
 //
 // Version history:
 //
+// Updated 2026-07-03 jwrl.
+// Changed "Color type" to "Grain type".
+// Added settings description to header text.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-02-17 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Video noise", "Stylize", "Textures", "Generates either monochrome or colour video noise", kNoFlags);
 
@@ -38,12 +46,11 @@ DeclareInput (Inp);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareIntParam (SetTechnique, "Color Type", kNoGroup, 0, "Monochrome|Color");
-
-DeclareFloatParam (Size, "Size", kNoGroup, kNoFlags, 0.05, 0.0, 1.0);
-DeclareFloatParam (Opacity, "Opacity", kNoGroup, kNoFlags, 0.25, 0.0, 1.0);
-DeclareFloatParam (Alpha, "Alpha", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Seed, "Random Seed", kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
+DeclareIntParam (SetTechnique, "Grain type",  kNoGroup, 0, "Monochrome|Color");
+DeclareFloatParam (Size,       "Size",        kNoGroup, kNoFlags, 0.05, 0.0, 1.0);
+DeclareFloatParam (Opacity,    "Opacity",     kNoGroup, kNoFlags, 0.25, 0.0, 1.0);
+DeclareFloatParam (Alpha,      "Alpha",       kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Seed,       "Random seed", kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
 
 DeclareFloatParam (_Progress);
 
@@ -107,4 +114,3 @@ DeclareEntryPoint (VideoNoiseColor)
 
    return float4 (ret.rgb, ret.a * Alpha);
 }
-
