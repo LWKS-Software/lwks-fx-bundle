@@ -1,10 +1,12 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-07-03
 // @Author jwrl
 // @Created 2016-05-14
 
 /**
- I was going to call this LSD, but this name will do.  Original effect.
+ Acidulate takes us back to the '60s.  Back then, to see something like this you'd have
+ to have been doing something illegal.  Simply apply the effect and adjust the amount
+ that you want.  I was going to call this LSD, but this name will do.  Original effect.
 
  NOTE:  This effect breaks resolution independence.  It is only suitable for use with
  Lightworks version 2023 and higher.
@@ -15,13 +17,14 @@
 //
 // Version history:
 //
+// Updated 2026-07-03 jwrl.
+// Masking now uses RGBA rather than just R.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-01-12 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Acidulate", "Stylize", "Textures", "I was going to call this LSD, but this name will do", kNoFlags);
 
@@ -40,7 +43,7 @@ DeclareMask;
 DeclareFloatParam (Amount, "Amount", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 DeclarePass (Inp)
@@ -67,6 +70,5 @@ DeclareEntryPoint (Acidulate)
 
    Img = tex2D (Image, frac (abs (uv2 + frac (xy * Amount))));
 
-   return lerp (tex2D (Inp, uv2), Img, tex2D (Mask, uv2).x);
+   return lerp (tex2D (Inp, uv2), Img, tex2D (Mask, uv2));
 }
-
