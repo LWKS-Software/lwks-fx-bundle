@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-07-03
 // @Author jwrl
 // @Created 2016-04-22
 
@@ -9,6 +9,30 @@
  this version is a means of adjusting the texture levels and inverting them, and a way
  to deal with the edges of frame of both video and texture has also been added.
 
+   [*]Overlay:  Adjusts the amount of texture pattern that will be mixed into the video.
+   [*]Size:  Scales the texture, not the video.
+   [*]Depth:  Controls the displacement caused by the texture, giving the illusion of
+      3D depth.
+   [*]Offset
+      [*]X:  Displaces the effect of the texture pattern's highlights horizontally to
+         enhance the 3D effect.
+      [*]Y:  Similar to the above, but displaces the texture vertically.
+   [*]Video mode:  Chooses what happens if the video size is less than the sequence
+      size.  The overflow can be blanked, or the video can be tiled or mirrored.
+   [*]Art setup
+      [*]Texture mode:  This is the same as video mode, but is applied to the texture.
+      [*]Invert texture:  The texture colours will be inverted, making them negative.
+      [*]Gamma:  The standard colourgrade function, applied to the texture pattern.
+      [*]Contrast:  The standard video function applied to the texture.
+      [*]Gain:  As above.
+      [*]Brightness:  As above.
+      [*]Show texture:  Allows the texture pattern to be shown to assist in setup.
+
+ It is advisable to initially enable Show texture, and using Lightwork's video tools,
+ adjust the texture levels for best dark - light separation.  Once you've done that,
+ turn show texture off.  Adjust the overlay until you're comfortable with it then the
+ depth and offsets.  If necessary set the video and texture modes and the texture size.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -16,6 +40,9 @@
 // Lightworks user effect Texturiser.fx
 //
 // Version history:
+//
+// Updated 2026-07-03 jwrl.
+// Restructured header text, includes settings.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -37,24 +64,22 @@ DeclareInputs (Art, Inp);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Amount, "Overlay", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Size, "Size", kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (Depth, "Depth", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Amount,       "Overlay",        kNoGroup,    kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Size,         "Size",           kNoGroup,    kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Depth,        "Depth",          kNoGroup,    kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareFloatParam (OffsetX, "X", "Offset", kNoFlags, 0.5, -1.0, 2.0);
-DeclareFloatParam (OffsetY, "Y", "Offset", kNoFlags, 0.5, -1.0, 2.0);
+DeclareFloatParam (OffsetX,      "X",              "Offset",    kNoFlags, 0.5, -1.0, 2.0);
+DeclareFloatParam (OffsetY,      "Y",              "Offset",    kNoFlags, 0.5, -1.0, 2.0);
 
-DeclareIntParam (VideoMode, "Video mode", kNoGroup, 0, "Single|Tiled|Mirrored");
-DeclareIntParam (TextureMode, "Texture mode", "Art setup", 1, "Single|Tiled|Mirrored");
+DeclareIntParam (VideoMode,      "Video mode",     kNoGroup,    0, "Single|Tiled|Mirrored");
 
+DeclareIntParam (TextureMode,    "Texture mode",   "Art setup", 1, "Single|Tiled|Mirrored");
 DeclareBoolParam (InvertTexture, "Invert texture", "Art setup", false);
-
-DeclareFloatParam (Gamma, "Gamma", "Art setup", kNoFlags, 1.0, 0.0, 2.0);
-DeclareFloatParam (Contrast, "Contrast", "Art setup", "DisplayAsPercentage", 1.0, 0.0, 2.0);
-DeclareFloatParam (Gain, "Gain", "Art setup", "DisplayAsPercentage", 1.0, 0.0, 2.0);
-DeclareFloatParam (Brightness, "Brightness", "Art setup", "DisplayAsPercentage", 0.0, -1.0, 1.0);
-
-DeclareBoolParam (ShowTexture, "Show texture", "Art setup", false);
+DeclareFloatParam (Gamma,        "Gamma",          "Art setup", kNoFlags, 1.0, 0.0, 2.0);
+DeclareFloatParam (Contrast,     "Contrast",       "Art setup", "DisplayAsPercentage", 1.0, 0.0, 2.0);
+DeclareFloatParam (Gain,         "Gain",           "Art setup", "DisplayAsPercentage", 1.0, 0.0, 2.0);
+DeclareFloatParam (Brightness,   "Brightness",     "Art setup", "DisplayAsPercentage", 0.0, -1.0, 1.0);
+DeclareBoolParam (ShowTexture,   "Show texture",   "Art setup", false);
 
 DeclareIntParam (_InpOrientation);
 
@@ -140,4 +165,3 @@ DeclareEntryPoint (Texturiser)
 
    return IsOutOfBounds (uv2) ? kTransparentBlack : float4 (Fgd.rgb, alpha);
 }
-
