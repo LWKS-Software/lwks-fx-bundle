@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-07-13
+// @Released 2026-07-03
 // @Author khaver
 // @Created 2011-05-05
 
@@ -8,6 +8,14 @@
  intensity adjustment it's also possible to adjust the size and softness of the grain.
  The grain can be applied to the alpha channel alone with variable transparency.  This
  is designed to help with grain blending when combined with other video sources.
+
+   [*]Strength:  Adjusts the visibility of the grain.
+   [*]Size:  Varies the size of the grain particles.
+   [*]Grain blur:  Softens the grain.
+   [*]Alpha
+      [*]Alpha grain only: Applies the grain to the alpha channel only, and not
+         to the video.
+      [*]Alpha trim: Varies the strength of the alpha grain modulation.
 
  NOTE:  This effect breaks resolution independence.  It is only suitable for use with
  Lightworks version 2023 and higher.
@@ -18,6 +26,10 @@
 //
 // Version history:
 //
+// Updated 2026-07-03 jwrl.
+// Renamed "Alpha adjustment" to "Alpha trim".
+// Added settings description to header text.
+//
 // Updated 2023-07-13 jwrl.
 // Corrected creation date.
 //
@@ -26,8 +38,6 @@
 //
 // Conversion 2023-01-12 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Grain (Variable)", "Stylize", "Textures", "A flexible means of adding grain to an image", kNoFlags);
 
@@ -41,13 +51,12 @@ DeclareInput (Input);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Strength, "Strength", kNoGroup, kNoFlags, 0.0, 0.0, 100.0);
-DeclareFloatParam (Size, "Size", kNoGroup, kNoFlags, 1.0, 1.0, 10.0);
-DeclareFloatParam (blur, "Grain Blur", kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Strength, "Strength",         kNoGroup, kNoFlags, 0.0, 0.0, 100.0);
+DeclareFloatParam (Size,     "Size",             kNoGroup, kNoFlags, 1.0, 1.0, 10.0);
+DeclareFloatParam (blur,     "Grain blur",       kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
 
-DeclareBoolParam (agrain, "Alpha grain only", "Alpha", false);
-
-DeclareFloatParam (aadjust, "Alpha adjustment", "Alpha", kNoFlags, 0.0, -1.0, 1.0);
+DeclareBoolParam (agrain,    "Alpha grain only", "Alpha",  false);
+DeclareFloatParam (aadjust,  "Alpha trim",       "Alpha",  kNoFlags, 0.0, -1.0, 1.0);
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputAspectRatio);
@@ -64,7 +73,7 @@ float _rand (float2 co, float seed)
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 DeclarePass (Samp1)
@@ -92,7 +101,7 @@ DeclarePass (Samp2)
    const float BlurWeights[13] = { 0.002216, 0.008764, 0.026995, 0.064759, 0.120985,
                                    0.176033, 0.199471, 0.176033, 0.120985, 0.064759,
                                    0.026995, 0.008764, 0.002216 };
-   float4 Color = kTransparentBlack;
+   float4 Color = 0.0.xxxx;
    float4 Orig = tex2D (Samp1, uv2);
 
    for (int i = 0; i < 13; i++) {
@@ -115,7 +124,7 @@ DeclarePass (Samp3)
    float BlurWeights[13] = { 0.002216, 0.008764, 0.026995, 0.064759, 0.120985, 0.176033, 0.199471,
                              0.176033, 0.120985, 0.064759, 0.026995, 0.008764, 0.002216 };
 
-   float4 Color = kTransparentBlack;
+   float4 Color = 0.0.xxxx;
    float4 Orig = tex2D (Samp2, uv2);
 
    for (int i = 0; i < 13; i++) {
@@ -129,7 +138,7 @@ DeclareEntryPoint (GrainVariable)
 {
    float4 source = tex2D (Input, uv1);
 
-   if (source.a == 0.0) return kTransparentBlack;
+   if (source.a == 0.0) return 0.0.xxxx;
 
    float4 grainblur = tex2D (Samp3, ((uv2 - 0.5.xx) / Size) + 0.5.xx);
    float4 grainorg = tex2D (Samp1, ((uv2 - 0.5.xx) / Size) + 0.5.xx);
@@ -137,4 +146,3 @@ DeclareEntryPoint (GrainVariable)
 
    return (!agrain) ? source + graintex - 0.5.xxxx : float4 (source.rgb, graintex.a + aadjust);
 }
-
