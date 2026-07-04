@@ -1,29 +1,30 @@
 // @Maintainer jwrl
-// @Released 2024-10-07
+// @Released 2026-07-04
 // @Author jwrl
 // @Author schrauber
 // @Created 2024-10-07
 
 /**
  This effect produces a satin sheen on text by blurring the edges and using that blur as
- an alpha channel to key the main and edge colours over the original text colour.  The
+ an alpha channel to key the fill and edge colours over the original text colour.  The
  text can either be extreacted from the background using a difference key, or can be
  used directly and blended over the background before the sheen effect is applied.  The
  settings are:
 
-   * Opacity : Fades Fg along with the sheen effect in or out.
-   * Key clip : When zero treats Fg as unblended otherwise produces a difference key.
-   * Show key : Displays Fg over a transparent checkerboard background.
-   * Show blend : Displays the composite effect over black without Opacity or masking.
-   * Satin
-      * Width : Adjusts the width of the edge colour.
-      * Edge opacity : Mixes in the amount of edge colour used.
-      * Edge colour : Self explanatory.
-      * Main opacity : Mixes in the amount of main colour used.
-      * Main colour : Self explanatory
+   [*]Opacity:  Fades Fg along with the sheen effect in or out.
+   [*]Key clip:  When zero treats Fg as unblended otherwise produces a difference key.
+   [*]Show key:  Displays Fg over a transparent checkerboard background.
+   [*]Show blend:  Displays the composite effect over black without opacity or masking.
+   [*]Satin edges
+      [*]Width:  Adjusts the width of the edge colour.
+      [*]Opacity:  Mixes in the amount of edge colour used.
+      [*]Colour:  Self explanatory.
+   [*]Satin fill
+      [*]Opacity:  Mixes in the amount of fill colour used.
+      [*]Colour:  Self explanatory
 
  The default colours have been chosen for best impact over white text.  If the text has
- shading already it would be advisable to reduce the main opacity.
+ shading already it may be advisable to reduce the satin fill opacity.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -36,6 +37,13 @@
 // have decided not to credit khaver because sadly there is none of his code used here.
 //
 // Version history:
+//
+// Updated 2026-07-04 jwrl.
+// Masking now uses RGBA instead of A.
+// Renamed the group "Satin", "Satin edges".
+// Renamed "Edge opacity" and "Edge colour" respectively "Opacity" and "Colour".
+// Created a new group "Satin fill", moved "Main opacity" and "Main colour" there.
+// Renamed "Main opacity" and "Main colour" respectively "Opacity" and "Colour".
 //
 // Built 2024-10-07 jwrl.
 //-----------------------------------------------------------------------------------------//
@@ -55,19 +63,17 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Opacity, "Opacity",  kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (KeyClip, "Key clip", kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam  (Opacity,     "Opacity",    kNoGroup,      kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam  (KeyClip,     "Key clip",   kNoGroup,      kNoFlags, 0.0, 0.0, 1.0);
+DeclareBoolParam   (ShowKey,     "Show key",   kNoGroup,      false);
+DeclareBoolParam   (ShowBlend,   "Show blend", kNoGroup,      false);
 
-DeclareBoolParam (ShowKey,   "Show key",   kNoGroup, false);
-DeclareBoolParam (ShowBlend, "Show blend", kNoGroup, false);
+DeclareFloatParam  (Width,       "Width",      "Satin edges", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam  (EdgeOpacity, "Opacity",    "Satin edges", kNoFlags, 1.0, 0.0, 1.0);
+DeclareColourParam (EdgeColour,  "Colour",     "Satin edges", kNoFlags, 0.26, 0.45, 0.84, 1.0);
 
-DeclareFloatParam (Width, "Width", "Satin", kNoFlags, 0.5, 0.0, 1.0);
-
-DeclareFloatParam (EdgeOpacity, "Edge opacity", "Satin", kNoFlags, 1.0, 0.0, 1.0);
-DeclareColourParam (EdgeColour, "Edge colour",  "Satin", kNoFlags, 0.26, 0.45, 0.84, 1.0);
-
-DeclareFloatParam (MainOpacity, "Main opacity", "Satin", kNoFlags, 1.0, 0.0, 1.0);
-DeclareColourParam (MainColour, "Main colour",  "Satin", kNoFlags, 0.67, 0.78, 0.99, 1.0);
+DeclareFloatParam  (MainOpacity, "Opacity",    "Satin fill",  kNoFlags, 1.0, 0.0, 1.0);
+DeclareColourParam (MainColour,  "Colour",     "Satin fill",  kNoFlags, 0.67, 0.78, 0.99, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -211,10 +217,9 @@ DeclareEntryPoint (SatinSheen)
       else {
          float4 Fgnd = lerp (tex2D (Bgd,  uv3), Edge, Edge.a);
 
-         retval = lerp (ReadPixel (Bg, uv2), Fgnd, tex2D (Mask, uv3).x * Opacity);
+         retval = lerp (ReadPixel (Bg, uv2), Fgnd, tex2D (Mask, uv3) * Opacity);
       }
    }
 
    return retval;
 }
-
