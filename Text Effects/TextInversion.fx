@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-03-03
+// @Released 2026-07-04
 // @Author jwrl
 // @Created 2026-02-23
 
@@ -17,23 +17,23 @@
  should be connected to the Bg input.
 
  The settings are shown below.
-   [*] Opacity:  Allows fading in or out of the foreground image.
-   [*] Inversion:  Allows fading out of the inverted background as fill to the
+   [*]Opacity:  Allows fading in or out of the foreground image.
+   [*]Inversion:  Allows fading out of the inverted background as fill to the
        foreground image (0%) then to the background as fill (-100%).
-   [*] Tint level:  Adjusts the amount of the tint to be mixed with the foreground.
-   [*] Tint colour:  Self explanatory.
-   [*] If not extracting foreground cut input to title/image key.
-     [*] Source mode: Selects between video/image key/title or an extracted foreground.
-   [*] Border
-     [*] Opacity:  Self explanatory.
-     [*] Thickness:  Self explanatory.
-     [*] Colour:  Self explanatory.
-   [*] Drop shadow
-     [*] Opacity:  Self explanatory.
-     [*] Feather:  Feathers the drop shadow.
-     [*] Offset X:  Sets the horizontal displacement for the shadow.
-     [*] Offset Y:  Sets the vertical displacement for the shadow.
-     [*] Tint colour:  Sets the tint colour of the shadow.
+   [*]Tint level:  Adjusts the amount of the tint to be mixed with the foreground.
+   [*]Tint colour:  Self explanatory.
+   [*]If not extracting foreground cut input to title/image key.
+     [*]Source mode: Selects between video/image key/title or an extracted foreground.
+   [*]Border
+     [*]Opacity:  Self explanatory.
+     [*]Thickness:  Self explanatory.
+     [*]Colour:  Self explanatory.
+   [*]Drop shadow
+     [*]Opacity:  Self explanatory.
+     [*]Feather:  Feathers the drop shadow.
+     [*]Offset X:  Sets the horizontal displacement for the shadow.
+     [*]Offset Y:  Sets the vertical displacement for the shadow.
+     [*]Tint colour:  Sets the tint colour of the shadow.
 
  The default values of the effect are set to show the inverted background with a
  black border and a faint drop shadow.  The best results are usually obtained if
@@ -45,6 +45,9 @@
 // Lightworks user effect TextInversion.fx 
 //
 // Version history:
+//
+// Updated 2026-07-04 jwrl.
+// Masking now uses RGBA instead of A.
 //
 // Modified 2026-03-03 by jwrl.
 // Increased the range of the inversion setting to run from -200% to 200%.
@@ -68,22 +71,22 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Opacity,    "Opacity",     kNoGroup, kNoFlags, 1.0,  0.0, 1.0);
-DeclareFloatParam (Inversion,  "Inversion",   kNoGroup, "DisplayAsPercentage", 1.0, -2.0, 2.0);
-DeclareFloatParam (TintLevel,  "Tint level",  kNoGroup, kNoFlags, 0.25, 0.0, 1.0);
-DeclareColourParam (FgdTint,   "Tint colour", kNoGroup, kNoFlags, 0.2,  0.8, 1.0, 1.0);
+DeclareFloatParam  (Opacity,    "Opacity",     kNoGroup,      kNoFlags, 1.0,  0.0, 1.0);
+DeclareFloatParam  (Inversion,  "Inversion",   kNoGroup,      "DisplayAsPercentage", 1.0, -2.0, 2.0);
+DeclareFloatParam  (TintLevel,  "Tint level",  kNoGroup,      kNoFlags, 0.25, 0.0, 1.0);
+DeclareColourParam (FgdTint,    "Tint colour", kNoGroup,      kNoFlags, 0.2,  0.8, 1.0, 1.0);
 
-DeclareIntParam   (Source,     "Source mode", "If not extracting foreground cut input to title/image key", 0, "Video, image key or title|Extracted foreground");
+DeclareIntParam    (Source,     "Source mode", "If not extracting foreground cut input to title/image key", 0, "Video, image key or title|Extracted foreground");
 
-DeclareFloatParam (BdrOpacity, "Opacity",     "Border", kNoFlags, 1.00, 0.0, 1.0);
-DeclareFloatParam (Thickness,  "Thickness",   "Border", kNoFlags, 0.25, 0.0, 1.0);
-DeclareColourParam (Colour,    "Colour",      "Border", kNoFlags, 0.0, 0.0, 0.0, 1.0);
+DeclareFloatParam  (BdrOpacity, "Opacity",     "Border",      kNoFlags, 1.00, 0.0, 1.0);
+DeclareFloatParam  (Thickness,  "Thickness",   "Border",      kNoFlags, 0.25, 0.0, 1.0);
+DeclareColourParam (Colour,     "Colour",      "Border",      kNoFlags, 0.0, 0.0, 0.0, 1.0);
 
-DeclareFloatParam (ShdOpacity, "Opacity",     "Drop shadow", kNoFlags,           0.50,   0.0, 1.0));
-DeclareFloatParam (ShdFeather, "Feather",     "Drop shadow", kNoFlags,           0.3333, 0.0, 1.0);
-DeclareFloatParam (OffsetX,    "Offset",      "Drop shadow", "SpecifiesPointX",  0.20,  -1.0, 1.0);
-DeclareFloatParam (OffsetY,    "Offset",      "Drop shadow", "SpecifiesPointY", -0.20,  -1.0, 1.0);
-DeclareColourParam (ShdTint,   "Tint colour", "Drop shadow", kNoFlags, 0.0, 0.0, 0.0, 1.0);
+DeclareFloatParam  (ShdOpacity, "Opacity",     "Drop shadow", kNoFlags,           0.50,   0.0, 1.0));
+DeclareFloatParam  (ShdFeather, "Feather",     "Drop shadow", kNoFlags,           0.3333, 0.0, 1.0);
+DeclareFloatParam  (OffsetX,    "Offset",      "Drop shadow", "SpecifiesPointX",  0.20,  -1.0, 1.0);
+DeclareFloatParam  (OffsetY,    "Offset",      "Drop shadow", "SpecifiesPointY", -0.20,  -1.0, 1.0);
+DeclareColourParam (ShdTint,    "Tint colour", "Drop shadow", kNoFlags, 0.0, 0.0, 0.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -371,5 +374,5 @@ DeclareEntryPoint (TextInversion)
 
    float4 comp = float4 (lerp (Bgnd, retval, retval.a).rgb, max (Bgnd.a, retval.a));
 
-   return lerp (Bgnd, comp, tex2D (Mask, uv3).x);
+   return lerp (Bgnd, comp, tex2D (Mask, uv3));
 }
