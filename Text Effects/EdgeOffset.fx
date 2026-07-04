@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-05-19
+// @Released 2026-07-04
 // @Author jwrl
 // @Created 2025-05-10
 
@@ -16,23 +16,23 @@
  will take care of the routing for you.
 
  The settings are shown below.
-   [*] Opacity:  Allows fading in or out of the title effect.
-   [*] Size:  Allows the size of the title to be adjusted.
-   [*] Position X:  Sets the horizontal position of the title.
-   [*] Position Y:  Sets the vertical position of the title.
-   [*] Border
-     [*] Thickness:  Self explanatory.
-     [*] Colour:  Self explanatory.
-   [*] Offsets
-     [*] Quantity:  Sets the number of offsets generated from none to five.
-     [*] Displacement X:  Sets the additive horizontal displacement for each offset.
-     [*] Displacement Y:  Sets the additive vertical displacement for each offset.
-     [*] Offset 1 colour:  Sets the text colour of the first offset.
-     [*] Offset 2 colour:  Self explanatory.  As above but for offset 2.
-     [*] Offset 3 colour:  Self explanatory.
-     [*] Offset 4 colour:  Self explanatory.
-     [*] Offset 5 colour:  Self explanatory.
-     [*] Borders:  Chooses offsets bordered or unbordered.
+   [*]Opacity:  Allows fading in or out of the title effect.
+   [*]Size:  Allows the size of the title to be adjusted.
+   [*]Position X:  Sets the horizontal position of the title.
+   [*]Position Y:  Sets the vertical position of the title.
+   [*]Border
+     [*]Thickness:  Self explanatory.
+     [*]Colour:  Self explanatory.
+   [*]Offsets
+     [*]Quantity:  Sets the number of offsets generated from none to five.
+     [*]Displace X:  Sets the additive horizontal displacement for each offset.
+     [*]Displace Y:  Sets the additive vertical displacement for each offset.
+     [*]Offset 1:  Sets the text colour of the first offset.
+     [*]Offset 2:  Self explanatory.  As above but for offset 2.
+     [*]Offset 3:  Self explanatory.
+     [*]Offset 4:  Self explanatory.
+     [*]Offset 5:  Self explanatory.
+     [*]Borders:  Chooses offsets bordered or unbordered.
 
  If borders are disabled the offsets can include or exclude the area that would be
  otherwise occupied by the border.  In this mode and with the number of offsets set
@@ -46,6 +46,11 @@
 // Lightworks user effect EdgeOffset.fx
 //
 // Version history:
+//
+// Updated 2026-07-04 jwrl.
+// Masking now uses RGBA instead of A.
+// Changed "Displacement" to "Displace".
+// Changed "Offset n colour" to "Offset n".
 //
 // Modified 2025-05-19 by jwrl.
 // Added border mode switching.
@@ -66,27 +71,23 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Opacity,   "Opacity",  kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Scale,     "Size",     kNoGroup, "DisplayAsPercentage", 1.0, 0.2, 5.0);
-DeclareFloatParam (PositionX, "Position", kNoGroup, "SpecifiesPointX", 0.0, -1.0, 1.0);
-DeclareFloatParam (PositionY, "Position", kNoGroup, "SpecifiesPointY", 0.0, -1.0, 1.0);
+DeclareFloatParam  (Opacity,   "Opacity",   kNoGroup,  kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam  (Scale,     "Size",      kNoGroup,  "DisplayAsPercentage", 1.0, 0.2, 5.0);
+DeclareFloatParam  (PositionX, "Position",  kNoGroup,  "SpecifiesPointX", 0.0, -1.0, 1.0);
+DeclareFloatParam  (PositionY, "Position",  kNoGroup,  "SpecifiesPointY", 0.0, -1.0, 1.0);
 
-DeclareFloatParam (Thickness, "Thickness", "Border", kNoFlags, 0.333333, 0.0, 1.0);
+DeclareFloatParam  (Thickness, "Thickness", "Border",  kNoFlags, 0.333333, 0.0, 1.0);
+DeclareColourParam (Colour,    "Colour",    "Border",  kNoFlags, 0.05, 0.05, 0.05, 1.0));
 
-DeclareColourParam (Colour, "Colour", "Border", kNoFlags, 0.05, 0.05, 0.05, 1.0));
-
-DeclareIntParam (Quantity, "Quantity", "Offsets", 3, "None|One|Two|Three|Four|Five");
-
-DeclareFloatParam (OffsetX, "Displacement", "Offsets", "SpecifiesPointX",  0.32, -1.0, 1.0);
-DeclareFloatParam (OffsetY, "Displacement", "Offsets", "SpecifiesPointY", -0.32, -1.0, 1.0);
-
-DeclareColourParam (Colour_1, "Offset 1 colour", "Offsets", kNoFlags, 0.85, 0.25, 0.10, 1.0));
-DeclareColourParam (Colour_2, "Offset 2 colour", "Offsets", kNoFlags, 0.85, 0.85, 0.01, 1.0));
-DeclareColourParam (Colour_3, "Offset 3 colour", "Offsets", kNoFlags, 0.25, 0.85, 0.10, 1.0));
-DeclareColourParam (Colour_4, "Offset 4 colour", "Offsets", kNoFlags, 0.01, 0.85, 0.85, 1.0));
-DeclareColourParam (Colour_5, "Offset 5 colour", "Offsets", kNoFlags, 0.10, 0.25, 0.85, 1.0));
-
-DeclareIntParam (Borders, "Borders", "Offsets", 0, "Same as foreground|Unbordered, includes border area|Unbordered");
+DeclareIntParam    (Quantity,  "Quantity",  "Offsets", 3, "None|One|Two|Three|Four|Five");
+DeclareFloatParam  (OffsetX,   "Displace",  "Offsets", "SpecifiesPointX",  0.32, -1.0, 1.0);
+DeclareFloatParam  (OffsetY,   "Displace",  "Offsets", "SpecifiesPointY", -0.32, -1.0, 1.0);
+DeclareColourParam (Colour_1,  "Offset 1",  "Offsets", kNoFlags, 0.85, 0.25, 0.10, 1.0));
+DeclareColourParam (Colour_2,  "Offset 2",  "Offsets", kNoFlags, 0.85, 0.85, 0.01, 1.0));
+DeclareColourParam (Colour_3,  "Offset 3",  "Offsets", kNoFlags, 0.25, 0.85, 0.10, 1.0));
+DeclareColourParam (Colour_4,  "Offset 4",  "Offsets", kNoFlags, 0.01, 0.85, 0.85, 1.0));
+DeclareColourParam (Colour_5,  "Offset 5",  "Offsets", kNoFlags, 0.10, 0.25, 0.85, 1.0));
+DeclareIntParam    (Borders,   "Borders",   "Offsets", 0, "Same as foreground|Unbordered, includes border area|Unbordered");
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -219,5 +220,5 @@ DeclareEntryPoint (EdgeOffset)
 
    retval = lerp (lerp (retval, Colour, tex2D (Border, uv3).a), Fgnd, Fgnd.a);
 
-   return lerp (Bgnd, retval, ReadPixel (Mask, uv1).x * Opacity);
+   return lerp (Bgnd, retval, ReadPixel (Mask, uv1) * Opacity);
 }
