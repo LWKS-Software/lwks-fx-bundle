@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-10-07
+// @Released 2026-07-04
 // @Author schrauber
 // @Author jwrl
 // @Created 2024-07-05
@@ -12,28 +12,30 @@
  and add internal glow effects.  To get the most out of it you'll need to experiment,
  but it will definitely repay the effort.
 
-   * Opacity:  Self explanatory.  Fades the text in and out.
-   * Mix:  Mixes the modified image with the unmodified.
-   * Text source
-      * Display:  Selects between "Passthrough / blend" the effect input, "Extracted
-        text" the unmodified keyed foreground, "Processed text" which shows the
-        modified keyed image and "Composite output" which shows the final result.
-      * Key mode:  Selects between "Internal blend" with the title input disconnected,
-        or "Auto extract", which automatically separates the blended foreground from
-        the background.
-      * Extraction:  Fine tunes the foreground extraction.  This only functions in
-        "Auto extract" mode.
-   * Text processing
-      * Text spread:  Adjusts the amount of the spread and blur of the processed text.
-      * Text gamma:  Self explanatory.
-      * Edge harden:  Alters the hardness and width of the text edges.
-      * Edge erode:  This not only erodes the text edges, it also has a slight
-        feathering effect.
-   * Text sharpness
-      * Sharpen:  Adjusts the internal sharpness of the text.
-      * Sample offset:  Adjusts the range which will be used to sample the sharpness.
-      * Edge clamp:  Adjusting this will create a boundary line inside the text.
-
+   [*]Opacity:  Self explanatory.  Fades the text in and out.
+   [*]Mix:  Mixes the modified image with the unmodified.
+   [*]Text source
+      [*]Display:  Selects between "Passthrough / blend" the effect input,
+         "Extracted text" the unmodified keyed foreground, "Processed text"
+         which shows the modified keyed image and "Composite output" which
+         shows the final result.
+      [*]Key mode:  Selects between "Internal blend" with the title input
+         disconnected, or "Auto extract", which automatically separates the
+         blended foreground from the background.
+      [*]Extraction:  Fine tunes the foreground extraction.  This only
+         functions in "Auto extract" mode.
+   [*]Text processing
+      [*]Text spread:  Adjusts the amount of the spread and blur of the
+         processed text.
+      [*]Text gamma:  Self explanatory.
+      [*]Edge harden:  Alters the hardness and width of the text edges.
+      [*]Edge erode:  This not only erodes the text edges, it also has a
+         slight feathering effect.
+   [*]Text sharpness
+      [*]Sharpen:  Adjusts the internal sharpness of the text.
+      [*]Fine tune:  Adjusts the range which will be used to sample the
+         sharpness.
+      [*]Edge clamp:  Adjusting this will create a boundary line inside the text.
 
  It will work with both title and image key effects.  When key mode is set to normal
  blend the text or image key must not have it's input connected.  If it does the Bg
@@ -58,6 +60,10 @@
 // I found that too much blur destroyed the readability of the text.
 //
 // Version history:
+//
+// Updated 2026-07-04 jwrl.
+// Masking now uses RGBA instead of A.
+// Changed "Sample offset" to "Fine tune".
 //
 // Modified 2024-10-07 jwrl.
 // Moved this effect from "Stylize > Blend Effects" to "Text > Text Effects"
@@ -86,21 +92,21 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Opacity, "Opacity", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Mixture, "Mix",     kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Opacity,      "Opacity",     kNoGroup,          kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Mixture,      "Mix",         kNoGroup,          kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareIntParam   (Display, "Display",    "Text source", 3, "Passthrough / blend|Extracted text|Processed text|Composite output");
-DeclareIntParam   (KeyMode, "Key mode",   "Text source", 1, "Internal blend|Auto extract");
-DeclareFloatParam (Extract, "Extraction", "Text source", kNoFlags, 0.25, 0.0, 1.0);
+DeclareIntParam   (Display,      "Display",     "Text source",     3, "Passthrough / blend|Extracted text|Processed text|Composite output");
+DeclareIntParam   (KeyMode,      "Key mode",    "Text source",     1, "Internal blend|Auto extract");
+DeclareFloatParam (Extract,      "Extraction",  "Text source",     kNoFlags, 0.25, 0.0, 1.0);
 
-DeclareFloatParam (TextSpread, "Text spread", "Text processing", kNoFlags, 0.1,  0.0, 1.0);
-DeclareFloatParam (TextGamma,  "Text gamma",  "Text processing", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (EdgeHarden, "Edge harden", "Text processing", kNoFlags, 0.5,  0.0, 1.0);
-DeclareFloatParam (EdgeErode,  "Edge erode",  "Text processing", kNoFlags, 0.0,  0.0, 1.0);
+DeclareFloatParam (TextSpread,   "Text spread", "Text processing", kNoFlags, 0.1,  0.0, 1.0);
+DeclareFloatParam (TextGamma,    "Text gamma",  "Text processing", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (EdgeHarden,   "Edge harden", "Text processing", kNoFlags, 0.5,  0.0, 1.0);
+DeclareFloatParam (EdgeErode,    "Edge erode",  "Text processing", kNoFlags, 0.0,  0.0, 1.0);
 
-DeclareFloatParam (Sharpen,      "Sharpen",       "Text sharpness", kNoFlags, 0.5,   0.0, 1.0);
-DeclareFloatParam (SampleOffset, "Sample offset", "Text sharpness", kNoFlags, 2.0,   0.0, 6.0);
-DeclareFloatParam (EdgeClamp,    "Edge clamp",    "Text sharpness", kNoFlags, 0.125, 0.0, 1.0);
+DeclareFloatParam (Sharpen,      "Sharpen",     "Text sharpness",  kNoFlags, 0.5,   0.0, 1.0);
+DeclareFloatParam (FineTune, "Fine tune",   "Text sharpness",  kNoFlags, 2.0,   0.0, 6.0);
+DeclareFloatParam (EdgeClamp,    "Edge clamp",  "Text sharpness",  kNoFlags, 0.125, 0.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -221,13 +227,11 @@ DeclareEntryPoint (TextPop)
    float4 Fgnd = tex2D (Blur, uv3);
    float4 Bgnd = (Display > 0) && (Display < 3) ? checkerboard (uv3) : tex2D (Bgd, uv3);
 
-   float mask = tex2D (Mask, uv3).x;
-
    if (Display > 1) {
       float clamp = max (1.0e-6, EdgeClamp);
 
-      float2 sampleX = float2 (SampleOffset / _OutputWidth, 0.0);
-      float2 sampleY = float2 (0.0, SampleOffset / _OutputHeight);
+      float2 sampleX = float2 (FineTune / _OutputWidth, 0.0);
+      float2 sampleY = float2 (0.0, FineTune / _OutputHeight);
 
       float4 luma_val = float4 (LUMA * Sharpen / clamp, 0.5);
       float4 edges = tex2D (Blur, uv3 + sampleY);
@@ -247,6 +251,7 @@ DeclareEntryPoint (TextPop)
       Fgnd   = lerp (tex2D (Fgd, uv3), Fgnd, Mixture);
    }
 
-   return lerp (Bgnd, Fgnd, Fgnd.a * mask * Opacity);
-}
+   float alpha = Fgnd.a * Opacity;
 
+   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3) * alpha);
+}
