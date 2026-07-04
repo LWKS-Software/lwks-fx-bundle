@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-10-07
+// @Released 2026-07-04
 // @Author jwrl
 // @Created 2024-10-07
 
@@ -11,18 +11,18 @@
  inverted if desired.
 
  The settings are shown below.
-   * Opacity:  Allows fading in or out of the foreground with the applied effect.
-   * Key clip:  Adjusts the difference key clip.  If set to zero, it blends the Fg instead.
-   * Show key:  Shows the unmodified foreground keyed over a checkerboard background.
-   * Show blend:  Shows the foreground with blended edges over black.
-   * Edge extrusion
-     * Edge type:  Selects between radial or linear and shaded or flat extrusion.
-     * Strength:  Fades the extruded edge in or out.
-     * Ray length:  Sets the length of the extrusion.
-     * Invert shade:  Switches shading between lightest nearest text to darkest.
-     * Effect centre X:  Adjusts rhe direction of the extrusion horizontally.
-     * Effect centre Y:  Adjusts rhe direction of the extrusion vertically.
-     * Edge colour:  Self explanatory.
+   [*]Opacity:  Allows fading in or out of the foreground with the applied effect.
+   [*]Key clip:  Adjusts the difference key clip.  If set to zero, it blends the Fg instead.
+   [*]Show key:  Shows the unmodified foreground keyed over a checkerboard background.
+   [*]Show blend:  Shows the foreground with blended edges over black.
+   [*]Edge extrusion
+     [*]Edge type:  Selects between radial or linear and shaded or flat extrusion.
+     [*]Strength:  Fades the extruded edge in or out.
+     [*]Ray length:  Sets the length of the extrusion.
+     [*]Invert shade:  Switches shading between lightest nearest text to darkest.
+     [*]Fx centre X:  Adjusts rhe direction of the extrusion horizontally.
+     [*]Fx centre Y:  Adjusts rhe direction of the extrusion vertically.
+     [*]Edge colour:  Self explanatory.
 
  In the linear modes the X and Y centering interact: they are really intended to give
  a simple on-screen method of adjusting the extrusion angle.  The length setting is
@@ -37,6 +37,10 @@
 // Lightworks user effect ExtrudedEdges.fx
 //
 // Version history:
+//
+// Updated 2026-07-04 jwrl.
+// Masking now uses RGBA instead of A.
+// Changed "Effect centre" to "Fx centre".
 //
 // Built 2024-10-07 by jwrl.
 //-----------------------------------------------------------------------------------------//
@@ -56,24 +60,18 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Opacity, "Opacity", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam  (Opacity,     "Opacity",      kNoGroup,         kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam  (KeyClip,     "Key clip",     kNoGroup,         kNoFlags, 0.0, 0.0, 1.0);
+DeclareBoolParam   (ShowKey,     "Show key",     kNoGroup,         false);
+DeclareBoolParam   (ShowBlend,   "Show blend",   kNoGroup,         false);
 
-DeclareFloatParam (KeyClip, "Key clip", kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
-
-DeclareBoolParam (ShowKey,   "Show key",   kNoGroup, false);
-DeclareBoolParam (ShowBlend, "Show blend", kNoGroup, false);
-
-DeclareIntParam (Mode, "Edge type", "Edge extrusion", 0, "Linear|Linear colour shaded|Linear coloured|Radial|Radial colour shaded|Radial coloured");
-
-DeclareFloatParam (Strength,  "Strength", "Edge extrusion", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (RayLength, "Ray length", "Edge extrusion", kNoFlags, 0.5, 0.0, 1.0);
-
-DeclareBoolParam (InvertShade, "Invert shade", "Edge extrusion", false);
-
-DeclareFloatParam (Xcentre, "Effect centre", "Edge extrusion", "SpecifiesPointX", 0.4, 0.0, 1.0);
-DeclareFloatParam (Ycentre, "Effect centre", "Edge extrusion", "SpecifiesPointY", 0.4, 0.0, 1.0);
-
-DeclareColourParam (Colour, "Edge colour", "Edge extrusion", kNoFlags, 0.38, 0.55, 1.0, 1.0));
+DeclareIntParam    (Mode,        "Edge type",    "Edge extrusion", 0, "Linear|Linear colour shaded|Linear coloured|Radial|Radial colour shaded|Radial coloured");
+DeclareFloatParam  (Strength,    "Strength",     "Edge extrusion", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam  (RayLength,   "Ray length",   "Edge extrusion", kNoFlags, 0.5, 0.0, 1.0);
+DeclareBoolParam   (InvertShade, "Invert shade", "Edge extrusion", false);
+DeclareFloatParam  (Xcentre,     "Fx centre",    "Edge extrusion", "SpecifiesPointX", 0.4, 0.0, 1.0);
+DeclareFloatParam  (Ycentre,     "Fx centre",    "Edge extrusion", "SpecifiesPointY", 0.4, 0.0, 1.0);
+DeclareColourParam (Colour,      "Edge colour",  "Edge extrusion", kNoFlags, 0.38, 0.55, 1.0, 1.0));
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -202,7 +200,7 @@ DeclarePass (Fgd)
          Fgnd.a = 0.0;
    }
 
-   if (!ShowKey && !ShowBlend) Fgnd.a *= ReadPixel (Mask, uv1).x;
+   if (!ShowKey && !ShowBlend) Fgnd *= ReadPixel (Mask, uv1);
 
    // If the alpha channel is zero we need to blank the Fg to get a clean extrusion.
 
@@ -270,4 +268,3 @@ DeclareEntryPoint (ExtrudedEdge)
 
    return retval;
 }
-
