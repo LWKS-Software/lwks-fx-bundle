@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-09-01
+// @Released 2026-07-04
 // @Author jwrl
 // @Created 2025-09-01
 
@@ -9,18 +9,18 @@
  fade out range can be adjusted and the softness progress during the fade out can
  be adjusted as needed.  The settings are:
 
-   [*] Opacity:  Fades the effect in and out.
-   [*] Motion
-      [*] Rotation:  The angle at which the text will move.
-      [*] End point:  Position at which the title ends.
-      [*] Fall off:  Position where the fade out starts.
-      [*] Softness:  The amount of softness applied during the fade out.
-      [*] Blur range:  The maximum softness that will applied during the fade.
-   [*] Geometry
-      [*] Scale:  Adjusts the scaling of the effect.
-      [*] Y size:  Adjusts the vertical size of the effect.
-      [*] Y offset:  Controls the vertical position the text.
-   [*] Progress:  Moves the text from the bottom of frame to the end point.
+   [*]Opacity:  Fades the effect in and out.
+   [*]Motion
+      [*]Rotation:  The angle at which the text will move.
+      [*]End point:  Position at which the title ends.
+      [*]Fall off:  Position where the fade out starts.
+      [*]Softness:  The amount of softness applied during the fade out.
+      [*]Blur range:  The maximum softness that will applied during the fade.
+   [*]Geometry
+      [*]Scale:  Adjusts the scaling of the effect.
+      [*]Y size:  Adjusts the vertical size of the effect.
+      [*]Y offset:  Controls the vertical position the text.
+   [*]Progress:  Moves the text from the bottom of frame to the end point.
 
  Although the effect has been designed with the ability to move the text by keyframing
  the progress, you can also use it with a credit roll.  Simply make sure that progress
@@ -34,6 +34,9 @@
 // Lightworks user effect Starwars.fx
 //
 // Version history:
+//
+// Updated 2026-07-04 jwrl.
+// Masking now uses RGBA instead of A.
 //
 // Built 2025-09-01 jwrl.
 //-----------------------------------------------------------------------------------------//
@@ -53,17 +56,17 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Opacity, "Opacity", kNoGroup, kNoFlags, 1.0,  0.0, 1.0);
+DeclareFloatParam (Opacity,   "Opacity",    kNoGroup,   kNoFlags, 1.0,  0.0, 1.0);
 
-DeclareFloatParam (Rotation,  "Rotation",   "Motion", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (EndPoint,  "End point",  "Motion", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (FallOff,   "Fall off",   "Motion", kNoFlags, 0.8, 0.0, 1.0);
-DeclareFloatParam (Softness,  "Softness",   "Motion", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (BlurRange, "Blur range", "Motion", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Rotation,  "Rotation",   "Motion",   kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (EndPoint,  "End point",  "Motion",   kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (FallOff,   "Fall off",   "Motion",   kNoFlags, 0.8, 0.0, 1.0);
+DeclareFloatParam (Softness,  "Softness",   "Motion",   kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (BlurRange, "Blur range", "Motion",   kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareFloatParam (Scale,    "Scale",    "Geometry", "DisplayAsPercentage", 1.0, 0.25, 4.0);
-DeclareFloatParam (Ysize,    "Y size",   "Geometry", "DisplayAsPercentage", 1.0, 0.25, 4.0);
-DeclareFloatParam (Y_offset, "Y offset", "Geometry", "DisplayAsPercentage", 0.5, -0.5, 1.5);
+DeclareFloatParam (Scale,     "Scale",      "Geometry", "DisplayAsPercentage", 1.0, 0.25, 4.0);
+DeclareFloatParam (Ysize,     "Y size",     "Geometry", "DisplayAsPercentage", 1.0, 0.25, 4.0);
+DeclareFloatParam (Y_offset,  "Y offset",   "Geometry", "DisplayAsPercentage", 0.5, -0.5, 1.5);
 
 DeclareFloatParamAnimated (Progress, "Progress", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
 
@@ -247,6 +250,5 @@ DeclareEntryPoint (Starwars)
 
    float4 retval = ReadPixel (Fgd, xy);
 
-   return lerp (tex2D (Bgd, uv3), retval, retval.a * Opacity * tex2D (Mask, uv3).x);
+   return lerp (tex2D (Bgd, uv3), retval, retval.a * Opacity * tex2D (Mask, uv3));
 }
-
