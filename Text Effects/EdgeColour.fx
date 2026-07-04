@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-10-07
+// @Released 2026-07-04
 // @Author jwrl
 // @Created 2024-10-07
 
@@ -11,27 +11,30 @@
  Master opacity, scale and insert softness are adjustable, and the line boundaries can
  be inverted.  The settings and what they do are:
 
-   *  Opacity:  Fades the text and coloured edge composite in or out.
-   *  Key separation:  Adjusts the difference key clip.  If 0, does a standard blend.
-   *  Show key:  Shows the unmodified foreground keyed over a checkerboard background.
-   *  Show blend:  Shows the foreground with blended edges over black.
-   *  All edges
-     *  Opacity:  Adjusts the opacity of all four edge overlays.
-     *  Scale:  Adjusts the thickness of all four edge overlays.
-     *  Softness:  Softens the edge of all four coloured edge overlays.
-   *  Left edge
-     *  Opacity:  Adjusts the opacity of the left edge overlay.
-     *  Width:  Adjusts the width of the left edge overlay.
-     *  Colour:  Sets the colour to be used for the left edge overlay.
-   *  Right edge - as for left edge.
-   *  Top edge - as for left edge.
-   *  Bottom edge - as for left edge.
+   [*]Opacity:  Fades the text and coloured edge composite in or out.
+   [*]Key clip:  Adjusts the difference key clip.  If 0, does a standard blend.
+   [*]Show key:  Shows the unmodified foreground keyed over a checkerboard background.
+   [*]Show blend:  Shows the foreground with blended edges over black.
+   [*]All edges
+     [*]Opacity:  Adjusts the opacity of all four edge overlays.
+     [*]Scale:  Adjusts the thickness of all four edge overlays.
+     [*]Softness:  Softens the edge of all four coloured edge overlays.
+   [*]Left edge
+     [*]Opacity:  Adjusts the opacity of the left edge overlay.
+     [*]Width:  Adjusts the width of the left edge overlay.
+     [*]Colour:  Sets the colour to be used for the left edge overlay.
+   [*]Right edge - as for left edge.
+   [*]Top edge - as for left edge.
+   [*]Bottom edge - as for left edge.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect EdgeColour.fx
 //
 // Version history:
+//
+// Updated 2026-07-04 jwrl.
+// Masking now uses RGBA instead of A.
 //
 // Built 2024-10-07 jwrl.
 //-----------------------------------------------------------------------------------------//
@@ -51,36 +54,30 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Opacity, "Opacity", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Opacity,   "Opacity",    kNoGroup,     kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (KeyClip,   "Key clip",   kNoGroup,     kNoFlags, 0.0, 0.0, 1.0);
+DeclareBoolParam (ShowKey,    "Show key",   kNoGroup,     false);
+DeclareBoolParam (ShowBlend,  "Show blend", kNoGroup,     false);
 
-DeclareFloatParam (KeyClip, "Key clip", kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (OpacityA,  "Opacity",    "All edges",  kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Scale,     "Scale",      "All edges",  kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Softness,  "Softness",   "All edges",  kNoFlags, 0.3, 0.0, 1.0);
 
-DeclareBoolParam (ShowKey,   "Show key",   kNoGroup, false);
-DeclareBoolParam (ShowBlend, "Show blend", kNoGroup, false);
+DeclareFloatParam (OpacityL,  "Opacity",   "Left edge",   kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Width_L,   "Width",     "Left edge",   kNoFlags, 0.5, 0.0, 1.0);
+DeclareColourParam (Colour_L, "Colour",    "Left edge",   kNoFlags, 0.09, 0.20, 0.78, 1.0);
 
-DeclareFloatParam (OpacityA, "Opacity",  "All edges", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Scale,    "Scale",    "All edges", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Softness, "Softness", "All edges", kNoFlags, 0.3, 0.0, 1.0);
+DeclareFloatParam (OpacityR,  "Opacity",   "Right edge",  kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Width_R,   "Width",     "Right edge",  kNoFlags, 0.5, 0.0, 1.0);
+DeclareColourParam (Colour_R, "Colour",    "Right edge",  kNoFlags, 0.28, 0.93, 1.00, 1.0);
 
-DeclareFloatParam (OpacityL,  "Opacity", "Left edge",   kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Width_L,   "Width",   "Left edge",   kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (OpacityT,  "Opacity",   "Top edge",    kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Width_T,   "Height",    "Top edge",    kNoFlags, 0.5, 0.0, 1.0);
+DeclareColourParam (Colour_T, "Colour",    "Top edge",    kNoFlags, 0.22, 0.69, 0.93, 1.0);
 
-DeclareColourParam (Colour_L, "Colour",  "Left edge",   kNoFlags, 0.09, 0.20, 0.78, 1.0);
-
-DeclareFloatParam (OpacityR,  "Opacity", "Right edge",  kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Width_R,   "Width",   "Right edge",  kNoFlags, 0.5, 0.0, 1.0);
-
-DeclareColourParam (Colour_R, "Colour",  "Right edge",  kNoFlags, 0.28, 0.93, 1.00, 1.0);
-
-DeclareFloatParam (OpacityT,  "Opacity", "Top edge",    kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Width_T,   "Height",  "Top edge",    kNoFlags, 0.5, 0.0, 1.0);
-
-DeclareColourParam (Colour_T, "Colour",  "Top edge",    kNoFlags, 0.22, 0.69, 0.93, 1.0);
-
-DeclareFloatParam (OpacityB,  "Opacity", "Bottom edge", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Width_B,   "Height",  "Bottom edge", kNoFlags, 0.5, 0.0, 1.0);
-
-DeclareColourParam (Colour_B, "Colour",  "Bottom edge", kNoFlags, 0.15, 0.44, 0.52, 1.0);
+DeclareFloatParam (OpacityB,  "Opacity",   "Bottom edge", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Width_B,   "Height",    "Bottom edge", kNoFlags, 0.5, 0.0, 1.0);
+DeclareColourParam (Colour_B, "Colour",    "Bottom edge", kNoFlags, 0.15, 0.44, 0.52, 1.0);
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
@@ -246,10 +243,9 @@ DeclareEntryPoint (TextEdges)
          float4 Bgnd = tex2D (Bgd,  uv3);
          float4 Fgnd = lerp (lerp (Bgnd, retval, retval.a), Edge, Edge.a);
 
-         retval = lerp (ReadPixel (Bg, uv2), Fgnd, tex2D (Mask, uv3).x * Opacity);
+         retval = lerp (ReadPixel (Bg, uv2), Fgnd, tex2D (Mask, uv3) * Opacity);
       }
    }
 
    return retval;
 }
-
