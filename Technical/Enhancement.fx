@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-11-06
+// @Released 2026-07-05
 // @Author khaver
 // @Author schrauber
 // @Author jwrl
@@ -17,8 +17,32 @@
  sampling.  A second pass then uses the positional dithering to add intermediate
  colours using spline interpolation.
 
- What will this not do?  Well, it isn't designed to remove JPEG artifacts.  It may help
- but it really was never intended to do that.  Try it - you could be lucky.
+   [*]Amount:  Mixes the enhanced image back into the original.
+   [*]Sharpness
+      [*]Bypass sharpening:  A switch which disables sharpening to help with setup
+         of colour decontouring.
+      [*]Strength:  Controls the amount of sharpening data that is copied back into
+         the image.
+      [*]Sample size:  Adjusts the range over which edge softness will be detected
+         and sharpened.
+      [*]Edge clamp:  Limits the amount of overshoot on the sharpened edges.
+   [*]Colour masking
+      [*]Show mask in red:  A switch that allows you see the self-generated mask
+         for setup purposes. It is not affected by Amount.
+      [*]Threshold:  Sets the similarity between colours that will cause a mask to
+         be generated.
+      [*]Dithering:  Sets the size of the area that will be used to dither colour
+         sampling.
+   [*]Colour smoothing
+      [*]Bypass smoothing:  Used when setting up sharpening.
+      [*]Interpolation:  Adjusts the amount of interpolated smoothing between
+         adjacent colours.
+      [*]Luma sharpness:  Controls the amount of the sharpened luminance that will
+         be used with the colour blur.
+
+ What will this not do?  Well, it isn't designed to remove JPEG artifacts.  However in
+ testing it was found to improve JPEG images somewhat, so it may help even though it
+ really was never intended to.  Try it - you could be lucky.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -32,10 +56,16 @@
 //
 // Version history.
 //
+// Updated 2026-07-05 jwrl.
+// Masking now uses RGBA, not R.
+// Changed "Sample offset" to "Sample size".
+// Changed "Dither radius" to "Dithering".
+// Changed "Interpolation" to "Interpolate".
+// Changed "Luma sharpness" to "Sharpness".
+// Added settings description to the header block.
+//
 // Created 2023-11-06 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Enhancement", "User", "Technical", "A video enhancer that sharpens the video while reducing colour banding", kNoFlags);
 
@@ -51,20 +81,20 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Amount,      "Amount",            kNoGroup,           kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareBoolParam (Bypass, "Bypass sharpening", "Sharpness", false);
-DeclareFloatParam (Strength, "Strength", "Sharpness", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Offset, "Sample offset", "Sharpness", kNoFlags, 2.0, 0.0, 6.0);
-DeclareFloatParam (EdgeClamp, "Edge clamp", "Sharpness", kNoFlags, 0.125, 0.0, 1.0);
+DeclareBoolParam (Bypass,       "Bypass sharpening", "Sharpness",        false);
+DeclareFloatParam (Strength,    "Strength",          "Sharpness",        kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Offset,      "Sample size",       "Sharpness",        kNoFlags, 2.0, 0.0, 6.0);
+DeclareFloatParam (EdgeClamp,   "Edge clamp",        "Sharpness",        kNoFlags, 0.125, 0.0, 1.0);
 
-DeclareBoolParam (ColourMask, "Show mask in red", "Colour masking", false);
-DeclareFloatParam (Threshold, "Threshold", "Colour masking", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Radius, "Dither radius", "Colour masking", kNoFlags, 0.5, 0.0, 1.0);
+DeclareBoolParam (ColourMask,   "Show mask in red",  "Colour masking",   false);
+DeclareFloatParam (Threshold,   "Threshold",         "Colour masking",   kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Radius,      "Dithering",         "Colour masking",   kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareBoolParam (NoSmooth, "Bypass smoothing", "Colour smoothing", false);
-DeclareFloatParam (Interpolate, "Interpolation", "Colour smoothing", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Sharpen, "Luma sharpness", "Colour smoothing", kNoFlags, 0.5, 0.0, 1.0);
+DeclareBoolParam (NoSmooth,     "Bypass smoothing",  "Colour smoothing", false);
+DeclareFloatParam (Interpolate, "Interpolate",       "Colour smoothing", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Sharpen,     "Sharpness",         "Colour smoothing", kNoFlags, 0.5, 0.0, 1.0);
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
@@ -295,6 +325,5 @@ DeclareEntryPoint (Enhancement)
       amt = Amount;
    }
 
-   return lerp (vidref, seporg, tex2D (Mask, uv1).x * amt);
+   return lerp (vidref, seporg, tex2D (Mask, uv1) * amt);
 }
-
