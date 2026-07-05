@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-02-19
+// @Released 2026-07-05
 // @Author jwrl
 // @Created 2025-02-19
 
@@ -16,28 +16,29 @@
  The border and background colours can be independently adjusted, and the complete
  bar can be faded in and out.
 
-   [*] Opacity:  Fades the bar in or out.
-   [*] Progress:  Adjusts the bar range.  This can be keyframed to make the bar grow
+   [*]Opacity:  Fades the bar in or out.
+   [*]Progress:  Adjusts the bar range.  This can be keyframed to make the bar grow
                   or shrink.
-   [*] Bar mode:  Can be set to display vertical or horizontal steps, or a vertical or
+   [*]Bar mode:  Can be set to display vertical or horizontal steps, or a vertical or
                   horizontal gradient.
-   [*] Position X:  Sets the horizontal position of the bar.
-   [*] Position Y:  Sets the vertical position of the bar.
-   [*] Bar colour
-      [*] Break 1:  The point at which the bar will change to the mid colour, colour 1.
-      [*] Break 2:  The point at which the bar will change to the end colour, colour 2.
-      [*] Colour 0:  The start or minimum colour.
-      [*] Colour 1:  The midpoint colour.
-      [*] Colour 2:  The end or full range colour.
-   [*] Bar shape
-      [*] Width:  Adjusts the overall width of the bar.  If the bar is set to vertical
-                  mode the width adjusts horizontally, otherwise it adjusts vertically.
-      [*] Length:  Adjusts the length of the bar.  If the bar is set to horizontal
-                   mode the length changes horizontally, otherwise it changes vertically.
-      [*] Show base:  Can either show the background and border or hide it.
-      [*] Border width:  Self explanatory.
-      [*] Border colour:  Self explanatory.
-      [*] Base colour:  The background colour of the bar.
+   [*]Position X:  Sets the horizontal position of the bar.
+   [*]Position Y:  Sets the vertical position of the bar.
+   [*]Bar colour
+      [*]Break 1:  The point at which the bar will change to the mid colour, colour 1.
+      [*]Break 2:  The point at which the bar will change to the end colour, colour 2.
+      [*]Colour 0:  The start or minimum colour.
+      [*]Colour 1:  The midpoint colour.
+      [*]Colour 2:  The end or full range colour.
+   [*]Bar shape
+      [*]Width:  Adjusts the overall width of the bar.  If the bar is set to vertical
+         mode the width adjusts horizontally, otherwise it adjusts vertically.
+      [*]Length:  Adjusts the length of the bar.  If the bar is set to horizontal
+         mode the length changes horizontally, otherwise it changes vertically.
+      [*]Show base:  Can either show the background and border or hide it.
+   [*]Bar border
+      [*]Width:  Self explanatory.
+      [*]Colour:  Self explanatory.
+   [*]Basic bar:  The background colour of the bar.
 
  The way that the breaks work is complex but I feel, logical.  In gradient mode break 2
  is not used at all.  Break 1 will cause the gradient to run from colour 1 to colour 2
@@ -55,10 +56,13 @@
 //
 // Version history:
 //
+// Updated 2026-07-05 jwrl.
+// Created a new group, "Bar border" and moved "Border width" and "Border colour" there.
+// Renamed "Border width", "Width" and "Border colour", "Colour".
+// Moved "Base colour" out of the group "Bar shape" and renamed it "Basic bar".
+//
 // Built 2025-02-19 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Enhanced progress bar", "Matte", "Technical", "A flexible progress bar generator", kNoFlags);
 
@@ -72,26 +76,26 @@ DeclareInput (Inp);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Opacity, "Opacity",  kNoGroup, kNoFlags, 1.0,  0.0, 1.0);
-DeclareFloatParam (Amount,  "Progress", kNoGroup, kNoFlags, 0.85, 0.0, 1.0);
+DeclareFloatParam (Opacity,       "Opacity",   kNoGroup,     kNoFlags, 1.0,  0.0, 1.0);
+DeclareFloatParam (Amount,        "Progress",  kNoGroup,     kNoFlags, 0.85, 0.0, 1.0);
+DeclareIntParam   (SetTechnique,  "Bar mode",  kNoGroup, 1,  "Vertical steps|Horizontal steps|Vertical gradient|Horizontal gradient");
+DeclareFloatParam (PosX,          "Position",  kNoGroup,     "SpecifiesPointX", 0.1, 0.0, 1.0);
+DeclareFloatParam (PosY,          "Position",  kNoGroup,     "SpecifiesPointY", 0.1, 0.0, 1.0);
 
-DeclareIntParam (SetTechnique, "Bar mode", kNoGroup, 1, "Vertical steps|Horizontal steps|Vertical gradient|Horizontal gradient");
+DeclareFloatParam  (Break_1,      "Break 1",   "Bar colour", kNoFlags, 0.75, 0.0,  1.0);
+DeclareFloatParam  (Break_2,      "Break 2",   "Bar colour", kNoFlags, 0.8,  0.0,  1.0);
+DeclareColourParam (Colour_0,     "Colour 0",  "Bar colour", kNoFlags, 0.08, 0.55, 0.03, 1.0);
+DeclareColourParam (Colour_1,     "Colour 1",  "Bar colour", kNoFlags, 1.0,  0.85, 0.0,  1.0);
+DeclareColourParam (Colour_2,     "Colour 2",  "Bar colour", kNoFlags, 0.72, 0.13, 0.0,  1.0);
 
-DeclareFloatParam (PosX, "Position", kNoGroup, "SpecifiesPointX", 0.1, 0.0, 1.0);
-DeclareFloatParam (PosY, "Position", kNoGroup, "SpecifiesPointY", 0.1, 0.0, 1.0);
+DeclareFloatParam  (BarWidth,     "Width",     "Bar shape",  kNoFlags, 0.1, 0.0, 1.0);
+DeclareFloatParam  (BarLength,    "Length",    "Bar shape",  kNoFlags, 0.8, 0.0, 1.0);
+DeclareBoolParam   (ShowBase,     "Show base", "Bar shape",  true);
 
-DeclareFloatParam  (Break_1,  "Break 1",  "Bar colour", kNoFlags, 0.75, 0.0,  1.0);
-DeclareFloatParam  (Break_2,  "Break 2",  "Bar colour", kNoFlags, 0.8,  0.0,  1.0);
-DeclareColourParam (Colour_0, "Colour 0", "Bar colour", kNoFlags, 0.08, 0.55, 0.03, 1.0);
-DeclareColourParam (Colour_1, "Colour 1", "Bar colour", kNoFlags, 1.0,  0.85, 0.0,  1.0);
-DeclareColourParam (Colour_2, "Colour 2", "Bar colour", kNoFlags, 0.72, 0.13, 0.0,  1.0);
+DeclareFloatParam  (BorderWidth,  "Width",     "Bar border", kNoFlags, 0.1, 0.0, 1.0);
+DeclareColourParam (BorderColour, "Colour",    "Bar border", kNoFlags, 0.0, 0.0, 0.0, 1.0);
 
-DeclareFloatParam  (BarWidth,     "Width",         "Bar shape", kNoFlags, 0.1, 0.0, 1.0);
-DeclareFloatParam  (BarLength,    "Length",        "Bar shape", kNoFlags, 0.8, 0.0, 1.0);
-DeclareBoolParam   (ShowBase,     "Show base",     "Bar shape", true);
-DeclareFloatParam  (BorderWidth,  "Border width",  "Bar shape", kNoFlags, 0.1, 0.0, 1.0);
-DeclareColourParam (BorderColour, "Border colour", "Bar shape", kNoFlags, 0.0, 0.0, 0.0, 1.0);
-DeclareColourParam (BaseColour,   "Base colour",   "Bar shape", kNoFlags, 0.9, 0.9, 0.9, 1.0);
+DeclareColourParam (BaseColour,   "Basic bar", kNoGroup,     kNoFlags, 0.9, 0.9, 0.9, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 DeclareFloatParam (_Progress);
@@ -240,4 +244,3 @@ DeclareEntryPoint (HorizontalGradient)
 
    return lerp (Input, retval, retval.a * Opacity);
 }
-
