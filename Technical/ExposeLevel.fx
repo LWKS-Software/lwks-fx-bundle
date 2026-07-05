@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-06-07
 // @Author khaver
 // @Created 2016-06-10
 
@@ -12,8 +12,23 @@
  E3 points to areas where there is minimal movement in the video clip.  The only
  constraint is that the chosen points must not be in pure black or white areas.
 
- If there is camera movement uncheck "Use Example Points for Video" and keyframe the V1,
- V2 and V3 points so they track the E1, E2 and E3 points.  Uncheck "Show Example Frame"
+   [*]Tune:  Trims the level adjustment.
+   [*]Blur:  Adjusts the blur amount.
+   [*]Swap tracks:  This is really unnecessary.  It performs the same function as
+      Lightworks' swap inputs command.
+   [*]Show example frame:  Shows the reference frame to be matched.
+   [*]Show video blur:  Self explanatory.
+   [*]Show example blur:  Self explanatory.
+   [*]Use example points for video:  Overrides the video sample point settings.
+   [*]Examples
+      [*]E1:  Selects the first sample point on the reference frame.
+      [*]E2:  Selects the second sample point on the reference frame.
+      [*]E3:  Selects the last sample point on the reference frame.
+   [*]Video samples duplicates the sample point settings for the video.  Only active
+      if "Use example points for video" is not set.
+
+ If there is camera movement uncheck "Use example points for video" and keyframe the V1,
+ V2 and V3 points so they track the E1, E2 and E3 points.  Uncheck "Show example frame"
  and the exposure in the video clip should stay close to the sample frame's exposure.
  Further fine tuning can be done with the "Tune" slider.
 
@@ -25,13 +40,16 @@
 //
 // Version history:
 //
+// Updated 2026-06-07 jwrl.
+// Changed "Blur Amount" to "Blur".
+// Renamed the group "Example samples" to just "Examples".
+// Added settings description to header block.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-01-11 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Exposure leveller", "User", "Technical", "This corrects the levels of shots where the exposure varies over time", CanSize);
 
@@ -45,32 +63,27 @@ DeclareInputs (Input, Frame);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (TUNE, "Tune", kNoGroup, kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (BLUR, "Blur Amount", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (TUNE,    "Tune", kNoGroup,        kNoFlags,          0.0, -1.0, 1.0);
+DeclareFloatParam (BLUR,    "Blur", kNoGroup,        kNoFlags,          0.5, 0.0, 1.0);
+DeclareBoolParam  (SWAP,    "Swap",                  kNoGroup,          false);
+DeclareBoolParam  (ShowE,   "Show example frame",    kNoGroup,          false);
+DeclareBoolParam  (ShowVB,  "Show video blur",       kNoGroup,          false);
+DeclareBoolParam  (ShowFB,  "Show example blur",     kNoGroup,          false);
+DeclareBoolParam  (COMBINE, "Use example points for video",   kNoGroup, true);
 
-DeclareBoolParam (SWAP, "Swap Tracks", kNoGroup, false);
-DeclareBoolParam (ShowE, "Show Example Frame", kNoGroup, false);
-DeclareBoolParam (ShowVB, "Show Video Blur", kNoGroup, false);
-DeclareBoolParam (ShowFB, "Show Example Blur", kNoGroup, false);
-DeclareBoolParam (COMBINE, "Use Example Points for Video", kNoGroup, true);
+DeclareFloatParam (F1X,     "E1",   "Examples",      "SpecifiesPointX", 0.25, 0.0, 1.0);
+DeclareFloatParam (F1Y,     "E1",   "Examples",      "SpecifiesPointY", 0.75, 0.0, 1.0);
+DeclareFloatParam (F2X,     "E2",   "Examples",      "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (F2Y,     "E2",   "Examples",      "SpecifiesPointY", 0.75, 0.0, 1.0);
+DeclareFloatParam (F3X,     "E3",   "Examples",      "SpecifiesPointX", 0.75, 0.0, 1.0);
+DeclareFloatParam (F3Y,     "E3",   "Examples",      "SpecifiesPointY", 0.75, 0.0, 1.0);
 
-DeclareFloatParam (F1X, "E1", "Example Samples", "SpecifiesPointX", 0.25, 0.0, 1.0);
-DeclareFloatParam (F1Y, "E1", "Example Samples", "SpecifiesPointY", 0.75, 0.0, 1.0);
-
-DeclareFloatParam (F2X, "E2", "Example Samples", "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (F2Y, "E2", "Example Samples", "SpecifiesPointY", 0.75, 0.0, 1.0);
-
-DeclareFloatParam (F3X, "E3", "Example Samples", "SpecifiesPointX", 0.75, 0.0, 1.0);
-DeclareFloatParam (F3Y, "E3", "Example Samples", "SpecifiesPointY", 0.75, 0.0, 1.0);
-
-DeclareFloatParam (V1X, "V1", "Video Samples", "SpecifiesPointX", 0.25, 0.0, 1.0);
-DeclareFloatParam (V1Y, "V1", "Video Samples", "SpecifiesPointY", 0.25, 0.0, 1.0);
-
-DeclareFloatParam (V2X, "V2", "Video Samples", "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (V2Y, "V2", "Video Samples", "SpecifiesPointY", 0.25, 0.0, 1.0);
-
-DeclareFloatParam (V3X, "V3", "Video Samples", "SpecifiesPointX", 0.75, 0.0, 1.0);
-DeclareFloatParam (V3Y, "V3", "Video Samples", "SpecifiesPointY", 0.25, 0.0, 1.0);
+DeclareFloatParam (V1X,     "V1",   "Video samples", "SpecifiesPointX", 0.25, 0.0, 1.0);
+DeclareFloatParam (V1Y,     "V1",   "Video samples", "SpecifiesPointY", 0.25, 0.0, 1.0);
+DeclareFloatParam (V2X,     "V2",   "Video samples", "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (V2Y,     "V2",   "Video samples", "SpecifiesPointY", 0.25, 0.0, 1.0);
+DeclareFloatParam (V3X,     "V3",   "Video samples", "SpecifiesPointX", 0.75, 0.0, 1.0);
+DeclareFloatParam (V3Y,     "V3",   "Video samples", "SpecifiesPointY", 0.25, 0.0, 1.0);
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
@@ -240,4 +253,3 @@ DeclareEntryPoint (ExposureLeveller)
 
    return cout;
 }
-
