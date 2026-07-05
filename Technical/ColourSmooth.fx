@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-11-05
+// @Released 2026-07-05
 // @Author khaver
 // @Author schrauber
 // @Author jwrl
@@ -12,6 +12,20 @@
  adjust sampling.  A second pass then uses the positional dithering to add intermediate
  colours using spline interpolation.  During this pass edge sharpness can be adjusted to
  compensate for any image blurring that may have happened with the interpolation.
+
+   [*]Amount:  Mixes the corrected image back into the original.
+   [*]Colour masking
+      [*]Show mask in red:  A switch that allows you see the self-generated mask for
+         setup purposes. It is not affected by Amount.
+      [*]Threshold:  Sets the similarity between colours that will cause a mask to
+         be generated.
+      [*]Dithering:  Sets the size of the area that will be used to dither colour
+         sampling.
+   [*]Colour smoothing
+      [*]Interpolate:  Adjusts the amount of interpolated smoothing between adjacent
+      colours.
+      [*]Sharpness:  Controls the amount of the original luminance that will be used
+         to protect image sharpness.
 
  Note that this effect does exactly what it says that it will do.  Unfortunately additional
  processing by delivery systems such as YouTube and the like can reintroduce the very
@@ -51,10 +65,15 @@
 //
 // Version history:
 //
+// Updated 2026-07-05 jwrl.
+// Masking now uses RGBA, not R.
+// Changed "Dither radius" to "Dithering".
+// Changed "Interpolation" to "Interpolate".
+// Changed "Luma sharpness" to "Sharpness".
+// Added settings description to header block.
+//
 // Conversion 2023-11-05 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Colour smoother", "Colour", "Technical", "Interpolates colours to correct contouring", CanSize);
 
@@ -70,15 +89,14 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Amount,      "Amount",      kNoGroup,           kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareBoolParam (ColourMask, "Show mask in red", "Colour masking", false);
+DeclareBoolParam (ColourMask,   "Show mask in red", "Colour masking", false);
+DeclareFloatParam (Threshold,   "Threshold",   "Colour masking",   kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Radius,      "Dithering",   "Colour masking",   kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareFloatParam (Threshold, "Threshold", "Colour masking", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Radius, "Dither radius", "Colour masking", kNoFlags, 0.5, 0.0, 1.0);
-
-DeclareFloatParam (Interpolate, "Interpolation", "Colour smoothing", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Sharpen, "Luma sharpness", "Colour smoothing", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Interpolate, "Interpolate", "Colour smoothing", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Sharpen,     "Sharpness",   "Colour smoothing", kNoFlags, 0.5, 0.0, 1.0);
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
@@ -210,7 +228,7 @@ DeclareEntryPoint (ColourSmooth)
       samp += fn_combine (samp1, samp2, samp3, samp4);
 
       xy1.y = xy3.y;                // float2 (xy0.x, xy0.y * 2.0)
-      xy3 = float2 (0.0, xy0.y);
+      xy3   = float2 (0.0, xy0.y);
 
       samp1 = mirror2D (Dither, uv2 - xy1);
       samp2 = (mirror2D (Dither, uv2 - xy0) + mirror2D (Dither, uv2 - xy2)) / 2.0;
@@ -227,7 +245,7 @@ DeclareEntryPoint (ColourSmooth)
       samp += fn_combine (samp1, samp2, samp3, samp4);
 
       xy1.x = -xy0.x;               // float2 (-xy0.x, xy0.y * 2.0)
-      xy3 = float2 (-xy0.x, xy0.y);
+      xy3   = float2 (-xy0.x, xy0.y);
 
       samp1 = mirror2D (Dither, uv2 - xy1);
       samp2 = (mirror2D (Dither, uv2 - xy3) + mirror2D (Dither, uv2 - xy2)) / 2.0;
@@ -235,7 +253,7 @@ DeclareEntryPoint (ColourSmooth)
       samp4 = mirror2D (Dither, uv2 + xy1);
       samp += fn_combine (samp1, samp2, samp3, samp4);
 
-      xy1 = xy3 * 2.0;              // float2 (-xy0.x, xy0.y) * 2.0
+      xy1   = xy3 * 2.0;               // float2 (-xy0.x, xy0.y) * 2.0
 
       samp1 = mirror2D (Dither, uv2 - xy1);
       samp2 = mirror2D (Dither, uv2 - xy3);
@@ -244,7 +262,7 @@ DeclareEntryPoint (ColourSmooth)
       samp += fn_combine (samp1, samp2, samp3, samp4);
 
       xy1.y = xy0.y;                // float2 (-xy0.x * 2.0, xy0.y)
-      xy2 = float2 (-xy0.x, 0.0);
+      xy2   = float2 (-xy0.x, 0.0);
 
       samp1 = mirror2D (Dither, uv2 + xy1);
       samp2 = (mirror2D (Dither, uv2 + xy3) + mirror2D (Dither, uv2 + xy2)) / 2.0;
@@ -275,6 +293,5 @@ DeclareEntryPoint (ColourSmooth)
       amt = Amount;
    }
 
-   return lerp (vidref, seporg, tex2D (Mask, uv1).x * amt);
+   return lerp (vidref, seporg, tex2D (Mask, uv1) * amt);
 }
-
