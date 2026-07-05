@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-08-25
+// @Released 2026-07-05
 // @Author jwrl
 // @Created 2022-08-28
 
@@ -9,6 +9,11 @@
  display is locked to the sequence size and aspect ratio.  It is NOT intended to be
  locked to the size and aspect ratio of the input video.
 
+   [*]Opacity:  Mixes the thirds grid over the input video.
+   [*]Line weight:  Adjusts the thickness of the lines used in the grid.
+   [*]Grid display:  Selects the blending mode used for the grid from additive,
+      subtractive or difference.
+
  It is suitable for LW version 2022.2 and above, but is unlikely to compile on older
  versions.
 */
@@ -17,6 +22,9 @@
 // Lightworks user effect RuleOfThirds.fx
 //
 // Version history:
+//
+// Updated 2026-07-05 jwrl.
+// Added settings description to the header block.
 //
 // Updated 2025-08-25 jwrl.
 // Corrected a geometry bug affecting rotated media.
