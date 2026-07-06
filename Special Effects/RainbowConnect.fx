@@ -28,8 +28,8 @@
 // Updated 2026-07-06 jwrl.
 // Changed "Hue cycling" to "Hue cycles".
 // Changed "Key softness" to "Soften key".
-// Masking now uses RGBA.
 // Added settings description to header block.
+// Masking now uses RGBA.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
