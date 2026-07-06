@@ -1,14 +1,38 @@
 // @Maintainer jwrl
-// @Released 2023-06-19
+// @Released 2026-07-06
 // @Author jwrl
 // @Author LWKS Software Ltd
 // @Created 2018-04-02
 
 /**
  This is a customised version of the Lightworks Chromakey effect with a transitional
- Star Trek-like transporter sparkle effect added.  This is definitely not a copy of
- any of the Star Trek versions of that effect, nor is it intended to be.  At most it
- should be regarded as an interpretation of the idea behind the effect.
+ Star Trek-like transporter sparkle effect added.
+
+   [*]Transition:  Adjusts the progress of the transporter effect.
+   [*]Key colour:  Sets the key colour in the same way as a Lightworks chromakey.
+   [*]Key settings
+      [*]Key softness:  Self explanatory.
+      [*]Remove spill:  Self explanatory..
+      [*]Ignore foreground alpha:  Ignores or supports any foreground transparency.
+   [*]Transform
+      [*]Position X:  Adjusts the horizontal position.
+      [*]Position Y:  Adjusts the vertical position.
+      [*]Position Z:  Adjusts the size.
+   [*]Crop
+      [*]High left X:  Adjusts the left crop.
+      [*]High left Y:  Adjusts the top crop.
+      [*]Low right X:  Adjusts the right crop.
+      [*]Low right Y:  Adjusts the bottom crop.
+   [*]Sparkles
+      [*]Spot size:  Sets the size of the centre of the sparkles.
+      [*]Star length:  Sets the length of the star points or arms.
+      [*]Density:  Self explanatory.
+      [*]Colour:  Self explanatory.
+   [*]Hide background:  Self explanatory.
+
+ This is definitely not a copy of any of the Star Trek versions of that effect, nor is
+ it intended to be.  At most it should be regarded as an interpretation of the idea
+ behind the effect.
 
  The transition is quite complex.  During the first 0.3 of the transition progress the
  sparkles/stars build, then hold for the next 0.4 of the transition.  They then decay.
@@ -33,6 +57,12 @@
 //
 // Version history:
 //
+// Updated 2026-07-06 jwrl.
+// Changed "Top left ..." to "High left ...".
+// Changed "Bottom right ..." to "Low right ...".
+// Changed "Star strength" to "Density".
+// Added settings description to header block.
+//
 // Updated 2023-06-19 jwrl.
 // Changed DVE references to transform.
 //
@@ -56,32 +86,31 @@ DeclareInputs (Fg, Bg);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Transition, "Transition", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Transition,         "Transition",   kNoGroup,       kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareColourParam (KeyColour, "Key Colour", kNoGroup, "SpecifiesColourRange", 150.0, 0.7, 0.75, 0.0);
-DeclareColourParam (Tolerance, "Tolerance", kNoGroup, "SpecifiesColourRange|Hidden", 20.0, 0.3, 0.25, 0.0);
+DeclareColourParam (KeyColour,         "Key Colour",   kNoGroup,       "SpecifiesColourRange", 150.0, 0.7, 0.75, 0.0);
+DeclareColourParam (Tolerance,         "Tolerance",    kNoGroup,       "SpecifiesColourRange|Hidden", 20.0, 0.3, 0.25, 0.0);
 DeclareColourParam (ToleranceSoftness, "Tolerance softness", kNoGroup, "SpecifiesColourRange|Hidden", 15.0, 0.115, 0.11, 0.0);
 
-DeclareFloatParam (KeySoftAmount, "Key softness", "Key settings", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (RemoveSpill, "Remove spill", "Key settings", kNoFlags, 0.5, 0.0, 1.0);
-DeclareBoolParam (NoAlpha, "Ignore foreground alpha", "Key settings", false);
+DeclareFloatParam (KeySoftAmount,      "Key softness", "Key settings", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (RemoveSpill,        "Remove spill", "Key settings", kNoFlags, 0.5, 0.0, 1.0);
+DeclareBoolParam (NoAlpha,             "Ignore foreground alpha", "Key settings", false);
 
-DeclareFloatParam (CentreX, "Position", "Transform", "SpecifiesPointX", 0.0, -1.0, 1.0);
-DeclareFloatParam (CentreY, "Position", "Transform", "SpecifiesPointY", 0.0, -1.0, 1.0);
-DeclareFloatParam (CentreZ, "Position", "Transform", "SpecifiesPointZ", 0.0, -1.0, 1.0);
+DeclareFloatParam (CentreX,            "Position",     "Transform",    "SpecifiesPointX", 0.0, -1.0, 1.0);
+DeclareFloatParam (CentreY,            "Position",     "Transform",    "SpecifiesPointY", 0.0, -1.0, 1.0);
+DeclareFloatParam (CentreZ,            "Position",     "Transform",    "SpecifiesPointZ", 0.0, -1.0, 1.0);
 
-DeclareFloatParam (CropLeft, "Top left", "Crop", "SpecifiesPointX", 0.0, 0.0, 1.0);
-DeclareFloatParam (CropTop, "Top left", "Crop", "SpecifiesPointY", 1.0, 0.0, 1.0);
-DeclareFloatParam (CropRight, "Bottom right", "Crop", "SpecifiesPointX", 1.0, 0.0, 1.0);
-DeclareFloatParam (CropBottom, "Bottom right", "Crop", "SpecifiesPointY", 0.0, 0.0, 1.0);
+DeclareFloatParam (CropLeft,           "High left",    "Crop",         "SpecifiesPointX", 0.0, 0.0, 1.0);
+DeclareFloatParam (CropTop,            "High left",    "Crop",         "SpecifiesPointY", 1.0, 0.0, 1.0);
+DeclareFloatParam (CropRight,          "Low right",    "Crop",         "SpecifiesPointX", 1.0, 0.0, 1.0);
+DeclareFloatParam (CropBottom,         "Low right",    "Crop",         "SpecifiesPointY", 0.0, 0.0, 1.0);
 
-DeclareFloatParam (starSize, "Spot size", "Sparkle", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (starLength, "Star length", "Sparkle", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (starStrength, "Star strength", "Sparkle", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (starSize,           "Spot size",    "Sparkles",     kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (starLength,         "Star length",  "Sparkles",     kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (starStrength,       "Density",      "Sparkles",     kNoFlags, 0.5, 0.0, 1.0);
+DeclareColourParam (starColour,        "Colour",       "Sparkles",     kNoFlags, 0.9, 0.75, 0.0, 1.0);
 
-DeclareColourParam (starColour, "Colour", "Sparkle", kNoFlags, 0.9, 0.75, 0.0, 1.0);
-
-DeclareBoolParam (HideBgd, "Hide background", kNoGroup, false);
+DeclareBoolParam (HideBgd,             "Hide background", kNoGroup, false);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -378,4 +407,3 @@ DeclareEntryPoint (Transporter1)
 
    return lerp (result, starColour, key.z * Amount);
 }
-
