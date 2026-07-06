@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-07-06
 // @Author baopao
 // @Author nouanda
 // @Created 2013-06-10
@@ -7,6 +7,11 @@
 /**
  Kaleido produces the classic kaleidoscope effect.  The number of sides, the centering,
  scaling and zoom factor are all adjustable.
+
+   [*]Sides:  Selects the number of sides of the kaleidoscope up to a maximum of 50.
+   [*]Scale:  Adjusts the size of the video prior to applying the kaleidoscope.
+   [*]Zoom:  Adjusts the finished size of the effect.
+   [*]Pan:  Moves the video source inside the kaleidoscope around.
 
  NOTE:  This effect breaks resolution independence.  It is only suitable for use with
  Lightworks version 2023 and higher.
@@ -20,6 +25,9 @@
 // nouanda.
 //
 // Version history:
+//
+// Updated 2026-07-06 jwrl.
+// Added settings description to header block.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -43,10 +51,10 @@ DeclareInput (Inp);
 
 DeclareFloatParam (Sides, "Sides", kNoGroup, kNoFlags, 5.0, 0.0, 50.0);
 DeclareFloatParam (Scale, "Scale", kNoGroup, kNoFlags, 1.0, 0.0, 2.0);
-DeclareFloatParam (Zoom, "Zoom", kNoGroup, kNoFlags, 1.0, 0.0, 2.0);
+DeclareFloatParam (Zoom,  "Zoom",  kNoGroup, kNoFlags, 1.0, 0.0, 2.0);
 
-DeclareFloatParam (PanX, "Pan", kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (PanY, "Pan", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (PanX,  "Pan",   kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (PanY,  "Pan",   kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -94,4 +102,3 @@ DeclareEntryPoint (Kaleido)
 
    return ReadPixel (Inp, xy);
 }
-
