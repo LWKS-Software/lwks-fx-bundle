@@ -1,10 +1,14 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-07-06
 // @Author khaver
 // @Created 2011-06-28
 
 /**
  This kaleidoscope effect varies the number of sides, position and scale.
+
+   [*]Complexity:  Selects the number of sides of the kaleidoscope from one to four.
+   [*]Pan:  Moves the video source inside the kaleidoscope around.
+   [*]Zoom:  Adjusts the finished size of the effect.
 
  NOTE:  This effect breaks resolution independence.  It is only suitable for use with
  Lightworks version 2023 and higher.
@@ -14,6 +18,9 @@
 // Lightworks user effect Kaleidoscope.fx
 //
 // Version history:
+//
+// Updated 2026-07-06 jwrl.
+// Added settings description to header block.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -37,9 +44,8 @@ DeclareInput (Input);
 
 DeclareIntParam (SetTechnique, "Complexity", kNoGroup, 0, "One|Two|Three|Four");
 
-DeclareFloatParam (ORGX, "Pan", kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (ORGY, "Pan", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
-
+DeclareFloatParam (ORGX, "Pan",  kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (ORGY, "Pan",  kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
 DeclareFloatParam (Zoom, "Zoom", kNoGroup, kNoFlags, 1.0, 0.0, 2.0);
 
 DeclareFloatParam (_OutputWidth);
@@ -141,4 +147,3 @@ DeclarePass (Sample4_4)
 
 DeclareEntryPoint (Kaleidoscope_Four)
 { return fn_main (Sample4_4, uv2); }
-
