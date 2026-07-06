@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-07-06
 // @Author jwrl
 // @Author Unknown
 // @Created 2020-06-28
@@ -9,6 +9,18 @@
  other catastrophic effects.  The flicker rate and hue of the flames can be adjusted,
  the size can fill the frame or reduce to zero, and it can be positioned in frame by
  dragging the centre point of the effect.
+
+   [*]Overlay settings
+      [*]Fireball mode:  Can be set as an overlay or as a standalone effect. In
+         standalone mode the overlay settings are ignored.
+      [*]Opacity:  Self explanatory.
+      [*]Invert key:  When set uses the fireball shape to cut a hole in the background.
+   [*]Fireball settings
+      [*]Flicker rate:  Self explanatory.
+      [*]Flame hue:  Self explanatory.
+      [*]Intensity:  Adjusts the fireball brightness and the size of the hot centre.
+      [*]Fireball size:  Self explanatory.
+   [*]Fireball pos.:  Self explanatory.
 
  The result can then optionally be blended with a video background layer.  This function
  has the ability to be disabled because with some display cards leaving it enabled when
@@ -33,6 +45,11 @@
 //
 // Version history:
 //
+// Updated 2026-07-06 jwrl.
+// Changed "Fireball opacity" to "Opacity".
+// Changed "Flame intensity" to "Intensity".
+// Changed "Fireball position" to "Fireball pos.".
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
@@ -53,19 +70,17 @@ DeclareInput (Inp);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareIntParam (SetTechnique, "Fireball mode", "Overlay settings", 0, "Overlay over input|Standalone (ignores overlay settings)");
+DeclareIntParam (SetTechnique, "Fireball mode", "Overlay settings",  0, "Overlay over input|Standalone (ignores overlay settings)");
+DeclareFloatParam (Amount,     "Opacity",       "Overlay settings",  kNoFlags, 1.0, 0.0, 1.0);
+DeclareBoolParam (InvertAlpha, "Invert key",    "Overlay settings",  false);
 
-DeclareFloatParam (Amount, "Fireball opacity", "Overlay settings", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Speed,      "Flicker rate",  "Fireball settings", "DisplayAsPercentage", 0.5, 0.0, 2.0);
+DeclareFloatParam (Hue,        "Flame hue",     "Fireball settings", kNoFlags, 0.0, -180.0, 180.0);
+DeclareFloatParam (Intensity,  "Intensity",     "Fireball settings", kNoFlags, 1.0, 0.5, 1.5);
+DeclareFloatParam (Size,       "Fireball size", "Fireball settings", kNoFlags, 0.2, 0.0, 1.0);
 
-DeclareBoolParam (InvertAlpha, "Invert key", "Overlay settings", false);
-
-DeclareFloatParam (Speed, "Flicker rate", "Fireball settings", "DisplayAsPercentage", 0.5, 0.0, 2.0);
-DeclareFloatParam (Hue, "Flame hue", "Fireball settings", kNoFlags, 0.0, -180.0, 180.0);
-DeclareFloatParam (Intensity, "Flame intensity", "Fireball settings", kNoFlags, 1.0, 0.5, 1.5);
-DeclareFloatParam (Size, "Fireball size", "Fireball settings", kNoFlags, 0.2, 0.0, 1.0);
-
-DeclareFloatParam (PosX, "Fireball position", kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (PosY, "Fireball position", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (PosX,       "Fireball pos.", kNoGroup,            "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (PosY,       "Fireball pos.", kNoGroup,            "SpecifiesPointY", 0.5, 0.0, 1.0);
 
 DeclareFloatParam (_Progress);
 DeclareFloatParam (_Length);
@@ -217,4 +232,3 @@ DeclareEntryPoint (Fireballs_1)
 
    return fn_hueShift (saturate (Fgnd * Intensity));
 }
-
