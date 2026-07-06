@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-07-06
 // @Author jwrl
 // @Created 2018-09-09
 
@@ -9,6 +9,10 @@
  when the amount reaches zero the blur does also.  The displacement is produced by scaling
  the video slightly in the X direction, ensuring that no edge artefacts are visible.
 
+   [*]Amount:  In most effects "Amount" fades the effect in or out.  In this effect
+      it interacts with the blur and varies the double vision displacement.
+   [*]Blurriness:  Controls the amount of blurred vision.  Interacts with Amount.
+
  NOTE:  This effect breaks resolution independence.  It is only suitable for use with
  Lightworks version 2023 and higher.
 */
@@ -17,6 +21,9 @@
 // Lightworks user effect DoubleVision.fx
 //
 // Version history:
+//
+// Updated 2026-07-06 jwrl.
+// Added settings description to header block.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack for Linux fix.
@@ -39,7 +46,7 @@ DeclareInput (Inp);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Amount, "Amount", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Amount,     "Amount",     kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
 DeclareFloatParam (Blurriness, "Blurriness", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
 
 DeclareFloatParam (_OutputWidth);
