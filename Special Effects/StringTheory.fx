@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-09-04
+// @Released 2026-07-06
 // @Author khaver
 // @Created 2018-08-01
 // @OriginalAuthor Martijn Steinrucken 2018
@@ -18,14 +18,18 @@
 // Email:countfrolic@gmail.com Twitter:@The_ArtOfCode
 // License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 //-----------------------------------------------------------------------------------------//
-// stringTheory.fx for Lightworks was adapted by user khaver 1 Aug 2018 for use with Lightworks
-// version 14.5 and higher from original code by the above licensee taken from the Shadertoy
-// website (https://www.shadertoy.com/view/lscczl).
+// stringTheory.fx for Lightworks was adapted by user khaver 1 Aug 2018 for use with
+// Lightworks version 14.5 and higher from original code by the above licensee taken from
+// the Shadertoy website (https://www.shadertoy.com/view/lscczl).
 //
-// This adaptation retains the same Creative Commons license shown above.
-// It cannot be used for commercial purposes.
+// This adaptation retains the same Creative Commons license shown above.  It cannot be
+// used for commercial purposes, i.e., you MAY use it to generate images in video content
+// but you MAY NOT use this code or any part of it as part of a commercial product.
 //
 // Version history:
+//
+// Updated 2026-07-06 jwrl.
+// Changed "Motion speed" to "Movement".
 //
 // Updated 2023-09-04 jwrl.
 // Optimised the code to resolve a Linux/Mac compatibility issue.
@@ -50,24 +54,24 @@ DeclareLightworksEffect ("String Theory", "Matte", "Special Effects", "You reall
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Brightness, "Brightness", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Glow, "Glow", kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (fSparkle, "Sparkle", kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Brightness,   "Brightness",     kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Glow,         "Glow",           kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (fSparkle,     "Sparkle",        kNoGroup, kNoFlags, 0.0, 0.0, 1.0);
 
-DeclareBoolParam (Negative, "Negative", kNoGroup, false);
+DeclareBoolParam (Negative,      "Negative",       kNoGroup, false);
 
-DeclareIntParam (LayerInt, "Layers", kNoGroup, 5, "1|2|3|4|5|6|7|8");
+DeclareIntParam (LayerInt,       "Layers",         kNoGroup, 5, "1|2|3|4|5|6|7|8");
 
-DeclareFloatParam (Center_X, "Center", kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (Center_Y, "Center", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (Center_X,     "Center",         kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (Center_Y,     "Center",         kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
 
-DeclareFloatParam (Rotation, "Rotation", kNoGroup, kNoFlags, 180.0, 0.0, 360.0);
-DeclareFloatParam (Zoom, "Zoom", kNoGroup, kNoFlags, 1.0, 0.0, 100.0);
-DeclareFloatParam (sSize, "Size", kNoGroup, kNoFlags, 15.0, 0.0, 50.0);
-DeclareFloatParam (lSpeed, "Linear Speed", kNoGroup, kNoFlags, 0.0, -20.0, 20.0);
-DeclareFloatParam (mSpeed, "Motion Speed", kNoGroup, kNoFlags, 5.0, 0.0, 100.0);
-DeclareFloatParam (Density, "String Density", kNoGroup, kNoFlags, 1.0, 0.0, 5.0);
-DeclareFloatParam (Irregularity, "Irregularity", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Rotation,     "Rotation",       kNoGroup, kNoFlags, 180.0, 0.0, 360.0);
+DeclareFloatParam (Zoom,         "Zoom",           kNoGroup, kNoFlags, 1.0, 0.0, 100.0);
+DeclareFloatParam (sSize,        "Size",           kNoGroup, kNoFlags, 15.0, 0.0, 50.0);
+DeclareFloatParam (lSpeed,       "Linear speed",   kNoGroup, kNoFlags, 0.0, -20.0, 20.0);
+DeclareFloatParam (mSpeed,       "Movement",       kNoGroup, kNoFlags, 5.0, 0.0, 100.0);
+DeclareFloatParam (Density,      "String density", kNoGroup, kNoFlags, 1.0, 0.0, 5.0);
+DeclareFloatParam (Irregularity, "Irregularity",   kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -223,4 +227,3 @@ DeclareEntryPoint (StringTheory)
 
    return float4 (col, 1.0);
 }
-
