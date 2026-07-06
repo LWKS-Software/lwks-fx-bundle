@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-06-19
+// @Released 2026-07-06
 // @Author jwrl
 // @Created 2017-12-29
 
@@ -9,6 +9,26 @@
  used in conjunction with a blend or transform effect.  The spot can be scaled, have
  its aspect ratio adjusted, and rotated through plus or minus 90 degrees.  The edge of
  the effect can also be feathered.
+
+   [*]Spot shape
+      [*]Size:  Self explanatory.
+      [*]Feather:  Softens the edges of the spot.
+      [*]Aspect ratio:  Self explanatory.
+      [*]Angle:  Adjusts angle of thhe spot.
+      [*]Position:  Sets the position of the spot.
+   [*]Spot settings
+      [*]Exposure:  Self explanatory.
+      [*]Saturation:  Self explanatory.
+      [*]Vibrance:  Self explanatory.
+      [*]Tint:  Self explanatory.
+      [*]Colour:  Self explanatory.
+   [*]Background settings
+      [*]Focus:  Blurs the background.
+      [*]Exposure:  Self explanatory.
+      [*]Saturation:  Self explanatory.
+      [*]Vibrance:  Self explanatory.
+      [*]Tint:  Self explanatory.
+      [*]Colour:  Self explanatory.
 
  Foreground and background exposure can be adjusted, as can saturation and vibrance.  The
  background can also be slightly blurred to give a soft focus effect, and the foreground
@@ -22,6 +42,9 @@
 // Lightworks user effect Spotlight.fx
 //
 // Version history:
+//
+// Updated 2026-07-06 jwrl.
+// Added settings description to header block.
 //
 // Updated 2023-06-19 jwrl.
 // Changed DVE references to transform.
@@ -46,27 +69,25 @@ DeclareInput (Fg);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (SpotSize, "Size", "Spot shape", kNoFlags, 0.3, 0.0, 1.0);
-DeclareFloatParam (SpotFeather, "Feather", "Spot shape", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (SpotAspect, "Aspect ratio", "Spot shape", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (SpotAngle, "Angle", "Spot shape", kNoFlags, 0.0, -90.0, 90.0);
-DeclareFloatParam (CentreX, "Position", "Spot shape", "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (CentreY, "Position", "Spot shape", "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (SpotSize,      "Size",         "Spot shape",          kNoFlags,  0.3,  0.0, 1.0);
+DeclareFloatParam (SpotFeather,   "Feather",      "Spot shape",          kNoFlags,  0.5,  0.0, 1.0);
+DeclareFloatParam (SpotAspect,    "Aspect ratio", "Spot shape",          kNoFlags,  0.0, -1.0, 1.0);
+DeclareFloatParam (SpotAngle,     "Angle",        "Spot shape",          kNoFlags, 0.0, -90.0, 90.0);
+DeclareFloatParam (CentreX,       "Position",     "Spot shape",          "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (CentreY,       "Position",     "Spot shape",          "SpecifiesPointY", 0.5, 0.0, 1.0);
 
-DeclareFloatParam (FgdExposure, "Exposure", "Spot settings", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (FgdSaturation, "Saturation", "Spot settings", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (FgdVibrance, "Vibrance", "Spot settings", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (FgdTint, "Tint", "Spot settings", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (FgdExposure,   "Exposure",     "Spot settings",       kNoFlags,  0.0, -1.0, 1.0);
+DeclareFloatParam (FgdSaturation, "Saturation",   "Spot settings",       kNoFlags,  0.0, -1.0, 1.0);
+DeclareFloatParam (FgdVibrance,   "Vibrance",     "Spot settings",       kNoFlags,  0.0, -1.0, 1.0);
+DeclareFloatParam (FgdTint,       "Tint",         "Spot settings",       kNoFlags,  0.0,  0.0, 1.0);
+DeclareColourParam (FgdColour,    "Colour",       "Spot settings",       kNoFlags,  1.0,  0.8, 0.0, 1.0);
 
-DeclareColourParam (FgdColour, "Colour", "Spot settings", kNoFlags, 1.0, 0.8, 0.0, 1.0);
-
-DeclareFloatParam (BgdFocus, "Focus", "Background settings", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (BgdExposure, "Exposure", "Background settings", kNoFlags, -0.5, -1.0, 1.0);
-DeclareFloatParam (BgdSaturation, "Saturation", "Background settings", kNoFlags, -0.5, -1.0, 1.0);
-DeclareFloatParam (BgdVibrance, "Vibrance", "Background settings", kNoFlags, -0.5, -1.0, 1.0);
-DeclareFloatParam (BgdTint, "Tint", "Background settings", kNoFlags, 0.25, 0.0, 1.0);
-
-DeclareColourParam (BgdColour, "Colour", "Background settings", kNoFlags, 0.0, 0.5, 1.0, 1.0);
+DeclareFloatParam (BgdFocus,      "Focus",        "Background settings", kNoFlags,  0.5,  0.0, 1.0);
+DeclareFloatParam (BgdExposure,   "Exposure",     "Background settings", kNoFlags, -0.5, -1.0, 1.0);
+DeclareFloatParam (BgdSaturation, "Saturation",   "Background settings", kNoFlags, -0.5, -1.0, 1.0);
+DeclareFloatParam (BgdVibrance,   "Vibrance",     "Background settings", kNoFlags, -0.5, -1.0, 1.0);
+DeclareFloatParam (BgdTint,       "Tint",         "Background settings", kNoFlags, 0.25,  0.0, 1.0);
+DeclareColourParam (BgdColour,    "Colour",       "Background settings", kNoFlags,  0.0,  0.5, 1.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -232,4 +253,3 @@ DeclareEntryPoint ()
 
    return lerp (retval, tex2D (FgdProc, uv2), alpha);
 }
-
