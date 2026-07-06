@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-07-06
 // @Author jwrl
 // @Created 2018-09-04
 
@@ -8,6 +8,15 @@
  essentially a non-additive mix.  It can be adjusted to operate over a limited range of the
  input video levels or the full range.
 
+   [*]Amount:  Self explanatory.
+   [*]Colour settings
+      [*]Saturation:  Self explanatory.
+      [*]Hue cycles:  Adjusts the rate at which the hue cycle changes.
+   [*]Range settings
+      [*]Low clip:  Sets the lower level above which the effect operates.
+      [*]High clip:  Sets the upper level above which the effect no longer operates.
+      [*]Soften key:  Sets the softness of the transition into and out of the effect.
+
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
 
@@ -15,6 +24,12 @@
 // Lightworks user effect RainbowConnect.fx
 //
 // Version history:
+//
+// Updated 2026-07-06 jwrl.
+// Changed "Hue cycling" to "Hue cycles".
+// Changed "Key softness" to "Soften key".
+// Masking now uses RGBA.
+// Added settings description to header block.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -38,14 +53,14 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Amount,     "Amount",     kNoGroup,          kNoFlags, 1.0, 0.0, 1.0);
 
 DeclareFloatParam (Saturation, "Saturation", "Colour settings", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (HueCycle, "Hue cycling", "Colour settings", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (HueCycle,   "Hue cycles", "Colour settings", kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareFloatParam (LowClip, "Low clip", "Range settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareFloatParam (HighClip, "High clip", "Range settings", kNoFlags, 0.75, 0.0, 1.0);
-DeclareFloatParam (Softness, "Key softness", "Range settings", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (LowClip,    "Low clip",   "Range settings",  kNoFlags, 0.25, 0.0, 1.0);
+DeclareFloatParam (HighClip,   "High clip",  "Range settings",  kNoFlags, 0.75, 0.0, 1.0);
+DeclareFloatParam (Softness,   "Soften key", "Range settings",  kNoFlags, 0.5, 0.0, 1.0);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -101,6 +116,5 @@ DeclareEntryPoint (RainbowConnect)
    clip  = (HighClip * 1.0002) - (edge * 0.5) - 0.0001;
    Alpha = min (Alpha, saturate ((clip - Luma) / edge));
 
-   return lerp (Fgnd, retval, tex2D (Mask, uv1).x * Alpha);
+   return lerp (Fgnd, retval, tex2D (Mask, uv1) * Alpha);
 }
-
