@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-07-06
 // @Author jwrl
 // @Created 2020-06-27
 
@@ -11,6 +11,27 @@
  It can also be varied in blend softness.  The default crop settings will produce a 90
  degree arc (plus and minus 45 degrees), but can be adjusted to whatever angle you need
  over a 180 degree range.
+
+   [*]Amount:  Sets the visibility of the rainbow.
+   [*]Radius:  Sets the radius of the primary rainbow. The secondary rainbow if used
+      is adjusted with respect to this.
+   [*]Width:  Sets the rainbow width.
+   [*]Falloff:  Adjusts the fading of the bluer end of the spectrum.
+   [*]Origin:  Self explanatory.
+   [*]Primary rainbow cropping
+      [*]Left angle:  Crops the left end of the primary rainbow.
+      [*]L. softness:  Adjusts left end sofness.
+      [*]Right angle:  Crops the right end of the primary rainbow.
+      [*]R. softness:  Adjusts right end sofness.
+   [*]Secondary rainbow offsets
+      [*]Amount:  Sets the intensity of the secondary rainbow.
+      [*]Displaced:  Sets the amount of displacement of the secondary rainbow from
+         the primary rainbow.
+   [*]Secondary rainbow cropping has the same four settings as the primary rainbow.
+   [*]Background breakthrough
+      [*]Amount:  Sets the amount of background breakthrough to vary the rainbow
+         transparency.
+      [*]Softness:  Sets the softness of the breakthrough.
 
  The secondary rainbow is inverted and inherits Amount, Radius, Width, Falloff and Origin
  from the primary rainbow.  The master Amount is modified by the secondary rainbow Amount,
@@ -25,6 +46,12 @@
 // Lightworks user effect Rainbow.fx
 //
 // Version history:
+//
+// Updated 2026-07-06 jwrl.
+// Added settings description to header block.
+// Changed "Left softness" to "L. softness".
+// Changed "Right softness" to "R. softness".
+// Changed "Displacement" to "Displaced".
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -46,29 +73,28 @@ DeclareInput (Inp);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Amount, "Amount", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Radius, "Radius", kNoGroup, kNoFlags, 0.5, 0.1, 2.0);
-DeclareFloatParam (Width, "Width", kNoGroup, kNoFlags, 0.125, 0.05, 0.4);
-DeclareFloatParam (Falloff, "Falloff", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Amount,    "Amount",      kNoGroup,                     kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Radius,    "Radius",      kNoGroup,                     kNoFlags, 0.5, 0.1, 2.0);
+DeclareFloatParam (Width,     "Width",       kNoGroup,                     kNoFlags, 0.125, 0.05, 0.4);
+DeclareFloatParam (Falloff,   "Falloff",     kNoGroup,                     kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Pos_X,     "Origin",      kNoGroup,                     "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (Pos_Y,     "Origin",      kNoGroup,                     "SpecifiesPointY", 0.5, 0.0, 1.0);
 
-DeclareFloatParam (Pos_X, "Origin", kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (Pos_Y, "Origin", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (L_angle,   "Left angle",  "Primary rainbow cropping",   kNoFlags, 45.0, 0.0, 180.0);
+DeclareFloatParam (L_soft,    "L. softness", "Primary rainbow cropping",   kNoFlags, 0.175, 0.0, 1.0);
+DeclareFloatParam (R_angle,   "Right angle", "Primary rainbow cropping",   kNoFlags, -45.0, -180.0, 0.0);
+DeclareFloatParam (R_soft,    "R. softness", "Primary rainbow cropping",   kNoFlags, 0.175, 0.0, 1.0);
 
-DeclareFloatParam (L_angle, "Left angle", "Primary rainbow cropping", kNoFlags, 45.0, 0.0, 180.0);
-DeclareFloatParam (L_soft, "Left softness", "Primary rainbow cropping", kNoFlags, 0.175, 0.0, 1.0);
-DeclareFloatParam (R_angle, "Right angle", "Primary rainbow cropping", kNoFlags, -45.0, -180.0, 0.0);
-DeclareFloatParam (R_soft, "Right softness", "Primary rainbow cropping", kNoFlags, 0.175, 0.0, 1.0);
+DeclareFloatParam (Amount_2,  "Amount",      "Secondary rainbow offsets",  kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (Offset,    "Displaced",   "Secondary rainbow offsets",  kNoFlags, 0.2, 0.0, 1.0);
 
-DeclareFloatParam (Amount_2, "Amount", "Secondary rainbow offsets", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (Offset, "Displacement", "Secondary rainbow offsets", kNoFlags, 0.2, 0.0, 1.0);
-
-DeclareFloatParam (L_angle_2, "Left angle", "Secondary rainbow cropping", kNoFlags, 45.0, 0.0, 180.0);
-DeclareFloatParam (L_soft_2, "Left softness", "Secondary rainbow cropping", kNoFlags, 0.175, 0.0, 1.0);
+DeclareFloatParam (L_angle_2, "Left angle",  "Secondary rainbow cropping", kNoFlags, 45.0, 0.0, 180.0);
+DeclareFloatParam (L_soft_2,  "L. softness", "Secondary rainbow cropping", kNoFlags, 0.175, 0.0, 1.0);
 DeclareFloatParam (R_angle_2, "Right angle", "Secondary rainbow cropping", kNoFlags, -45.0, -180.0, 0.0);
-DeclareFloatParam (R_soft_2, "Right softness", "Secondary rainbow cropping", kNoFlags, 0.175, 0.0, 1.0);
+DeclareFloatParam (R_soft_2,  "R. softness", "Secondary rainbow cropping", kNoFlags, 0.175, 0.0, 1.0);
 
-DeclareFloatParam (Clip, "Amount", "Background breakthrough", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Range, "Softness", "Background breakthrough", kNoFlags, 0.2, 0.0, 1.0);
+DeclareFloatParam (Clip,      "Amount",      "Background breakthrough",    kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Range,     "Softness",    "Background breakthrough",    kNoFlags, 0.2, 0.0, 1.0);
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
@@ -194,4 +220,3 @@ DeclareEntryPoint (Rainbow)
 
    return lerp (Bgnd, Fgnd, fn_get_mask (MaskBounds, xy, Rmsk, OUTER));
 }
-
