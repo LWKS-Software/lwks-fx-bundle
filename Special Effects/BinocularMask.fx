@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-07-06
 // @Author jwrl
 // @Created 2020-08-24
 
@@ -7,6 +7,11 @@
  This effect creates the classic binocular mask shape.  It can be adjusted from a simple
  circular or telescope-style effect, to separated circular masks.  The edge softness can
  be adjusted, and colour fringing can be applied to the edges as well.
+
+   [*]Size:  Sets the size of the circular masks.
+   [*]L / R offset:  Sets the displacement of the masks.  Set to zero to emulate a telescope.
+   [*]Edge softness:  Self explanatory.
+   [*]Edge fringing:  Adds a specular colour fringe to edge softness.
 
  NOTE:  This effect breaks resolution independence.  It is only suitable for use with
  Lightworks version 2023 and higher.
@@ -16,6 +21,9 @@
 // Lightworks user effect BinocularMask.fx
 //
 // Version history:
+//
+// Updated 2026-07-06 jwrl.
+// Added settings description to header block.
 //
 // Updated 2024-05-24 jwrl.
 // Minor mask generation change.
@@ -38,8 +46,8 @@ DeclareInput (Inp);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Size, "Size", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Offset, "L / R offset", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Size,     "Size",          kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Offset,   "L / R offset",  kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
 DeclareFloatParam (Softness, "Edge softness", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
 DeclareFloatParam (Fringing, "Edge fringing", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
 
