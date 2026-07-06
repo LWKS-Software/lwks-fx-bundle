@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-07-06
 // @Author jwrl
 // @Created 2019-04-10
 
@@ -11,12 +11,21 @@
  from two to thirty frames.  Although decimal numbers of frames can be entered they will
  always round to the nearest available whole number.
 
+   [*]Number of flash cycles:  This sets the number of repeated flashes in a single
+      lightning flash sequence.  It can range from one to five.
+   [*]Duration of flashes:  The duration of individual flashes in a flash sequence
+      can be from 1 to 3 frames.
+   [*]Fade (frames):  The fade out (decay) of an individual flash can range from 2 to
+      30 frames.  Longer is NOT better.
+   [*]Colour cast:  The flash colour.  The default is a very light blue.
+
  This is not designed as a transition so it is up to the user to ensure that there is
  room for the effect to function fully.  The required duration will be double the number
  of flashes times the flash duration plus the fade duration minus one.  For example,
  three one frame flashes with a fade duration of six frames will need eleven frames to
  fully function.  Once the flash sequence fade ends it will not affect the image further
- and can be left in place.
+ and can be left in place.  Then the next time that you need a flash just press the C
+ key to force a cut in the timeline and you'll have a fresh bolt of Lightning.
 
  NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
 */
@@ -25,6 +34,10 @@
 // Lightworks user effect LightningFlash.fx
 //
 // Version history:
+//
+// Updated 2026-07-06 jwrl.
+// Changed "Fade (in frames)" to "Fade (frames)".
+// Rewrote header block.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
@@ -46,12 +59,11 @@ DeclareInput (Inp);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareIntParam (FlashCycle, "Number of flash cycles", kNoGroup, 2, "1 flash|2 flashes|3 flashes|4 flashes|5 flashes");
-DeclareIntParam (FlashDuration, "Duration of flashes", kNoGroup, 0, "1 frame|2 frames|3 frames");
+DeclareIntParam (FlashCycle,    "Number of flash cycles", kNoGroup, 2, "1 flash|2 flashes|3 flashes|4 flashes|5 flashes");
+DeclareIntParam (FlashDuration, "Duration of flashes",    kNoGroup, 0, "1 frame|2 frames|3 frames");
 
-DeclareFloatParam (FadeAmount, "Fade (in frames)", kNoGroup, kNoFlags, 6.0, 2.0, 30.0);
-
-DeclareColourParam (ColourCast, "Colour cast", kNoGroup, kNoFlags, 0.33, 0.67, 1.0, 1.0);
+DeclareFloatParam (FadeAmount,  "Fade (frames)",          kNoGroup, kNoFlags, 6.0, 2.0, 30.0);
+DeclareColourParam (ColourCast, "Colour cast",            kNoGroup, kNoFlags, 0.33, 0.67, 1.0, 1.0);
 
 DeclareFloatParam (_LengthFrames);
 DeclareFloatParam (_Progress);
@@ -80,4 +92,3 @@ DeclareEntryPoint (LightningFlash)
 
    return lerp (ngtve, video, fade);
 }
-
