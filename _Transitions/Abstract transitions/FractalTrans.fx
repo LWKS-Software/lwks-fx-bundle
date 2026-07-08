@@ -1,6 +1,6 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
-// @Author Robert Schütze
+// @Released 2026-07-08
+// @Author Robert SchÃ¼tze
 // @Author jwrl
 // @Created 2016-05-21
 
@@ -10,16 +10,41 @@
  will notice that the border settings are much more extreme.  This is to assist in the
  blend transition process.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+   [*]Amount:  The transition progress.
+   [*]Fractal settings
+      [*]Offset:  Sets the state of the fractal pattern at the start of the
+         transition
+      [*]Rate:  Sets the rate at which the pattern changes.
+      [*]Edge size:  Sets the thickness of the coloured border in the pattern.
+      [*]Feather:  Softens the edge of the pattern and the border thickness.
+   [*]Enable blend transitions:  Changes the mode from opaque video to transparent
+      video such as titles and the like.
+   [*]Blend settings
+      [*]Source:  Selects between an extracted video source and transparent video.
+      [*]Transition into blend:  Selects between transitioning into or out of a
+         blended video source.
+      [*]Fine tune:  Fine tunes the separation of an extracted video source from
+         its background.
+      [*]Show foreground key:  Showing the key helps in setting up the clip.
+      [*]Swap sources:  This can be necessary when using a folded delta key
+         (extracted) transition.
+
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect FractalTrans.fx
 //
 // The fractal component is a conversion of GLSL sandbox effect #308888 created by Robert
-// Schütze (trirop) 07.12.2015.
+// SchÃ¼tze (trirop) 07.12.2015.
 //
 // Version history:
+//
+// Updated 2026-07-08 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
@@ -34,8 +59,6 @@
 // Conversion 2023-03-06 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
 
-#include "_utils.fx"
-
 DeclareLightworksEffect ("Fractal transition", "Mix", "Abstract transitions", "Uses a fractal-like pattern to transition between two sources", "CanSize");
 
 //-----------------------------------------------------------------------------------------//
@@ -44,26 +67,24 @@ DeclareLightworksEffect ("Fractal transition", "Mix", "Abstract transitions", "U
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",       kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareFloatParam (fractalOffset, "Offset", "Fractal settings", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Rate, "Rate", "Fractal settings", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Border, "Edge size", "Fractal settings", kNoFlags, 0.1, 0.0, 1.0);
-DeclareFloatParam (Feather, "Feather", "Fractal settings", kNoFlags, 0.1, 0.0, 1.0);
+DeclareFloatParam (fractalOffset,  "Offset",       "Fractal settings", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Rate,           "Rate",         "Fractal settings", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Border,         "Edge size",    "Fractal settings", kNoFlags, 0.1, 0.0, 1.0);
+DeclareFloatParam (Feather,        "Feather",      "Fractal settings", kNoFlags, 0.1, 0.0, 1.0);
 
-DeclareBoolParam (Blended, "Enable blend transitions", kNoGroup, false);
+DeclareBoolParam  (Blended,        "Enable blend transitions",         kNoGroup, false);
 
-DeclareIntParam (Source, "Source", "Blend settings", 0, "Extracted foreground|Image key/Title pre 2023.2, no input|Image or title without connected input");
-DeclareBoolParam (SwapDir, "Transition into blend", "Blend settings", true);
-DeclareFloatParam (KeyGain, "Key adjustment", "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam (ShowKey, "Show foreground key", "Blend settings", false);
-DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
+DeclareIntParam   (Source,         "Source",       "Blend settings",   0, "Extracted foreground|Image key/Title pre 2023.2, no input|Image or title without connected input");
+DeclareBoolParam  (SwapDir,        "Transition into blend",            "Blend settings", true);
+DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings",   kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (ShowKey,        "Show foreground key",              "Blend settings", false);
+DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings",   false);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -143,30 +164,19 @@ DeclarePass (Fractal)
 
 DeclareEntryPoint (FractalTrans)
 {
-   float4 Fgnd = tex2D (Fgd, uv3);
-   float4 Bgnd = tex2D (Bgd, uv3);
+   float4 Fgnd   = tex2D (Fgd, uv3);
+   float4 Bgnd   = tex2D (Bgd, uv3);
    float4 retval = tex2D (Fractal, uv3);
-   float4 maskBg;
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = kTransparentBlack;
-      }
+      if (ShowKey) { retval = Fgnd; }
       else {
          float amount = SwapDir ? 1.0 - Amount : Amount;
 
          retval = fn_technique (Fgnd, Bgnd, retval, amount);
-         maskBg = Bgnd;
       }
-
-      retval = lerp (maskBg, retval, Fgnd.a);
    }
-   else {
-      retval = fn_technique (Fgnd, Bgnd, retval, Amount);
-      maskBg = Fgnd;
-   }
+   else retval = fn_technique (Fgnd, Bgnd, retval, Amount);
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
-
