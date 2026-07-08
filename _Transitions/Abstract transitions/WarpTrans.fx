@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2026-07-08
 // @Author jwrl
 // @Created 2016-05-10
 
@@ -10,7 +10,27 @@
  transmogrify transition, which is now called pixel cloud.  The original versions have
  now been withdrawn.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+   [*]Amount:  The transition progress.
+   [*]Warp type:  The warp can either smear the video sources into each other, or
+      break them up into a pixel cloud.
+   [*]Distortion:  This controls the amount of distortion that the effect applies.
+      There's a surprise!'
+   [*]Enable blend transitions:  Changes the mode from opaque video to transparent
+      video such as titles and the like.
+   [*]Blend settings
+      [*]Source:  Selects between an extracted video source and transparent video.
+      [*]Transition into blend:  Selects between transitioning into or out of a
+         blended video source.
+      [*]Fine tune:  Fine tunes the separation of an extracted video source from
+         its background.
+      [*]Show foreground key:  Showing the key helps in setting up the clip.
+      [*]Swap sources:  This can be necessary when using a folded delta key
+         (extracted) transition.
+
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -18,20 +38,22 @@
 //
 // Version history:
 //
+// Updated 2026-07-08 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
+//
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
 //
 // Updated 2023-06-13 jwrl.
 // Added keyed foreground viewing to help set up delta key.
 // Added delta key swap to correct routing problems.
+// Removed masking.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-03-06 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Warp transition", "Mix", "Abstract transitions", "Warps into or out of titles, keys and images", "CanSize");
 
@@ -41,24 +63,20 @@ DeclareLightworksEffect ("Warp transition", "Mix", "Abstract transitions", "Warp
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",       kNoGroup,         kNoFlags, 0.5, 0.0, 1.0);
+DeclareIntParam   (SetTechnique,   "Warp type",    kNoGroup, 0,      "Smeared video|Pixel cloud");
+DeclareFloatParam (Distortion,     "Distortion",   kNoGroup,         kNoFlags, 0.5, 0.0, 1.0);
+DeclareBoolParam  (Blended,        "Enable blend transitions",       kNoGroup, false);
 
-DeclareIntParam (SetTechnique, "Warp type", kNoGroup, 0, "Smeared video|Pixel cloud");
-DeclareFloatParam (Distortion, "Distortion", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
-
-DeclareBoolParam (Blended, "Enable blend transitions", kNoGroup, false);
-
-DeclareIntParam (Source, "Source", "Blend settings", 0, "Extracted foreground|Image key/Title pre 2023.2, no input|Image or title without connected input");
-DeclareBoolParam (SwapDir, "Transition into blend", "Blend settings", true);
-DeclareFloatParam (KeyGain, "Key adjustment", "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam (ShowKey, "Show foreground key", "Blend settings", false);
-DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
+DeclareIntParam   (Source,         "Source",       "Blend settings", 0, "Extracted foreground|Image key/Title pre 2023.2, no input|Image or title without connected input");
+DeclareBoolParam  (SwapDir,        "Transition into blend",          "Blend settings", true);
+DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend settings", false);
+DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
 DeclareFloatParam (_OutputAspectRatio);
 DeclareFloatParam (_Progress);
@@ -126,17 +144,14 @@ DeclareEntryPoint (Warp_0)
 {
    float4 Fgnd = tex2D (Fg_0, uv3);
    float4 Bgnd = tex2D (Bg_0, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    float2 xy;
 
    float amount, warpFactor;
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = kTransparentBlack;
-      }
+      if (ShowKey) { retval = Fgnd; }
       else {
          retval = (Bgnd - 0.5.xxxx) * lerp (0.4, 3.2, Distortion);
 
@@ -155,14 +170,10 @@ DeclareEntryPoint (Warp_0)
 
          Fgnd = tex2D (Fg_0, xy);
          retval = lerp (Bgnd, Fgnd, amount);
-         maskBg = Bgnd;
       }
-
-      retval = lerp (maskBg, retval, Fgnd.a);
    }
    else {
       warpFactor = sin (Amount * PI) * Distortion * 4.0;
-      maskBg = Fgnd;
 
       xy = uv3 - float2 (Fgnd.b - Fgnd.r, Fgnd.g) * warpFactor;
       retval = tex2D (Fg_0, xy);
@@ -170,7 +181,7 @@ DeclareEntryPoint (Warp_0)
       retval = lerp (retval, tex2D (Bg_0, xy), Amount);
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -187,7 +198,7 @@ DeclareEntryPoint (Warp_1)
 {
    float4 Fgnd = tex2D (Fg_1, uv3);
    float4 Bgnd = tex2D (Bg_1, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    float scale = lerp (0.00054, 0.00055, Distortion);
 
@@ -196,10 +207,7 @@ DeclareEntryPoint (Warp_1)
    float rand = frac (sin (dot (pixSize, float2 (18.5475, 89.3723))) * 54853.3754);
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = kTransparentBlack;
-      }
+      if (ShowKey) { retval = Fgnd; }
       else {
          pixSize += ((uv3 * rand) - 0.5).xx;
 
@@ -218,13 +226,9 @@ DeclareEntryPoint (Warp_1)
          xy = lerp (xy, uv3, amount);
          Fgnd = tex2D (Fg_1, xy);
          retval = lerp (Bgnd, Fgnd, amount);
-         maskBg = Bgnd;
       }
-
-      retval = lerp (maskBg, retval, Fgnd.a);
    }
    else {
-      maskBg = Fgnd;
       xy = saturate (pixSize + (sqrt (1.0 - _Progress) - 0.5).xx + (uv3 * rand));
 
       float2 xy1 = lerp (uv3, saturate (pixSize + (sqrt (_Progress) - 0.5).xx + (uv3 * rand)), Amount);
@@ -235,6 +239,5 @@ DeclareEntryPoint (Warp_1)
       retval = lerp (Fgnd, Bgnd, Amount);
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
-
