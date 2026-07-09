@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-07-09
 // @Author jwrl
 // @Created 2018-06-11
 
@@ -8,16 +8,41 @@
  them to make the image materialise from four directions or blow apart in four directions.
  Each quadrant is independently coloured.
 
+   [*]Amount:  The transition progress.
+   [*]Borders
+      [*]Width:  Self explanatory.
+      [*]Offset:  Sets the amount of displacement of the four outlines.
+   [*]Colours
+      [*]Outline 1:  Sets the colour for the first outline.
+      [*]Outline 2:  Sets the colour for the second outline.
+      [*]Outline 3:  Sets the colour for the third outline.
+      [*]Outline 4:  Sets the colour for the fourth outline.
+   [*]Blend settings
+      [*]Source:  Selects between an extracted video source and transparent video.
+      [*]Transition into blend:  Selects between transitioning into or out of a
+         blended video source.
+      [*]Fine tune:  Fine tunes the separation of an extracted video source from
+         its background.
+      [*]Show foreground key:  Showing the key helps in setting up the clip.
+      [*]Swap sources:  This can be necessary when using a folded delta key
+         (extracted) transition.
+
  If the foreground and/or background resolution differ from the sequence resolution it
  will be necessary to adjust the delta key trim.  Normally you won't need to do this.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect BorderTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-09 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack to fix Linux lerp()/mix() bug.
@@ -35,8 +60,6 @@
 // Conversion 2023-03-06 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
 
-#include "_utils.fx"
-
 DeclareLightworksEffect ("Border transition", "Mix", "Art transitions", "The foreground materialises from four directions or dematerialises to four directions", "CanSize");
 
 //-----------------------------------------------------------------------------------------//
@@ -45,27 +68,25 @@ DeclareLightworksEffect ("Border transition", "Mix", "Art transitions", "The for
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",       kNoGroup,         kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareFloatParam (Radius, "Thickness", "Borders", kNoFlags, 0.3, 0.0, 1.0);
-DeclareFloatParam (Displace, "Displacement", "Borders", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Radius,         "Width",       "Borders",         kNoFlags, 0.3, 0.0, 1.0);
+DeclareFloatParam (Displace,       "Offset",      "Borders",         kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareColourParam (Colour_1, "Outline 1", "Colours", kNoFlags, 0.6, 0.9, 1.0, 1.0);
-DeclareColourParam (Colour_2, "Outline 2", "Colours", kNoFlags, 0.3, 0.6, 1.0, 1.0);
-DeclareColourParam (Colour_3, "Outline 3", "Colours", kNoFlags, 0.9, 0.6, 1.0, 1.0);
-DeclareColourParam (Colour_4, "Outline 4", "Colours", kNoFlags, 0.6, 0.3, 1.0, 1.0);
+DeclareColourParam (Colour_1,      "Outline 1",    "Colours",        kNoFlags, 0.6, 0.9, 1.0, 1.0);
+DeclareColourParam (Colour_2,      "Outline 2",    "Colours",        kNoFlags, 0.3, 0.6, 1.0, 1.0);
+DeclareColourParam (Colour_3,      "Outline 3",    "Colours",        kNoFlags, 0.9, 0.6, 1.0, 1.0);
+DeclareColourParam (Colour_4,      "Outline 4",    "Colours",        kNoFlags, 0.6, 0.3, 1.0, 1.0);
 
-DeclareIntParam (Source, "Source", "Blend settings", 0, "Extracted foreground|Image key/Title pre 2023.2, no input|Image or title without connected input");
-DeclareBoolParam (SwapDir, "Transition into blend", "Blend settings", true);
-DeclareFloatParam (KeyGain, "Key adjustment", "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam (ShowKey, "Show foreground key", "Blend settings", false);
-DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
+DeclareIntParam   (Source,         "Source",       "Blend settings", 0, "Extracted foreground|Image key or title (disconnect input)");
+DeclareBoolParam  (SwapDir,        "Transition into blend",          "Blend settings", true);
+DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend settings", false);
+DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
 DeclareFloatParam (_OutputAspectRatio);
 DeclareFloatParam (_Progress);
@@ -93,7 +114,7 @@ DeclareFloatParam (_Progress);
 float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 DeclarePass (Fgd)
@@ -109,10 +130,12 @@ DeclarePass (Fgd)
       Bgnd = ReadPixel (Bg, uv2);
    }
 
-   if (Source == 0) { Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb)); }
-   else if (Source == 1) { Fgnd.a = pow (Fgnd.a, 0.375 + (KeyGain / 2.0)); }
+   if (Source == 0) Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb));
 
-   if (Fgnd.a == 0.0) Fgnd.rgb = Fgnd.aaa;
+   // If alpha is zero we need any video to be blanked.  We do NOT need it to be
+   // multiplied, so this is the simplest way to fix things.
+
+   if (Fgnd.a == 0.0) Fgnd = kTransparentBlack;
 
    return Fgnd;
 }
@@ -198,13 +221,13 @@ DeclarePass (Border_2)
 
 DeclareEntryPoint (BorderTrans)
 {
-   if (ShowKey) return lerp (_TransparentBlack, tex2D (Super, uv3), tex2D (Mask, uv3).x);
+   if (ShowKey) return tex2D (Super, uv3);
 
    float2 xy1 = (Displace / 2.0).xx;
 
    if (SwapDir) { xy1 *= 1.0 - Amount; }
    else {
-      xy1 *= Amount;
+      xy1  *= Amount;
       xy1.x = -xy1.x;
    }
 
@@ -217,12 +240,15 @@ DeclareEntryPoint (BorderTrans)
 
    float4 border = tex2D (Super, xy1);
    float4 retval = _TransparentBlack;
-   float4 Bgnd = tex2D (Bgd, uv3);
+   float4 Bgnd   = tex2D (Bgd, uv3);
 
    if (NotEqual (xy1, xy2)) {
-      retval = tex2D (Super, xy2); border = lerp (border, retval, retval.a);
-      retval = tex2D (Super, xy3); border = lerp (border, retval, retval.a);
-      retval = tex2D (Super, xy4); border = lerp (border, retval, retval.a);
+      retval = tex2D (Super, xy2);
+      border = lerp (border, retval, retval.a);
+      retval = tex2D (Super, xy3);
+      border = lerp (border, retval, retval.a);
+      retval = tex2D (Super, xy4);
+      border = lerp (border, retval, retval.a);
 
       retval = Colour_1 * tex2D (Border_2, xy1).a;
       retval = lerp (retval, Colour_2, tex2D (Border_2, xy2).a);
@@ -242,5 +268,5 @@ DeclareEntryPoint (BorderTrans)
    }
    else retval = lerp (Bgnd, border, border.a);
 
-   return lerp (Bgnd, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
