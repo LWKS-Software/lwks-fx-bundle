@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-07-09
 // @Author jwrl
 // @Created 2017-01-03
 
@@ -18,13 +18,35 @@
  a trigonometric curve or a quadratic curve applied to the "Amount" parameter.  You can
  vary the linearity of the curve using the strength setting.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+   [*]Amount:  The transition progress.
+   [*]Dissolve profile:  Sets the profile to non-add, ultra non-add, trigonometric
+      or quadratic.
+   [*]Strength:  Adjusts the strength of the profile.
+   [*]Enable blend transitions:  Changes the mode from opaque video to transparent
+      video such as titles and the like.
+   [*]Blend settings
+      [*]Source:  Selects between an extracted video source and transparent video.
+      [*]Transition into blend:  Selects between transitioning into or out of a
+         blended video source.
+      [*]Fine tune:  Fine tunes the separation of an extracted video source from
+         its background.
+      [*]Show foreground key:  Showing the key helps in setting up the clip.
+      [*]Swap sources:  This can be necessary when using a folded delta key
+         (extracted) transition.
+
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect NonlinearTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-09 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack to fix Linux lerp()/mix() bug.
@@ -50,24 +72,20 @@ DeclareLightworksEffect ("Non-linear transitions", "Mix", "Blend transitions", "
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",                kNoGroup,         kNoFlags, 0.5, 0.0, 1.0);
+DeclareIntParam (SetTechnique,     "Dissolve profile",      kNoGroup, 0,      "Non-additive mix|Ultra non-add|Trig curve|Quad curve");
+DeclareFloatParam (Strength,       "Strength",              kNoGroup,         kNoFlags, 0.5, -1.0, 1.0);
+DeclareBoolParam  (Blended,        "Enable blend transitions",                kNoGroup, false);
 
-DeclareIntParam (SetTechnique, "Dissolve profile", kNoGroup, 0, "Non-additive mix|Ultra non-add|Trig curve|Quad curve");
-DeclareFloatParam (Strength, "Strength", kNoGroup, kNoFlags, 0.5, -1.0, 1.0);
-
-DeclareBoolParam (Blended, "Enable blend transitions", kNoGroup, false);
-
-DeclareIntParam (Source, "Source", "Blend settings", 0, "Extracted foreground|Image key/Title pre 2023.2, no input|Image or title without connected input");
-DeclareBoolParam (SwapDir, "Transition into blend", "Blend settings", true);
-DeclareFloatParam (KeyGain, "Key adjustment", "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam (ShowKey, "Show foreground key", "Blend settings", false);
-DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
+DeclareIntParam   (Source,         "Source",                "Blend settings", 0, "Extracted foreground|Image key or title (disconnect input)");
+DeclareBoolParam  (SwapDir,        "Transition into blend", "Blend settings", true);
+DeclareFloatParam (KeyGain,        "Fine tune",             "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (ShowKey,        "Show foreground key",   "Blend settings", false);
+DeclareBoolParam  (SwapSource,     "Swap sources",          "Blend settings", false);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -101,10 +119,12 @@ float4 fn_initFg (sampler F, float2 xy1, sampler B, float2 xy2)
       Bgnd = ReadPixel (B, xy2);
    }
 
-   if (Source == 0) { Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb)); }
-   else if (Source == 1) { Fgnd.a = pow (Fgnd.a, 0.375 + (KeyGain / 2.0)); }
+   if (Source == 0) Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb));
 
-   if (Fgnd.a == 0.0) Fgnd.rgb = Fgnd.aaa;
+   // If alpha is zero we need any video to be blanked.  We do NOT need it to be
+   // multiplied, so this is the simplest way to fix things.
+
+   if (Fgnd.a == 0.0) Fgnd = _TransparentBlack;
 
    return Fgnd;
 }
@@ -119,7 +139,7 @@ float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shadows
 //-----------------------------------------------------------------------------------------//
 
 // Non-add
@@ -134,15 +154,12 @@ DeclareEntryPoint (NonAdd)
 {
    float4 Fgnd = tex2D (Fg_N, uv3);
    float4 Bgnd = tex2D (Bg_N, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    float amount;
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = _TransparentBlack;
-      }
+      if (ShowKey) { retval = Fgnd; }
       else {
          float alpha = Fgnd.a;
 
@@ -153,15 +170,9 @@ DeclareEntryPoint (NonAdd)
 
          retval = max (lerp (Bgnd, _TransparentBlack, amount), Fgnd);
          retval.a = alpha;
-
-         maskBg = Bgnd;
       }
-
-      retval = lerp (maskBg, retval, retval.a);
    }
    else {
-      maskBg = Fgnd;
-
       amount = (1.0 - abs (Amount - 0.5)) * 2.0;
 
       Fgnd = lerp (Fgnd, _TransparentBlack, Amount);
@@ -169,7 +180,7 @@ DeclareEntryPoint (NonAdd)
       retval = saturate (max (Bgnd, Fgnd) * amount);
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -186,15 +197,12 @@ DeclareEntryPoint (NonAddUltra)
 {
    float4 Fgnd = tex2D (Fg_U, uv3);
    float4 Bgnd = tex2D (Bg_U, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    float amount;
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = _TransparentBlack;
-      }
+      if (ShowKey) { retval = Fgnd; }
       else {
          float alpha  = Fgnd.a;
 
@@ -203,22 +211,17 @@ DeclareEntryPoint (NonAddUltra)
          Fgnd.a *= (1.0 - abs (amount - 0.5)) * 2.0;
          retval = max (lerp (Bgnd, _TransparentBlack, amount), lerp (_TransparentBlack, Fgnd, amount));
          retval.a = alpha;
-
-         maskBg = Bgnd;
       }
-
-      retval = lerp (maskBg, retval, retval.a);
    }
    else {
       amount = (1.0 - abs (Amount - 0.5)) * 2.0;
-      maskBg = Fgnd;
 
       Fgnd = lerp (Fgnd, _TransparentBlack, Amount);
       Bgnd = lerp (_TransparentBlack, Bgnd, Amount);
       retval = saturate (amount * max (Bgnd, Fgnd));
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -235,7 +238,7 @@ DeclareEntryPoint (Trig)
 {
    float4 Fgnd = tex2D (Fg_T, uv3);
    float4 Bgnd = tex2D (Bg_T, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    float curve  = Strength < 0.0 ? Strength * 0.6666666667 : Strength;
    float amount = (1.0 + sin ((cos (Amount * PI)) * HALF_PI)) / 2.0;
@@ -243,10 +246,7 @@ DeclareEntryPoint (Trig)
    amount = lerp (Amount, 1.0 - amount, curve);
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = _TransparentBlack;
-      }
+      if (ShowKey) { retval = Fgnd; }
       else {
          float alpha  = Fgnd.a;
 
@@ -254,18 +254,11 @@ DeclareEntryPoint (Trig)
 
          retval = lerp (Bgnd, Fgnd, amount);
          retval.a = alpha;
-
-         maskBg = Bgnd;
       }
-
-      retval = lerp (maskBg, retval, retval.a);
    }
-   else {
-      maskBg = Fgnd;
-      retval = lerp (Fgnd, Bgnd, amount);
-   }
+   else retval = lerp (Fgnd, Bgnd, amount);
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -282,17 +275,14 @@ DeclareEntryPoint (Quad)
 {
    float4 Fgnd = tex2D (Fg_P, uv3);
    float4 Bgnd = tex2D (Bg_P, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    float amount = Amount * Amount * (3.0 - (Amount * 2.0));
 
    amount = lerp (Amount, amount, Strength + 1.0);
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = _TransparentBlack;
-      }
+      if (ShowKey) { retval = Fgnd; }
       else {
          float alpha  = Fgnd.a;
 
@@ -300,16 +290,9 @@ DeclareEntryPoint (Quad)
 
          retval = lerp (Bgnd, Fgnd, amount);
          retval.a = alpha;
-
-         maskBg = Bgnd;
       }
-
-      retval = lerp (maskBg, retval, retval.a);
    }
-   else {
-      retval = lerp (Fgnd, Bgnd, amount);
-      maskBg = Fgnd;
-   }
+   else retval = lerp (Fgnd, Bgnd, amount);
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
