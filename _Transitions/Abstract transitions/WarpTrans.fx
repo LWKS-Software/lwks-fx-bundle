@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-08
+// @Released 2026-07-09
 // @Author jwrl
 // @Created 2016-05-10
 
@@ -38,7 +38,7 @@
 //
 // Version history:
 //
-// Updated 2026-07-08 jwrl.
+// Updated 2026-07-09 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-08-02 jwrl.
@@ -72,7 +72,7 @@ DeclareIntParam   (SetTechnique,   "Warp type",    kNoGroup, 0,      "Smeared vi
 DeclareFloatParam (Distortion,     "Distortion",   kNoGroup,         kNoFlags, 0.5, 0.0, 1.0);
 DeclareBoolParam  (Blended,        "Enable blend transitions",       kNoGroup, false);
 
-DeclareIntParam   (Source,         "Source",       "Blend settings", 0, "Extracted foreground|Image key/Title pre 2023.2, no input|Image or title without connected input");
+DeclareIntParam   (Source,         "Source",       "Blend settings", 0, "Extracted foreground|Image key or title (disconnect input)");
 DeclareBoolParam  (SwapDir,        "Transition into blend",          "Blend settings", true);
 DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
 DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend settings", false);
@@ -111,10 +111,12 @@ float4 fn_initFg (sampler F, float2 xy1, sampler B, float2 xy2)
       Bgnd = ReadPixel (B, xy2);
    }
 
-   if (Source == 0) { Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb)); }
-   else if (Source == 1) { Fgnd.a = pow (Fgnd.a, 0.375 + (KeyGain / 2.0)); }
+   if (Source == 0) Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb));
 
-   if (Fgnd.a == 0.0) Fgnd.rgb = Fgnd.aaa;
+   // If alpha is zero we need any video to be blanked.  We do NOT need it to be
+   // multiplied, so this is the simplest way to fix things.
+
+   if (Fgnd.a == 0.0) Fgnd = kTransparentBlack;
 
    return Fgnd;
 }
