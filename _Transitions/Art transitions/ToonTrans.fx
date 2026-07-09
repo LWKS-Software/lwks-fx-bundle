@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2026-07-09
 // @Author jwrl
 // @Created 2022-06-01
 
@@ -11,13 +11,48 @@
  a flat coloured title over a plain background you may not see much difference between
  this and a normal dissolve.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+   [*]Amount:  The transition progress.
+   [*]Edge detection
+      [*]Threshold:  Sets the threshold at which an edge will be detected and an
+         outline generated.
+      [*]Line width:  Sets the width of the generated outlines.
+      [*]Line height:  Sets the height of the generated outlines.
+   [*]Posterize preprocess
+      [*]Poster depth:  Sets the number of posterization steps to use when generating
+         the flat colours.
+      [*]Preblur:  Blurs the image befoe generating the flat colours.
+      [*]Saturation:  Adjusts the image saturation before posterizing.
+      [*]Gamma:  Adjusts the image gamma before posterizing.
+   [*]Posterize postprocess
+      [*]Brightness:  Standard video brightness setting of the posterized image.
+      [*]Contrast:  Standard video contrast setting of the posterized image.
+      [*]Gain:  Standard video gain setting of the posterized image.
+      [*]Hue angle:  Standard video hue setting of the posterized image.
+   [*]Enable blend transitions:  Changes the mode from opaque video to transparent
+      video such as titles and the like.
+   [*]Blend settings
+      [*]Source:  Selects between an extracted video source and transparent video.
+      [*]Transition into blend:  Selects between transitioning into or out of a
+         blended video source.
+      [*]Fine tune:  Fine tunes the separation of an extracted video source from
+         its background.
+      [*]Show foreground key:  Showing the key helps in setting up the clip.
+      [*]Swap sources:  This can be necessary when using a folded delta key
+         (extracted) transition.
+
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect ToonTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-09 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
@@ -32,8 +67,6 @@
 // Conversion 2023-03-06 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
 
-#include "_utils.fx"
-
 DeclareLightworksEffect ("Toon transition", "Mix", "Art transitions", "A stylised cartoon transition", "CanSize");
 
 //-----------------------------------------------------------------------------------------//
@@ -42,36 +75,33 @@ DeclareLightworksEffect ("Toon transition", "Mix", "Art transitions", "A stylise
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",        kNoGroup,                 kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareFloatParam (Threshold, "Threshold", "Edge detection", "DisplayAsPercentage", 0.3, 0.0, 2.0);
-DeclareFloatParam (LineWeightX, "Line weight X", "Edge detection", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (LineWeightY, "Line weight Y", "Edge detection", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Threshold,      "Threshold",     "Edge detection",         "DisplayAsPercentage", 0.3, 0.0, 2.0);
+DeclareFloatParam (LineWeightX,    "Line width",    "Edge detection",         kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (LineWeightY,    "Line height",   "Edge detection",         kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareIntParam (PosterizeDepth, "Posterize depth", "Posterize preprocess", 3, "2|3|4|5|6|7|8");
+DeclareIntParam (PosterizeDepth,   "Poster depth",  "Posterize preprocess",   3, "2|3|4|5|6|7|8");
+DeclareFloatParam (Preblur,        "Preblur",       "Posterize preprocess",   kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Saturation,     "Saturation",    "Posterize preprocess",   "DisplayAsPercentage", 2.5, 0.0, 4.0);
+DeclareFloatParam (Gamma,          "Gamma",         "Posterize preprocess",   kNoFlags, 0.6, 0.1, 4.0);
 
-DeclareFloatParam (Preblur, "Preblur", "Posterize preprocess", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Saturation, "Saturation", "Posterize preprocess", "DisplayAsPercentage", 2.5, 0.0, 4.0);
-DeclareFloatParam (Gamma, "Gamma", "Posterize preprocess", kNoFlags, 0.6, 0.1, 4.0);
+DeclareFloatParam (Brightness,     "Brightness",    "Posterize postprocess",  "DisplayAsPercentage", 0.0, -1.0, 1.0);
+DeclareFloatParam (Contrast,       "Contrast",      "Posterize postprocess",  "DisplayAsPercentage", 1.0, 0.0, 5.0);
+DeclareFloatParam (Gain,           "Gain",          "Posterize postprocess",  "DisplayAsPercentage", 1.0, 0.0, 4.0);
+DeclareFloatParam (HueAngle,       "Hue angle",     "Posterize postprocess",  kNoFlags, 0.0, -180.0, 180.0);
 
-DeclareFloatParam (Brightness, "Brightness", "Posterize postprocess", "DisplayAsPercentage", 0.0, -1.0, 1.0);
-DeclareFloatParam (Contrast, "Contrast", "Posterize postprocess", "DisplayAsPercentage", 1.0, 0.0, 5.0);
-DeclareFloatParam (Gain, "Gain", "Posterize postprocess", "DisplayAsPercentage", 1.0, 0.0, 4.0);
-DeclareFloatParam (HueAngle, "Hue (degrees)", "Posterize postprocess", kNoFlags, 0.0, -180.0, 180.0);
+DeclareBoolParam  (Blended,        "Enable blend transitions", kNoGroup,      false);
 
-DeclareBoolParam (Blended, "Enable blend transitions", kNoGroup, false);
-
-DeclareIntParam (Source, "Source", "Blend settings", 0, "Extracted foreground|Image key/Title pre 2023.2, no input|Image or title without connected input");
-DeclareBoolParam (SwapDir, "Transition into blend", "Blend settings", true);
-DeclareFloatParam (KeyGain, "Key adjustment", "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam (ShowKey, "Show foreground key", "Blend settings", false);
-DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
+DeclareIntParam   (Source,         "Source",        "Blend settings", 0,      "Extracted foreground|Image key or title (disconnect input)");
+DeclareBoolParam  (SwapDir,        "Transition into blend", "Blend settings", true);
+DeclareFloatParam (KeyGain,        "Fine tune",     "Blend settings",         kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (ShowKey,        "Show foreground key",   "Blend settings", false);
+DeclareBoolParam  (SwapSource,     "Swap sources",  "Blend settings",         false);
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
@@ -202,7 +232,7 @@ float4 fn_technique (sampler M, sampler T, float2 uv, float amount)
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 DeclarePass (Fgd)
@@ -220,10 +250,12 @@ DeclarePass (Fgd)
       Bgnd = ReadPixel (Bg, uv2);
    }
 
-   if (Source == 0) { Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb)); }
-   else if (Source == 1) { Fgnd.a = pow (Fgnd.a, 0.375 + (KeyGain / 2.0)); }
+   if (Source == 0) Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb));
 
-   if (Fgnd.a == 0.0) Fgnd.rgb = Fgnd.aaa;
+   // If alpha is zero we need any video to be blanked.  We do NOT need it to be
+   // multiplied, so this is the simplest way to fix things.
+
+   if (Fgnd.a == 0.0) Fgnd = kTransparentBlack;
 
    return Fgnd;
 }
@@ -343,13 +375,9 @@ DeclareEntryPoint (ToonTrans)
    float4 maskBg, retval;
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = kTransparentBlack;
-      }
+      if (ShowKey) { retval = Fgnd; }
       else {
          retval = fn_technique (Mixed, ToonSub, uv3, 0.5);
-         maskBg = Bgnd;
 
          if (SwapDir) {
             retval = lerp (Bgnd, retval, saturate (Amount * 2.0));
@@ -360,14 +388,8 @@ DeclareEntryPoint (ToonTrans)
             retval = lerp (retval, Bgnd, saturate ((Amount - 0.5) * 2.0));
          }
       }
-
-      retval = lerp (maskBg, retval, Fgnd.a);
    }
-   else {
-      retval = fn_technique (Mixed, ToonSub, uv3, Amount) * Fgnd.a;
-      maskBg = Fgnd;
-   }
+   else retval = fn_technique (Mixed, ToonSub, uv3, Amount) * Fgnd.a;
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
-
