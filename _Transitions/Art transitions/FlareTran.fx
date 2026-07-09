@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-06-22
+// @Released 2026-07-09
 // @Author khaver
 // @Created 2014-08-30
 
@@ -10,13 +10,26 @@
  with swapping the target track and/or adjusting the strength of the effect to get the
  best result.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+   [*]Amount:  The transition progress.
+   [*]Origin X:  Selects the horizontal point of a bright spot to trigger the flare.
+   [*]Origin Y:  Selects the vertical point of a bright spot to trigger the flare.
+   [*]Strength:   This and stretch interact when setting the flare for maximum impact.
+   [*]Stretch:  See "Strength", above.
+   [*]Timing:  Sets the point in the transition where the flare is at its brightest.
+
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect FlareTran.fx
 //
 // Version history:
+//
+// Updated 2026-07-09 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-06-22 jwrl.
 // Removed needless input swap.
@@ -27,8 +40,6 @@
 // Conversion 2023-03-06 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
 
-#include "_utils.fx"
-
 DeclareLightworksEffect ("Flare transition", "Mix", "Art transitions", "Dissolves between images through an over-exposure style of flare", "CanSize");
 
 //-----------------------------------------------------------------------------------------//
@@ -37,26 +48,22 @@ DeclareLightworksEffect ("Flare transition", "Mix", "Art transitions", "Dissolve
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
 DeclareFloatParamAnimated (Amount, "Progress", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
-
-DeclareFloatParam (CentreX, "Origin", kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (CentreY, "Origin", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
-
-DeclareFloatParam (Strength, "Strength", kNoGroup, kNoFlags, 0.2, 0.0, 1.0);
-DeclareFloatParam (stretch, "Stretch", kNoGroup, kNoFlags, 5.0, 0.0, 10.0);
-DeclareFloatParam (Timing, "Timing", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (CentreX,        "Origin",   kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (CentreY,        "Origin",   kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (Strength,       "Strength", kNoGroup, kNoFlags, 0.2, 0.0, 1.0);
+DeclareFloatParam (stretch,        "Stretch",  kNoGroup, kNoFlags, 5.0, 0.0, 10.0);
+DeclareFloatParam (Timing,         "Timing",   kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 DeclarePass (Fgd)
@@ -106,6 +113,5 @@ DeclareEntryPoint (FlareTran)
    ret = saturate (ret + source);
    ret.a = 1.0;
 
-   return lerp (tex2D (Fgd, uv3), ret, tex2D (Mask, uv3).x);
+   return ret;
 }
-
