@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-07-09
 // @Author khaver
 // @Author jwrl
 // @Created 2023-03-07
@@ -10,6 +10,21 @@
  as close as possible visually to the standard Photoshop blend modes.  Apart from its
  use as a standard dissolve, titles or other keyed components can be separated from the
  background with an alpha or delta key before executing the transition.
+
+   [*]Amount:  The transition progress.
+   [*]Method:  Sets the blend mode to use for the transition.
+   [*]Midpoint:  Sets the mid point of the transition.
+   [*]Enable blend transitions:  Changes the mode from opaque video to transparent
+      video such as titles and the like.
+   [*]Blend settings
+      [*]Source:  Selects between an extracted video source and transparent video.
+      [*]Transition into blend:  Selects between transitioning into or out of a
+         blended video source.
+      [*]Fine tune:  Fine tunes the separation of an extracted video source from
+         its background.
+      [*]Show foreground key:  Showing the key helps in setting up the clip.
+      [*]Swap sources:  This can be necessary when using a folded delta key
+         (extracted) transition.
 
  In addition to the Lightworks blends, this effect provides Linear burn, Darker colour,
  Vivid light, Linear light, Pin light, Hard mix, Divide, Hue and Saturation.  The
@@ -24,13 +39,19 @@
  be possible to make the normal blend mode completely smooth it would mean bypassing the
  centre point adjustment for that blend mode.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // User effect DissolveXTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-09 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack to fix Linux lerp()/mix() bug.
@@ -56,25 +77,20 @@ DeclareLightworksEffect ("Dissolve X transitions", "Mix", "Blend transitions", "
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",       kNoGroup,         kNoFlags, 0.5, 0.0, 1.0);
+DeclareIntParam   (SetTechnique,   "Method",       kNoGroup, 0,      "Normal|Darken|Multiply|Colour Burn|Linear Burn|Darker Colour|Lighten|Screen|Colour Dodge|Linear Dodge (Add)|Lighter Colour|Overlay|Soft Light|Hard Light|Vivid Light|Linear Light|Pin Light|Hard Mix|Difference|Exclusion|Subtract|Divide|Hue|Saturation|Colour|Luminosity");
+DeclareFloatParam (Midpoint,       "Midpoint",     kNoGroup,         kNoFlags, 0.5, 0.0, 1.0);
+DeclareBoolParam  (Blended,        "Enable blend transitions",       kNoGroup, false);
 
-DeclareIntParam (SetTechnique, "Method", kNoGroup, 0, "Normal|Darken|Multiply|Colour Burn|Linear Burn|Darker Colour|Lighten|Screen|Colour Dodge|Linear Dodge (Add)|Lighter Colour|Overlay|Soft Light|Hard Light|Vivid Light|Linear Light|Pin Light|Hard Mix|Difference|Exclusion|Subtract|Divide|Hue|Saturation|Colour|Luminosity");
-
-DeclareFloatParam (Midpoint, "Midpoint", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
-
-DeclareBoolParam (Blended, "Enable blend transitions", kNoGroup, false);
-
-DeclareIntParam (Source, "Source", "Blend settings", 0, "Extracted foreground|Image key/Title pre 2023.2, no input|Image or title without connected input");
-DeclareBoolParam (SwapDir, "Transition into blend", "Blend settings", true);
-DeclareFloatParam (KeyGain, "Key adjustment", "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam (ShowKey, "Show foreground key", "Blend settings", false);
-DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
+DeclareIntParam   (Source,         "Source",       "Blend settings", 0, "Extracted foreground|Image key or title (disconnect input)");
+DeclareBoolParam  (SwapDir,        "Transition into blend",          "Blend settings", true);
+DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend settings", false);
+DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -172,10 +188,12 @@ float2 fn_init (sampler F, float2 xy1, out float4 Fgnd, sampler B, float2 xy2, o
          Fgnd = temp;
       }
 
-      if (Source == 0) { Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb)); }
-      else if (Source == 1) { Fgnd.a = pow (Fgnd.a, 0.375 + (KeyGain / 2.0)); }
+   if (Source == 0) Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb));
 
-      if (Fgnd.a == 0.0) Fgnd = _TransparentBlack;
+   // If alpha is zero we need any video to be blanked.  We do NOT need it to be
+   // multiplied, so this is the simplest way to fix things.
+
+   if (Fgnd.a == 0.0) Fgnd = _TransparentBlack;
 
       if (ShowKey) {
          Bgnd = _TransparentBlack;
@@ -188,7 +206,7 @@ float2 fn_init (sampler F, float2 xy1, out float4 Fgnd, sampler B, float2 xy2, o
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 DeclareEntryPoint (Normal)
@@ -199,7 +217,7 @@ DeclareEntryPoint (Normal)
 
    if (amount.x >= 0.0) Fgnd = lerp (Bgnd, Fgnd, Fgnd.a * (amount.x + amount.y) / 2.0);
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
 
 //--------------------------------------- GROUP 1 -----------------------------------------//
@@ -217,7 +235,7 @@ DeclareEntryPoint (Darken)
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
    }
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
 
 DeclareEntryPoint (Multiply)
@@ -233,7 +251,7 @@ DeclareEntryPoint (Multiply)
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
    }
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
 
 DeclareEntryPoint (ColourBurn)
@@ -255,7 +273,7 @@ DeclareEntryPoint (ColourBurn)
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
    }
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
 
 DeclareEntryPoint (LinearBurn)
@@ -271,7 +289,7 @@ DeclareEntryPoint (LinearBurn)
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
    }
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
 
 DeclareEntryPoint (DarkerColour)
@@ -291,7 +309,7 @@ DeclareEntryPoint (DarkerColour)
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
    }
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
 
 //--------------------------------------- GROUP 2 -----------------------------------------//
@@ -309,7 +327,7 @@ DeclareEntryPoint (Lighten)
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
    }
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
 
 DeclareEntryPoint (Screen)
@@ -325,7 +343,7 @@ DeclareEntryPoint (Screen)
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
    }
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
 
 DeclareEntryPoint (ColourDodge)
@@ -347,7 +365,7 @@ DeclareEntryPoint (ColourDodge)
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
    }
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
 
 DeclareEntryPoint (LinearDodge)
@@ -363,7 +381,7 @@ DeclareEntryPoint (LinearDodge)
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
    }
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
 
 DeclareEntryPoint (LighterColour)
@@ -382,7 +400,7 @@ DeclareEntryPoint (LighterColour)
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
    }
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
 
 //--------------------------------------- GROUP 3 -----------------------------------------//
@@ -408,7 +426,7 @@ DeclareEntryPoint (Overlay)
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
    }
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
 
 DeclareEntryPoint (SoftLight)
@@ -435,7 +453,7 @@ DeclareEntryPoint (SoftLight)
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
    }
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
 
 DeclareEntryPoint (HardLight)
@@ -459,7 +477,7 @@ DeclareEntryPoint (HardLight)
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
    }
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
 
 DeclareEntryPoint (VividLight)
@@ -493,7 +511,7 @@ DeclareEntryPoint (VividLight)
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
    }
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
 
 DeclareEntryPoint (LinearLight)
@@ -516,7 +534,7 @@ DeclareEntryPoint (LinearLight)
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
    }
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
 
 DeclareEntryPoint (PinLight)
@@ -540,7 +558,7 @@ DeclareEntryPoint (PinLight)
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
    }
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
 
 DeclareEntryPoint (HardMix)
@@ -563,7 +581,7 @@ DeclareEntryPoint (HardMix)
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
    }
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
 
 //--------------------------------------- GROUP 4 -----------------------------------------//
@@ -581,7 +599,7 @@ DeclareEntryPoint (Difference)
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
    }
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
 
 DeclareEntryPoint (Exclusion)
@@ -597,7 +615,7 @@ DeclareEntryPoint (Exclusion)
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
    }
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
 
 DeclareEntryPoint (Subtract)
@@ -613,7 +631,7 @@ DeclareEntryPoint (Subtract)
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
    }
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
 
 DeclareEntryPoint (Divide)
@@ -634,7 +652,7 @@ DeclareEntryPoint (Divide)
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
    }
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
 
 //--------------------------------------- GROUP 5 -----------------------------------------//
@@ -655,7 +673,7 @@ DeclareEntryPoint (Hue)
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
    }
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
 
 DeclareEntryPoint (Saturation)
@@ -674,7 +692,7 @@ DeclareEntryPoint (Saturation)
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
    }
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
 
 DeclareEntryPoint (Colour)
@@ -693,7 +711,7 @@ DeclareEntryPoint (Colour)
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
    }
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
 
 DeclareEntryPoint (Luminosity)
@@ -712,5 +730,5 @@ DeclareEntryPoint (Luminosity)
       Fgnd = lerp (Bgnd, blnd, Fgnd.a);
    }
 
-   return lerp (Bgnd, Fgnd, tex2D (Mask, uv3).x);
+   return Fgnd;
 }
