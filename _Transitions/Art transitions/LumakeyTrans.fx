@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-09-14
+// @Released 2026-07-09
 // @Author jwrl
 // @Created 2025-09-14
 
@@ -15,7 +15,7 @@
  transition.  The colour border thickness is dynamically generated, and varies over
  the effect duration reaches its maximum at the midpoint of the transition.
 
-   [*] Progress:  The progress of the transition.
+   [*] Progress:  The transition progress.
    [*] Blending
       [*] Choose mode:  Switch between dissolve (default) and wipe mode.
       [*] Choose source:  Select between the outgoing video, the incoming or a mix
@@ -25,14 +25,14 @@
       [*] Invert key:  Reverses the key clip transition from white to black areas
           of the frame rather than black to white.
    [*] Borders
-      [*] Colour spread:  Adjusts the spread of the colour pattern over the video.
+      [*] Colour mix:  Adjusts the spread of the colour pattern over the video.
       [*] Colour 1:  Outer colour border.
       [*] Colour 2:  Inner colour border.
    [*] Luminance
       [*] Show luminance:  Aids setup by displaying the luminance used by the key.
       [*] Black level:  Adjusts black level.
       [*] White level:  Adjusts white level.
-      [*] Mid ranges:  Expands or compresses the mid levels.
+      [*] Mid range:  Expands or compresses the mid levels.
 
  The wipe mode is similar to, but not the same as the Lightworks Luma Wipe effect.
  As described above, the most obvious difference is that the border generation can
@@ -55,6 +55,9 @@
 //
 // Version history:
 //
+// Updated 2026-07-09 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
+//
 // Created 2025-09-14 jwrl.
 //-----------------------------------------------------------------------------------------//
 
@@ -76,17 +79,17 @@ DeclareFloatParamAnimated (Progress, "Progress", kNoGroup,   kNoFlags, 0.5, 0.0,
 DeclareIntParam   (TransMode, "Choose mode",    "Blending",  0, "Dissolve|Wipe");
 DeclareIntParam   (Source,    "Choose source",  "Blending",  2, "Outgoing|Incoming|Mix both inputs");
 DeclareFloatParam (MixRange,  "Mix range",      "Blending",  kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (Softness,  "Key softness",   "Blending",  kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Softness,  "Key soften",     "Blending",  kNoFlags, 0.5, 0.0, 1.0);
 DeclareBoolParam  (Invert,    "Invert key",     "Blending",  false);
 
-DeclareFloatParam  (Spread,   "Colour spread",  "Borders",   kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam  (Spread,   "Colour mix",     "Borders",   kNoFlags, 0.0, 0.0, 1.0);
 DeclareColourParam (Colour_1, "Colour 1",       "Borders",   kNoFlags, 0.4, 0.8, 0.96);
 DeclareColourParam (Colour_2, "Colour 2",       "Borders",   kNoFlags, 0.4, 0.3, 0.92);
 
 DeclareBoolParam  (Setup,     "Show luminance", "Luminance", false);
 DeclareFloatParam (Blacks,    "Black level",    "Luminance", kNoFlags, 0.5, 0.0, 1.0);
 DeclareFloatParam (Whites,    "White level",    "Luminance", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Mids,      "Mid ranges",     "Luminance", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Mids,      "Mid range",      "Luminance", kNoFlags, 0.5, 0.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 DeclareFloatParam (_LengthFrames);
@@ -153,7 +156,7 @@ float linearstep (float a, float b, float c)
 { return saturate ((c - a) / (b - a)); }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 DeclarePass (Trans)
@@ -264,4 +267,3 @@ DeclareEntryPoint (LumakeyTrans)
 
    return lerp (mixval, inval, Amount_1);             // Dissolve out of the colours
 }
-
