@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2026-07-09
 // @Author jwrl
 // @Created 2018-05-06
 
@@ -8,13 +8,35 @@
  The stroke length and angle can be independently adjusted.  Keyframing the progress
  while the transition proceeds can also make the effect more dynamic.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+   [*]Amount:  The transition progress.
+   [*]Stroke
+      [*]Length:  Sets the length of the dry brush stroke.
+      [*]Angle:   Adjusts the brush stroke angle between -180 and +180 degrees.
+   [*]Enable blend transitions:  Changes the mode from opaque video to transparent
+      video such as titles and the like.
+   [*]Blend settings
+      [*]Source:  Selects between an extracted video source and transparent video.
+      [*]Transition into blend:  Selects between transitioning into or out of a
+         blended video source.
+      [*]Fine tune:  Fine tunes the separation of an extracted video source from
+         its background.
+      [*]Show foreground key:  Showing the key helps in setting up the clip.
+      [*]Swap sources:  This can be necessary when using a folded delta key
+         (extracted) transition.
+
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect DryBrushTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-09 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
@@ -29,8 +51,6 @@
 // Conversion 2023-03-06 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
 
-#include "_utils.fx"
-
 DeclareLightworksEffect ("Dry brush transition", "Mix", "Art transitions", "Mimics the Photoshop angled brush effect to reveal the next video", "CanSize");
 
 //-----------------------------------------------------------------------------------------//
@@ -39,24 +59,22 @@ DeclareLightworksEffect ("Dry brush transition", "Mix", "Art transitions", "Mimi
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",        kNoGroup,         kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareFloatParam (Length, "Stroke length", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Angle, "Stroke angle", kNoGroup, kNoFlags, 45.0, -180.0, 180.0);
+DeclareFloatParam (Length,         "Length",        "Stroke",         kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Angle,          "Angle",         "Stroke",         kNoFlags, 45.0, -180.0, 180.0);
 
-DeclareBoolParam (Blended, "Enable blend transitions", kNoGroup, false);
+DeclareBoolParam  (Blended,        "Enable blend transitions",        kNoGroup, false);
 
-DeclareIntParam (Source, "Source", "Blend settings", 0, "Extracted foreground|Image key/Title pre 2023.2, no input|Image or title without connected input");
-DeclareBoolParam (SwapDir, "Transition into blend", "Blend settings", true);
-DeclareFloatParam (KeyGain, "Key adjustment", "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam (ShowKey, "Show foreground key", "Blend settings", false);
-DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
+DeclareIntParam   (Source,         "Source",        "Blend settings", 0, "Extracted foreground|Image key or title (disconnect input)");
+DeclareBoolParam  (SwapDir,        "Transition into blend",           "Blend settings", true);
+DeclareFloatParam (KeyGain,        "Fine tune",     "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (ShowKey,        "Show foreground key",             "Blend settings", false);
+DeclareBoolParam  (SwapSource,     "Swap sources",  "Blend settings", false);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -76,7 +94,7 @@ float2 fn_rnd (float2 uv)
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 DeclarePass (Fgd)
@@ -94,10 +112,12 @@ DeclarePass (Fgd)
       Bgnd = ReadPixel (Bg, uv2);
    }
 
-   if (Source == 0) { Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb)); }
-   else if (Source == 1) { Fgnd.a = pow (Fgnd.a, 0.375 + (KeyGain / 2.0)); }
+   if (Source == 0) Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb));
 
-   if (Fgnd.a == 0.0) Fgnd.rgb = kTransparentBlack;
+   // If alpha is zero we need any video to be blanked.  We do NOT need it to be
+   // multiplied, so this is the simplest way to fix things.
+
+   if (Fgnd.a == 0.0) Fgnd = kTransparentBlack;
 
    return Fgnd;
 }
@@ -125,10 +145,7 @@ DeclareEntryPoint (DryBrushTrans)
    sincos (angle, xy1.x, xy1.y);
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = kTransparentBlack;
-      }
+      if (ShowKey) { retval = Fgnd; }
       else {
          amount = SwapDir ? Amount : 1.0 - Amount;
 
@@ -139,14 +156,10 @@ DeclareEntryPoint (DryBrushTrans)
          Fgnd = tex2D (Fgd, xy3);
          retval = lerp (Bgnd, Fgnd, amount);
          retval.a = Fgnd.a;
-         maskBg = Bgnd;
       }
-
-      retval = lerp (maskBg, retval, retval.a);
    }
    else {
       amount = Amount;
-      maskBg = Fgnd;
 
       xy2 = fn_rnd (uv3 - 0.5.xx) * stroke * amount;
       xy3.x = uv3.x + (xy2.x * xy1.x) + (xy2.y * xy1.y);
@@ -164,6 +177,5 @@ DeclareEntryPoint (DryBrushTrans)
       retval = lerp (Fgnd, Bgnd, Fgnd.a * amount);
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
-
