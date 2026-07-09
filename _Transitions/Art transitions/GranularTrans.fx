@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-07-09
 // @Author jwrl
 // @Created 2016-02-08
 
@@ -8,13 +8,41 @@
  The noise component is based on work by users khaver and windsturm.  The radial gradient
  part is from an effect provided by LWKS Software Ltd.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+   [*]Amount:  The transition progress.
+   [*]Transition type:  Selects the transition direction.
+   [*]Invert direction:  Swaps the travel direction of the transition.
+   [*]Width:  Sets the width of the area covered by the particles.
+   [*]Particles
+      [*]Size:  Sets the particle size.
+      [*]Softness:  Sets the particle softness.
+      [*]Static pattern:  Fixes the particles into an unmoving pattern.
+      [*]Sparkle:  Turning this off disables the particle display.
+      [*]Colour:  Sets the colour to use for the particles.
+   [*]Enable blend transitions:  Changes the mode from opaque video to transparent
+      video such as titles and the like.
+   [*]Blend settings
+      [*]Source:  Selects between an extracted video source and transparent video.
+      [*]Transition into blend:  Selects between transitioning into or out of a
+         blended video source.
+      [*]Fine tune:  Fine tunes the separation of an extracted video source from
+         its background.
+      [*]Show foreground key:  Showing the key helps in setting up the clip.
+      [*]Swap sources:  This can be necessary when using a folded delta key
+         (extracted) transition.
+
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect GranularTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-09 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack to fix Linux lerp()/mix() bug.
@@ -40,30 +68,28 @@ DeclareLightworksEffect ("Granular transition", "Mix", "Art transitions", "Uses 
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",           kNoGroup,         kNoFlags, 0.5, 0.0, 1.0);
+DeclareIntParam (SetTechnique,     "Transition type",  kNoGroup, 1,      "Top to bottom|Left to right|Radial|No gradient");
+DeclareBoolParam (TransDir,        "Invert direction", kNoGroup,         false);
+DeclareFloatParam (gWidth,         "Width",            kNoGroup,         kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareIntParam (SetTechnique, "Transition type", kNoGroup, 1, "Top to bottom|Left to right|Radial|No gradient");
-DeclareBoolParam (TransDir, "Invert transition direction", kNoGroup, false);
-DeclareFloatParam (gWidth, "Width", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (pSize, "Size", "Particles", kNoFlags, 5.5, 1.0, 10.0);
-DeclareFloatParam (pSoftness, "Softness", "Particles", kNoFlags, 0.5, 0.0, 1.0);
-DeclareBoolParam (TransVar, "Static particle pattern", "Particles", false);
-DeclareBoolParam (Sparkles, "Sparkle", "Particles", false);
-DeclareColourParam (starColour, "Colour", "Particles", kNoFlags, 0.9, 0.75, 0.0, 1.0);
+DeclareFloatParam (pSize,          "Size",             "Particles",      kNoFlags, 5.5, 1.0, 10.0);
+DeclareFloatParam (pSoftness,      "Softness",         "Particles",      kNoFlags, 0.5, 0.0, 1.0);
+DeclareBoolParam (TransVar,        "Static pattern",   "Particles",      false);
+DeclareBoolParam (Sparkles,        "Sparkle",          "Particles",      false);
+DeclareColourParam (starColour,    "Colour",           "Particles",      kNoFlags, 0.9, 0.75, 0.0, 1.0);
 
-DeclareBoolParam (Blended, "Enable blend transitions", kNoGroup, false);
+DeclareBoolParam (Blended,         "Enable blend transitions",           kNoGroup, false);
 
-DeclareIntParam (Source, "Source", "Blend settings", 0, "Extracted foreground|Image key/Title pre 2023.2, no input|Image or title without connected input");
-DeclareBoolParam (SwapDir, "Transition into blend", "Blend settings", true);
-DeclareFloatParam (KeyGain, "Key adjustment", "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam (ShowKey, "Show foreground key", "Blend settings", false);
-DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
+DeclareIntParam   (Source,         "Source",           "Blend settings", 0, "Extracted foreground|Image key or title (disconnect input)");
+DeclareBoolParam  (SwapDir,        "Transition into blend",              "Blend settings", true);
+DeclareFloatParam (KeyGain,        "Fine tune",        "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (ShowKey,        "Show foreground key",                "Blend settings", false);
+DeclareBoolParam  (SwapSource,     "Swap sources",     "Blend settings", false);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -103,10 +129,12 @@ float4 fn_initFg (sampler F, float2 xy1, sampler B, float2 xy2)
       Bgnd = ReadPixel (B, xy2);
    }
 
-   if (Source == 0) { Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb)); }
-   else if (Source == 1) { Fgnd.a = pow (Fgnd.a, 0.375 + (KeyGain / 2.0)); }
+   if (Source == 0) Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb));
 
-   if (Fgnd.a == 0.0) Fgnd.rgb = Fgnd.aaa;
+   // If alpha is zero we need any video to be blanked.  We do NOT need it to be
+   // multiplied, so this is the simplest way to fix it.
+
+   if (Fgnd.a == 0.0) Fgnd = kTransparentBlack;
 
    return Fgnd;
 }
@@ -172,7 +200,7 @@ float4 fn_main (sampler F, sampler B, sampler G, sampler S, float2 xy)
 {
    float4 Fgnd = tex2D (F, xy);     // Outgoing
    float4 Bgnd = tex2D (B, xy);     // Incoming
-   float4 maskBg, retval;
+   float4 retval;
 
    float4 grad  = tex2D (G, xy);                          // Gradient
    float4 noise = tex2D (S, ((xy - 0.5) / pSize) + 0.5);  // Soft
@@ -180,10 +208,7 @@ float4 fn_main (sampler F, sampler B, sampler G, sampler S, float2 xy)
    float stars, level = saturate (((0.5 - grad.x) * 2) + noise);
 
    if (Blended) {
-      if (ShowKey) {
-         retval = lerp (_TransparentBlack, Fgnd, Fgnd.a);
-         maskBg = _TransparentBlack;
-      }
+      if (ShowKey) { retval = lerp (_TransparentBlack, Fgnd, Fgnd.a); }
       else {
          retval = lerp (Fgnd, Bgnd, level);
 
@@ -194,12 +219,10 @@ float4 fn_main (sampler F, sampler B, sampler G, sampler S, float2 xy)
             retval = lerp (retval, starColour, stars);
          }
 
-         maskBg = Bgnd;
          retval = lerp (maskBg, retval, Fgnd.a);
       }
    }
    else {
-      maskBg = Fgnd;
       retval = lerp (Fgnd, Bgnd, level);
 
       if (Sparkles) {
@@ -210,11 +233,11 @@ float4 fn_main (sampler F, sampler B, sampler G, sampler S, float2 xy)
       }
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, xy).x);
+   return retval;
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 // technique Granulate Vertical
@@ -383,24 +406,16 @@ DeclareEntryPoint (Granulate_F)
 {
    float4 Fgnd = tex2D (Fg_F, uv3);
    float4 Bgnd = tex2D (Bg_F, uv3);
-   float4 MaskBg, retval;
+   float4 retval;
 
    float amount;
 
    if (Blended) {
-      if (ShowKey) {
-         retval = lerp (_TransparentBlack, Fgnd, Fgnd.a);
-
-         return lerp (_TransparentBlack, retval, tex2D (Mask, uv3).x);
-      }
+      if (ShowKey) { retval = lerp (_TransparentBlack, Fgnd, Fgnd.a); }
 
       amount = SwapDir ? 1.0 - Amount : Amount;
-      MaskBg = Bgnd;
    }
-   else {
-      amount = Amount;
-      MaskBg = Fgnd;
-   }
+   else amount = Amount;
 
    if (Fgnd.a > 0.0 ) {
       float noise  = tex2D (Blur_F, ((uv3 - 0.5) / pSize) + 0.5).x;
@@ -418,5 +433,5 @@ DeclareEntryPoint (Granulate_F)
    }
    else retval = Bgnd;
 
-   return lerp (MaskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
