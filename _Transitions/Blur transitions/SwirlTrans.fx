@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2026-07-10
 // @Author schrauber
 // @Author jwrl
 // @Created 2017-11-13
@@ -12,17 +12,46 @@
  phase.  During the second half the zoom oscillates as the incoming image mixes
  in.  Finally, the zoom reduces to zero as the transition completes.
 
+   [*]Amount:  The normal keyframed transition progress.
+   [*]Swirl rotation
+      [*]Strength:  Sets the strength of the swirl.
+      [*]Spins:   The number of rotations that the swirl will make during the
+         transition.
+      [*]Fill gaps:  Sets the amount of smearing to the edge of frame used to
+         fill any gaps.
+   [*]Enable blend transitions:  Changes the mode from opaque video to transparent
+      video such as titles and the like.
+   [*]Swirl settings
+      [*]Start angle:  Sets the start angle of the swirl.
+      [*]Centre X:  Sets the horizontal centre point of the swirl.
+      [*]Centre Y:  Sets the vertical centre point of the swirl.
+   [*]Blend settings
+      [*]Source:  Selects between an extracted video source and transparent video.
+      [*]Transition into blend:  Selects between transitioning into or out of a
+         blended video source.
+      [*]Fine tune:  Fine tunes the separation of an extracted video source from
+         its background.
+      [*]Show foreground key:  Showing the key helps in setting up the clip.
+      [*]Swap sources:  This can be necessary when using a folded delta key
+         (extracted) transition.
+
  If the spin rotation is reduced to zero the outgoing image pinches to the centre
  and holds up to the 50% point.  It then bounces back and produces ripples in the
  outgoing image which cause it to transition from the centre to the incoming image.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect SwirlTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-10 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
@@ -37,8 +66,6 @@
 // Conversion 2023-03-04 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
 
-#include "_utils.fx"
-
 DeclareLightworksEffect ("Swirl transition", "Mix", "Blur transitions", "A swirl mix effect used as a transition between video sources", CanSize);
 
 //-----------------------------------------------------------------------------------------//
@@ -47,29 +74,27 @@ DeclareLightworksEffect ("Swirl transition", "Mix", "Blur transitions", "A swirl
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",       kNoGroup,         kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareFloatParam (Amplitude, "Swirl depth", "Rotation", kNoFlags, 0.5, -1.0, 1.0);
-DeclareFloatParam (Rate, "Revolutions", "Rotation", kNoFlags, 2.5, -10.0, 10.0);
-DeclareFloatParam (FillGaps, "Fill gaps", "Rotation", kNoFlags, 0.9, 0.0, 1.0);
+DeclareFloatParam (Amplitude,      "Strength",     "Swirl rotation", kNoFlags, 0.5, -1.0, 1.0);
+DeclareFloatParam (Rate,           "Spins",        "Swirl rotation", kNoFlags, 2.5, -10.0, 10.0);
+DeclareFloatParam (FillGaps,       "Fill gaps",    "Swirl rotation", kNoFlags, 0.9, 0.0, 1.0);
 
-DeclareBoolParam (Blended, "Enable blend transitions", kNoGroup, false);
+DeclareBoolParam  (Blended,        "Enable blend transitions",       kNoGroup, false);
 
-DeclareFloatParam (Start, "Start angle", "Blend swirl", kNoFlags, 0.0, -360.0, 360.0);
-DeclareFloatParam (CentreX, "Spin centre", "Blend swirl", "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (CentreY, "Spin centre", "Blend swirl", "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (Start,          "Start angle",  "Swirl settings", kNoFlags, 0.0, -360.0, 360.0);
+DeclareFloatParam (CentreX,        "Centre",       "Swirl settings", "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (CentreY,        "Centre",       "Swirl settings", "SpecifiesPointY", 0.5, 0.0, 1.0);
 
-DeclareIntParam (Source, "Source", "Blend settings", 0, "Extracted foreground|Image key/Title pre 2023.2, no input|Image or title without connected input");
-DeclareBoolParam (SwapDir, "Transition into blend", "Blend settings", true);
-DeclareFloatParam (KeyGain, "Key adjustment", "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam (ShowKey, "Show foreground key", "Blend settings", false);
-DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
+DeclareIntParam   (Source,         "Source",       "Blend settings", 0, "Extracted foreground|Image key or title (disconnect input)");
+DeclareBoolParam  (SwapDir,        "Transition into blend",          "Blend settings", true);
+DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend settings", false);
+DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
 DeclareFloatParam (_OutputAspectRatio);
 DeclareFloatParam (_Length);
@@ -87,7 +112,7 @@ DeclareFloatParam (_Length);
 #define CENTRE     0.5
 
 #define FREQ       20.0      // Frequency of the zoom oscillation
-#define PHASE      0.5       // 90° phase shift of the zoom oscillation. Valid from progress 0.75
+#define PHASE      0.5       // 90Â° phase shift of the zoom oscillation. Valid from progress 0.75
 #define AREA       100.0     // Area of the regional zoom
 #define ZOOMPOWER  12.0
 
@@ -174,7 +199,7 @@ float4 fn_zoom (sampler Twist, float2 uv, out float distC)
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 DeclarePass (Fgd)
@@ -192,10 +217,12 @@ DeclarePass (Fgd)
       Bgnd = ReadPixel (Bg, uv2);
    }
 
-   if (Source == 0) { Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb)); }
-   else if (Source == 1) { Fgnd.a = pow (Fgnd.a, 0.375 + (KeyGain / 2.0)); }
+   if (Source == 0) Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb));
 
-   if (Fgnd.a == 0.0) Fgnd.rgb = Fgnd.aaa;
+   // If alpha is zero we need any video to be blanked.  We do NOT need it to be
+   // multiplied, so this is the simplest way to fix things.
+
+   if (Fgnd.a == 0.0) Fgnd = kTransparentBlack;
 
    return Fgnd;
 }
@@ -219,15 +246,12 @@ DeclareEntryPoint (SwirlTrans)
 {
    float4 Fgnd = tex2D (Fgd, uv3);
    float4 Bgnd = tex2D (Bgd, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    float amount;
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = kTransparentBlack;
-      }
+      if (ShowKey) { retval = Fgnd; }
       else {
          amount = SwapDir ? Amount : 1.0 - Amount;
 
@@ -245,14 +269,9 @@ DeclareEntryPoint (SwirlTrans)
 
          retval = ReadPixel (Fgd, xy);
          retval.a *= amount;
-         maskBg = Bgnd;
       }
-
-      retval = lerp (maskBg, retval, retval.a);
    }
    else {
-      maskBg = Fgnd;
-
       float Cdist;
 
       float4 FgZoom = fn_zoom (FgTwist, uv3, Cdist);  // Recover the foreground component
@@ -267,6 +286,5 @@ DeclareEntryPoint (SwirlTrans)
       retval = lerp (FgZoom, BgZoom, amount);
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
-
