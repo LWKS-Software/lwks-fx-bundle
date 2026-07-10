@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2026-07-10
 // @Author rakusan
 // @Author jwrl
 // @Created 2016-02-15
@@ -10,13 +10,40 @@
  The direction, aspect ratio, centring and strength of the blur can all be adjusted.
  It can also be used with titles and other blended images.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+   [*]Amount:  The normal keyframed transition progress.
+   [*]Spin settings
+      [*]Spin direction:  Sets the spin to be anticlockwise or clockwise.
+      [*]Arc length:  Because this is a spin blur, the blur length is set in
+         degrees of rotation.
+      [*]Aspect 1:x:  Sets the aspect ratio.  Adjusting it will make the spin
+         more or less ellipsoid.
+      [*]Centre X:  Sets the horizontal centre point of the spin.
+      [*]Centre Y:  Sets the vertical centre point of the spin.
+   [*]Enable blend transitions:  Changes the mode from opaque video to transparent
+      video such as titles and the like.
+   [*]Blend settings
+      [*]Source:  Selects between an extracted video source and transparent video.
+      [*]Transition into blend:  Selects between transitioning into or out of a
+         blended video source.
+      [*]Fine tune:  Fine tunes the separation of an extracted video source from
+         its background.
+      [*]Show foreground key:  Showing the key helps in setting up the clip.
+      [*]Swap sources:  This can be necessary when using a folded delta key
+         (extracted) transition.
+
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect SpinTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-10 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
@@ -31,8 +58,6 @@
 // Conversion 2023-03-04 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
 
-#include "_utils.fx"
-
 DeclareLightworksEffect ("Spin transition", "Mix", "Blur transitions", "Dissolves the images through a blurred spin", CanSize);
 
 //-----------------------------------------------------------------------------------------//
@@ -41,29 +66,25 @@ DeclareLightworksEffect ("Spin transition", "Mix", "Blur transitions", "Dissolve
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",         kNoGroup,         kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareIntParam (CW_CCW, "Rotation direction", "Spin", 1, "Anticlockwise|Clockwise");
+DeclareIntParam   (CW_CCW,         "Spin direction", "Spin settings",  1, "Anticlockwise|Clockwise");
+DeclareFloatParam (blurLen,        "Arc length",     "Spin settings",  kNoFlags, 90.0, 0.0, 180.0);
+DeclareFloatParam (aspectRatio,    "Aspect 1:x",     "Spin settings",  kNoFlags, 1.0, 0.01, 10.0);
+DeclareFloatParam (CentreX,        "Centre",         "Spin settings",  "SpecifiesPointX", 0.5, -0.5, 1.5);
+DeclareFloatParam (CentreY,        "Centre",         "Spin settings",  "SpecifiesPointY", 0.5, -0.5, 1.5);
 
-DeclareFloatParam (blurLen, "Arc (degrees)", "Spin", kNoFlags, 90.0, 0.0, 180.0);
-DeclareFloatParam (aspectRatio, "Aspect ratio 1:x", "Spin", kNoFlags, 1.0, 0.01, 10.0);
+DeclareBoolParam  (Blended,        "Enable blend transitions",         kNoGroup, false);
 
-DeclareFloatParam (CentreX, "Centre", "Spin", "SpecifiesPointX", 0.5, -0.5, 1.5);
-DeclareFloatParam (CentreY, "Centre", "Spin", "SpecifiesPointY", 0.5, -0.5, 1.5);
-
-DeclareBoolParam (Blended, "Enable blend transitions", kNoGroup, false);
-
-DeclareIntParam (Source, "Source", "Blend settings", 0, "Extracted foreground|Image key/Title pre 2023.2, no input|Image or title without connected input");
-DeclareBoolParam (SwapDir, "Transition into blend", "Blend settings", true);
-DeclareFloatParam (KeyGain, "Key adjustment", "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam (ShowKey, "Show foreground key", "Blend settings", false);
-DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
+DeclareIntParam   (Source,         "Source",         "Blend settings", 0, "Extracted foreground|Image key or title (disconnect input)");
+DeclareBoolParam  (SwapDir,        "Transition into blend",            "Blend settings", true);
+DeclareFloatParam (KeyGain,        "Fine tune",      "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (ShowKey,        "Show foreground key",              "Blend settings", false);
+DeclareBoolParam  (SwapSource,     "Swap sources",   "Blend settings", false);
 
 DeclareFloatParam (_OutputAspectRatio);
 DeclareFloatParam (_LengthFrames);
@@ -153,7 +174,7 @@ float4 fn_BgBlur (sampler B, float2 uv, int base)
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 DeclarePass (Fgd)
@@ -171,13 +192,12 @@ DeclarePass (Fgd)
       Bgnd = ReadPixel (Bg, uv2);
    }
 
-   if (Source == 0) { Fgnd.a = smoothstep (0.0, 0.25, distance (Bgnd.rgb, Fgnd.rgb)); }
-   else if (Source == 1) { Fgnd.a = pow (Fgnd.a, 0.5); }
-/*
-   if (Source == 0) { Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb)); }
-   else if (Source == 1) { Fgnd.a = pow (Fgnd.a, 0.375 + (KeyGain / 2.0)); }
-*/
-   if (Fgnd.a == 0.0) Fgnd.rgb = Fgnd.aaa;
+   if (Source == 0) Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb));
+
+   // If alpha is zero we need any video to be blanked.  We do NOT need it to be
+   // multiplied, so this is the simplest way to fix things.
+
+   if (Fgnd.a == 0.0) Fgnd = kTransparentBlack;
 
    return Fgnd;
 }
@@ -226,26 +246,20 @@ DeclareEntryPoint (SpinTrans)
    float4 Fgnd = tex2D (Fgd, uv3);
    float4 Bgnd = tex2D (Bgd, uv3);
    float4 Fg_vid = tex2D (Fblur, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    Fg_vid += tex2D (Rot_1, uv3) + tex2D (Rot_2, uv3);
    Fg_vid += tex2D (Rot_3, uv3) + tex2D (Rot_4, uv3);
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = kTransparentBlack;
-      }
+      if (ShowKey) { retval = Fgnd; }
       else {
          float amount = SwapDir ? Amount * _LengthFrames / (_LengthFrames - 1.0) : 1.0 - Amount;
 
          Fg_vid *= 1.4585;
          retval = lerp (Fgnd, Fg_vid, saturate ((1.0 - amount) * 8.0));
          retval.a *= amount;
-         maskBg = Bgnd;
       }
-
-      retval = lerp (maskBg, retval, retval.a);
    }
    else {
       retval  = tex2D (Bblur, uv3);
@@ -258,9 +272,7 @@ DeclareEntryPoint (SpinTrans)
 
       mix = (1.0 + (abs (mix) * mix)) / 2.0;
       retval = lerp (Fg_vid, retval, mix);
-      maskBg = Fgnd;
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
-
