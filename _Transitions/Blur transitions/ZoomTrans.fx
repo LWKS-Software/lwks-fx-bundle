@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-05
+// @Released 2026-07-10
 // @Author jwrl
 // @Created 2016-05-07
 
@@ -13,13 +13,37 @@
  OR
    Zooms in or out to transition into or out of blended and keyed foreground layers.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+   [*]Amount:  The normal keyframed transition progress.
+   [*]Zoom settings
+      [*]Direction:  Sets the zoom direction to be zoom in or zoom out.
+      [*]Strength:  Sets the strength of the zoom.
+      [*]Centre X:  Sets the horizontal centre point of the zoom.
+      [*]Centre Y:  Sets the vertical centre point of the zoom.
+   [*]Enable blend transitions:  Changes the mode from opaque video to transparent
+      video such as titles and the like.
+   [*]Blend settings
+      [*]Source:  Selects between an extracted video source and transparent video.
+      [*]Transition into blend:  Selects between transitioning into or out of a
+         blended video source.
+      [*]Fine tune:  Fine tunes the separation of an extracted video source from
+         its background.
+      [*]Show foreground key:  Showing the key helps in setting up the clip.
+      [*]Swap sources:  This can be necessary when using a folded delta key
+         (extracted) transition.
+
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect ZoomTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-10 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-08-05 jwrl.
 // Reworded source selection for 2023.2 settings.
@@ -34,8 +58,6 @@
 // Conversion 2023-03-04 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
 
-#include "_utils.fx"
-
 DeclareLightworksEffect ("Zoom transition", "Mix", "Blur transitions", "Zooms in or out of the video to establish or remove it", CanSize);
 
 //-----------------------------------------------------------------------------------------//
@@ -44,28 +66,24 @@ DeclareLightworksEffect ("Zoom transition", "Mix", "Blur transitions", "Zooms in
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",       kNoGroup,         kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareIntParam (Direction, "Direction", "Zoom", 0, "Zoom in|Zoom out");
+DeclareIntParam   (Direction,      "Direction",    "Zoom settings",  0, "Zoom in|Zoom out");
+DeclareFloatParam (zoomAmount,     "Strength",     "Zoom settings",  kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Xcentre,        "Centre",       "Zoom settings",  "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (Ycentre,        "Centre",       "Zoom settings",  "SpecifiesPointY", 0.5, 0.0, 1.0);
 
-DeclareFloatParam (zoomAmount, "Zoom amount", "Zoom", kNoFlags, 0.5, 0.0, 1.0);
+DeclareBoolParam  (Blended,        "Enable blend transitions",       kNoGroup, false);
 
-DeclareFloatParam (Xcentre, "Centre", "Zoom", "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (Ycentre, "Centre", "Zoom", "SpecifiesPointY", 0.5, 0.0, 1.0);
-
-DeclareBoolParam (Blended, "Enable blend transitions", kNoGroup, false);
-
-DeclareIntParam (Source, "Source", "Blend settings", 0, "Extracted foreground|Image key/Title pre 2023.2, no input|Image or title without connected input");
-DeclareBoolParam (SwapDir, "Transition into blend", "Blend settings", true);
-DeclareFloatParam (KeyGain, "Key adjustment", "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam (ShowKey, "Show foreground key", "Blend settings", false);
-DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
+DeclareIntParam   (Source,         "Source",       "Blend settings", 0, "Extracted foreground|Image key or title (disconnect input)");
+DeclareBoolParam  (SwapDir,        "Transition into blend",          "Blend settings", true);
+DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend settings", false);
+DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -121,7 +139,7 @@ float4 fn_zoom (sampler S, float2 uv)
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 DeclarePass (Fgd)
@@ -139,10 +157,12 @@ DeclarePass (Fgd)
       Bgnd = ReadPixel (Bg, uv2);
    }
 
-   if (Source == 0) { Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb)); }
-   else if (Source == 1) { Fgnd.a = pow (Fgnd.a, 0.375 + (KeyGain / 2.0)); }
+   if (Source == 0) Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb));
 
-   if (Fgnd.a == 0.0) Fgnd.rgb = Fgnd.aaa;
+   // If alpha is zero we need any video to be blanked.  We do NOT need it to be
+   // multiplied, so this is the simplest way to fix things.
+
+   if (Fgnd.a == 0.0) Fgnd = kTransparentBlack;
 
    return Fgnd;
 }
@@ -163,13 +183,10 @@ DeclareEntryPoint (ZoomTrans)
 {
    float4 Fgnd = tex2D (Fgd, uv3);
    float4 Bgnd = tex2D (Bgd, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = kTransparentBlack;
-      }
+      if (ShowKey) { retval = Fgnd; }
       else {
          Fgnd = fn_zoom (Super, uv3);
 
@@ -177,14 +194,9 @@ DeclareEntryPoint (ZoomTrans)
 
          retval = lerp (Bgnd, Fgnd, Fgnd.a);
          retval.a *= amount;
-         maskBg = Bgnd;
       }
-
-      retval = lerp (maskBg, retval, retval.a);
    }
    else {
-      maskBg = Fgnd;
-
       if (zoomAmount > 0.0) {
          float strength_1, strength_2, scale_1 = 1.0, scale_2 = 1.0;
 
@@ -219,6 +231,5 @@ DeclareEntryPoint (ZoomTrans)
       retval = lerp (Fgnd, Bgnd, Amount);
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
-
