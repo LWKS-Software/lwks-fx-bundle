@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2026-07-10
 // @Author jwrl
 // @Created 2015-10-12
 
@@ -9,13 +9,33 @@
  can be used with standard video, title effects, image keys or other blended video
  layer(s).
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+   [*]Amount:  The normal keyframed transition progress.
+   [*]Blurriness:  Sets the amount of blur to use in the transition.
+   [*]Enable blend transitions:  Changes the mode from opaque video to transparent
+      video such as titles and the like.
+   [*]Blend settings
+      [*]Source:  Selects between an extracted video source and transparent video.
+      [*]Transition into blend:  Selects between transitioning into or out of a
+         blended video source.
+      [*]Fine tune:  Fine tunes the separation of an extracted video source from
+         its background.
+      [*]Show foreground key:  Showing the key helps in setting up the clip.
+      [*]Swap sources:  This can be necessary when using a folded delta key
+         (extracted) transition.
+
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect BlurTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-10 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
@@ -30,8 +50,6 @@
 // Conversion 2023-03-04 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
 
-#include "_utils.fx"
-
 DeclareLightworksEffect ("Blur transition", "Mix", "Blur transitions", "Uses a blur to drive the transition", CanSize);
 
 //-----------------------------------------------------------------------------------------//
@@ -40,23 +58,19 @@ DeclareLightworksEffect ("Blur transition", "Mix", "Blur transitions", "Uses a b
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",       kNoGroup,         kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Blurriness,     "Blurriness",   kNoGroup,         kNoFlags, 0.5, 0.0, 1.0);
+DeclareBoolParam  (Blended,        "Enable blend transitions",       kNoGroup, false);
 
-DeclareFloatParam (Blurriness, "Blurriness", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
-
-DeclareBoolParam (Blended, "Enable blend transitions", kNoGroup, false);
-
-DeclareIntParam (Source, "Source", "Blend settings", 0, "Extracted foreground|Image key/Title pre 2023.2, no input|Image or title without connected input");
-DeclareBoolParam (SwapDir, "Transition into blend", "Blend settings", true);
-DeclareFloatParam (KeyGain, "Key adjustment", "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam (ShowKey, "Show foreground key", "Blend settings", false);
-DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
+DeclareIntParam   (Source,         "Source",       "Blend settings", 0, "Extracted foreground|Image key or title (disconnect input)");
+DeclareBoolParam  (SwapDir,        "Transition into blend",          "Blend settings", true);
+DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend settings", false);
+DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -99,7 +113,7 @@ float4 fn_transition (sampler vid, float2 uv, float2 blur)
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 DeclarePass (Fgd)
@@ -117,10 +131,12 @@ DeclarePass (Fgd)
       Bgnd = ReadPixel (Bg, uv2);
    }
 
-   if (Source == 0) { Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb)); }
-   else if (Source == 1) { Fgnd.a = pow (Fgnd.a, 0.375 + (KeyGain / 2.0)); }
+   if (Source == 0) Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb));
 
-   if (Fgnd.a == 0.0) Fgnd.rgb = Fgnd.aaa;
+   // If alpha is zero we need any video to be blanked.  We do NOT need it to be
+   // multiplied, so this is the simplest way to fix things.
+
+   if (Fgnd.a == 0.0) Fgnd = kTransparentBlack;
 
    return Fgnd;
 }
@@ -162,31 +178,23 @@ DeclareEntryPoint (BlurTrans)
 {
    float4 Fgnd = tex2D (Fgd, uv3);
    float4 Bgnd = tex2D (Bgd, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    float2 blur;
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = kTransparentBlack;
-      }
+      if (ShowKey) { retval = Fgnd; }
       else {
          blur  = SwapDir ? float2 (0.0, 1.0 - Amount) : float2 (0.0, Amount);
          retval = fn_transition (BlurX, uv3, blur);
          retval.a *= SwapDir ? sin (saturate (Amount * 2.0) * HALF_PI)
                              : cos (saturate (Amount - 0.5) * PI);
-         maskBg = Bgnd;
       }
-
-      retval = lerp (maskBg, retval, retval.a);
    }
    else {
-      blur = float2 (0.0, sin (saturate (Amount) * PI));
+      blur   = float2 (0.0, sin (saturate (Amount) * PI));
       retval = fn_transition (BlurX, uv3, blur);
-      maskBg = Fgnd;
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
-
