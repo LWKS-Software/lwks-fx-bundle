@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2026-07-11
 // @Author jwrl
 // @Created 2016-07-31
 
@@ -11,7 +11,38 @@
  adjustable using the transition centre setting, and the dwell time can be controlled
  by means of the transition curve setting.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+   [*]Amount:  The transition progress.
+   [*]Mid point: Sets the time during the transition at which 100% colour mix
+      will be reached.
+   [*]Colour setup
+      [*]Opacity: Sets the transparency of the colour mix.
+      [*]Profile: Adjusts the curve of the mix to colour.
+      [*]Gradient type: Sets the colour gradient to flat, a range of gradients, or to
+         a black and white version of the mix.
+      [*]Grad. mid X: Sets the horizontal position of the gradient midpoint.
+      [*]Grad. mid Y: Sets the vertical position of the gradient midpoint.
+      [*]Top left: The colour to be used at the top left of screen.
+      [*]Top right: The colour to be used at the top right of screen.
+      [*]Bot. left: The colour to be used at the bottom left of screen.
+      [*]Bot. right: The colour to be used at the bottom right of screen.
+      [*]Show grad.: Displays the colour to be used at the midpoint for setup
+         purposes.
+   [*]Enable blend transitions:  Changes the mode from opaque video to transparent
+      video such as titles and the like.
+   [*]Blend settings
+      [*]Source:  Selects between an extracted video source and transparent video.
+      [*]Transition into blend:  Selects between transitioning into or out of a
+         blended video source.
+      [*]Fine tune:  Fine tunes the separation of an extracted video source from
+         its background.
+      [*]Show foreground key:  Showing the key helps in setting up the clip.
+      [*]Swap sources:  This can be necessary when using a folded delta key
+         (extracted) transition.
+
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -20,6 +51,10 @@
 // Version history:
 //
 // Updated 2023-08-02 jwrl.
+//
+// Updated 2026-07-11 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
+//
 // Reworded source selection for 2023.2 settings.
 //
 // Updated 2023-06-08 jwrl.
@@ -33,8 +68,6 @@
 // Conversion 2023-05-05 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
 
-#include "_utils.fx"
-
 DeclareLightworksEffect ("Colour gradient transition", "Mix", "Colour transitions", "Transitions in or out through monochrome or a colour gradient", CanSize);
 
 //-----------------------------------------------------------------------------------------//
@@ -43,34 +76,31 @@ DeclareLightworksEffect ("Colour gradient transition", "Mix", "Colour transition
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",        kNoGroup,         kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (FxCentre,       "Mid point",     kNoGroup,         kNoFlags, 0.0, -1.0, 1.0);
 
-DeclareFloatParam (FxCentre, "Transition centre", kNoGroup, kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam (cAmount,        "Opacity",       "Colour setup",   kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (cCurve,         "Profile",       "Colour setup",   kNoFlags, 0.0, 0.0, 1.0);
+DeclareIntParam   (cGradient,      "Gradient type", "Colour setup", 5, "Flat (uses only the top left colour)|Horizontal blend (top left > top right)|Horizontal blend to centre (TL > TR > TL)|Vertical blend (top left > bottom left)|Vertical blend to centre (TL > BL > TL)|Four way gradient|Four way gradient to centre|Four way gradient to centre (horizontal)|Four way gradient to centre (vertical)|Radial (TL outer > TR centre)|Black and white");
+DeclareFloatParam (OffsX,          "Grad. mid",     "Colour setup",   "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (OffsY,          "Grad. mid",     "Colour setup",   "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareColourParam (topLeft,       "Top left",      "Colour setup",   kNoFlags, 0.0, 0.0, 0.0, 1.0);
+DeclareColourParam (topRight,      "Top right",     "Colour setup",   kNoFlags, 0.5, 0.0, 0.8, 1.0);
+DeclareColourParam (botLeft,       "Bot. left",     "Colour setup",   kNoFlags, 0.0, 0.0, 1.0, 1.0);
+DeclareColourParam (botRight,      "Bot. right",    "Colour setup",   kNoFlags, 0.0, 0.8, 0.5, 1.0);
+DeclareBoolParam  (ShowGrad,       "Show gradient", "Colour setup",   false);
 
-DeclareFloatParam (cAmount, "Opacity", "Colour setup", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (cCurve, "Transition curve", "Colour setup", kNoFlags, 0.0, 0.0, 1.0);
-DeclareIntParam (cGradient, "Gradient", "Colour setup", 5, "Flat (uses only the top left colour)|Horizontal blend (top left > top right)|Horizontal blend to centre (TL > TR > TL)|Vertical blend (top left > bottom left)|Vertical blend to centre (TL > BL > TL)|Four way gradient|Four way gradient to centre|Four way gradient to centre (horizontal)|Four way gradient to centre (vertical)|Radial (TL outer > TR centre)|Black and white");
-DeclareFloatParam (OffsX, "Grad. midpoint", "Colour setup", "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (OffsY, "Grad. midpoint", "Colour setup", "SpecifiesPointY", 0.5, 0.0, 1.0);
-DeclareColourParam (topLeft, "Top left", "Colour setup", kNoFlags, 0.0, 0.0, 0.0, 1.0);
-DeclareColourParam (topRight, "Top right", "Colour setup", kNoFlags, 0.5, 0.0, 0.8, 1.0);
-DeclareColourParam (botLeft, "Bottom left", "Colour setup", kNoFlags, 0.0, 0.0, 1.0, 1.0);
-DeclareColourParam (botRight, "Bottom right", "Colour setup", kNoFlags, 0.0, 0.8, 0.5, 1.0);
-DeclareBoolParam (ShowGrad, "Show gradient", "Colour setup", false);
+DeclareBoolParam  (Blended,        "Enable blend transitions",       kNoGroup, false);
 
-DeclareBoolParam (Blended, "Enable blend transitions", kNoGroup, false);
-
-DeclareIntParam (Source, "Source", "Blend settings", 0, "Extracted foreground|Image key/Title pre 2023.2, no input|Image or title without connected input");
-DeclareBoolParam (SwapDir, "Transition into blend", "Blend settings", true);
-DeclareFloatParam (KeyGain, "Key adjustment", "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam (ShowKey, "Show foreground key", "Blend settings", false);
-DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
+DeclareIntParam   (Source,         "Source",        "Blend settings", 0, "Extracted foreground|Image key or title (disconnect input)");
+DeclareBoolParam  (SwapDir,        "Transition into blend",           "Blend settings", true);
+DeclareFloatParam (KeyGain,        "Fine tune",     "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (ShowKey,        "Show foreground key",             "Blend settings", false);
+DeclareBoolParam  (SwapSource,     "Swap sources",  "Blend settings", false);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -165,7 +195,7 @@ float4 fn_colour (float4 Fgnd, float4 Bgnd, float amt, float2 xy)
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 DeclarePass (Fgd)
@@ -183,10 +213,12 @@ DeclarePass (Fgd)
       Bgnd = ReadPixel (Bg, uv2);
    }
 
-   if (Source == 0) { Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb)); }
-   else if (Source == 1) { Fgnd.a = pow (Fgnd.a, 0.375 + (KeyGain / 2.0)); }
+   if (Source == 0) Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb));
 
-   if (Fgnd.a == 0.0) Fgnd.rgb = Fgnd.aaa;
+   // If alpha is zero we need any video to be blanked.  We do NOT need it to be
+   // multiplied, so this is the simplest way to fix things.
+
+   if (Fgnd.a == 0.0) Fgnd = kTransparentBlack;
 
    return Fgnd;
 }
@@ -204,13 +236,10 @@ DeclareEntryPoint (ColourMixTrans)
 {
    float4 Fgnd = tex2D (Fgd, uv3);
    float4 Bgnd = tex2D (Bgd, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    if (Blended) {
-      if (ShowKey) {
-         maskBg = kTransparentBlack;
-         retval = lerp (maskBg, Fgnd, Fgnd.a);
-      }
+      if (ShowKey) { retval = Fgnd; }
       else {
          if (ShowGrad) { retval = float4 (fn_gradient (Fgnd, Bgnd, uv0).rgb, 1.0); }
          else {
@@ -218,17 +247,12 @@ DeclareEntryPoint (ColourMixTrans)
 
             retval = lerp (Bgnd, fn_colour (Fgnd, Bgnd, amt, uv0), Fgnd.a);
          }
-
-         maskBg = Bgnd;
       }
    }
    else {
       if (ShowGrad) { retval = float4 (fn_gradient (Fgnd, Bgnd, uv0).rgb, 1.0); }
       else retval = fn_colour (Fgnd, Bgnd, Amount, uv0);
-
-      maskBg = Fgnd;
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
-
