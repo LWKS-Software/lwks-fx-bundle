@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-17
+// @Released 2026-07-12
 // @Author jwrl
 // @Created 2017-03-01
 
@@ -7,7 +7,18 @@
  This "dissolve" simulates the chinagraph marks used by film editors to mark up optical
  effects on film rushes.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+   [*]Amount:  The normal keyframed transition progress.
+   [*]Overlay type:   Controls the motion of the chinagraph pencil.
+   [*]Angle:  Sets the angle of the chinagraph mark
+   [*]Texture
+      [*]Amount:  Sets the amount of texture applied to the chinagraph mark.
+      [*]Depth:  Sets the texture intensity.
+      [*]Softness:  Sets the texture softness.
+
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -15,13 +26,14 @@
 //
 // Version history:
 //
+// Updated 2026-07-12 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
+//
 // Updated 2023-05-17 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-03-04 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Chinagraph markup", "Mix", "Fades and non mixes", "Simulates the chinagraph marks used by film editors to mark up optical effects on film rushes", CanSize);
 
@@ -31,21 +43,17 @@ DeclareLightworksEffect ("Chinagraph markup", "Mix", "Fades and non mixes", "Sim
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",       kNoGroup,  kNoFlags, 1.0, 0.0, 1.0);
+DeclareIntParam   (MarkType,       "Overlay type", kNoGroup,  0, "Left to right|Right to left|Crossover");
+DeclareFloatParam (Tilt,           "Angle",        kNoGroup,  kNoFlags, 0.25, 0.0, 1.0);
 
-DeclareIntParam (MarkType, "Overlay type", kNoGroup, 0, "Left to right|Right to left|Crossover");
-
-DeclareFloatParam (Tilt, "Angle", kNoGroup, kNoFlags, 0.25, 0.0, 1.0);
-
-DeclareFloatParam (Texture, "Amount", "Texture", kNoFlags, 0.125, 0.0, 1.0);
-DeclareFloatParam (Depth, "Depth", "Texture", kNoFlags, 0.125, 0.0, 1.0);
-DeclareFloatParam (Radius, "Softness", "Texture", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Texture,        "Amount",       "Texture", kNoFlags, 0.125, 0.0, 1.0);
+DeclareFloatParam (Depth,          "Depth",        "Texture", kNoFlags, 0.125, 0.0, 1.0);
+DeclareFloatParam (Radius,         "Softness",     "Texture", kNoFlags, 0.5, 0.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -132,7 +140,6 @@ DeclareEntryPoint (Chinagraph_Dx)
 {
    float4 retval = tex2D (Target, uv3);
    float4 china  = tex2D (Markup, uv3);
-   float4 maskBg = retval;
 
    if ((Amount != 0.0) && (Radius != 0.0)) {
 
@@ -151,8 +158,5 @@ DeclareEntryPoint (Chinagraph_Dx)
       china /= DIVISOR;
    }
 
-   retval = lerp (retval, china, china.a);
-
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return lerp (retval, china, china.a);
 }
-
