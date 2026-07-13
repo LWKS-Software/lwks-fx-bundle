@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-17
+// @Released 2026-07-13
 // @Author schrauber
 // @Author baopao
 // @Author nouanda
@@ -8,7 +8,17 @@
 /**
  This is loosely based on the user effect Kaleido, converted to function as a transition.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+   [*]Amount:  The normal keyframed transition progress.
+   [*]Zoom:   Sets the size.
+   [*]Pan
+      [*]Position X:  Sets the horizontal position.
+      [*]Position Y:  Sets the vertical position.
+   [*]Fan:  Sets the number of elements in the kaleidoscope.
+
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -16,13 +26,14 @@
 //
 // Version history:
 //
+// Updated 2026-07-13 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
+//
 // Updated 2023-05-17 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-03-09 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Kaleidoscope transition", "Mix", "Geometric transitions", "Breaks the images into a rotary kaleidoscope pattern", CanSize);
 
@@ -32,20 +43,17 @@ DeclareLightworksEffect ("Kaleidoscope transition", "Mix", "Geometric transition
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
 DeclareFloatParamAnimated (amount, "Progress", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (Zoom,           "Zoom",     kNoGroup, kNoFlags, 1.0, 0.0, 2.0);
 
-DeclareFloatParam (Zoom, "Zoom", kNoGroup, kNoFlags, 1.0, 0.0, 2.0);
+DeclareFloatParam (PosX,           "Position", "Pan",    "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (PosY,           "Position", "Pan",    "SpecifiesPointY", 0.5, 0.0, 1.0);
 
-DeclareFloatParam (PosX, "Position", "Pan", "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (PosY, "Position", "Pan", "SpecifiesPointY", 0.5, 0.0, 1.0);
-
-DeclareBoolParam (fan, "Fan", kNoGroup, true);
+DeclareBoolParam (fan,             "Fan",      kNoGroup, true);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -74,9 +82,9 @@ float4 MirrorPixel (sampler S, float2 xy)
 
 // This function added to mimic the GLSL mod() function
 
-float mod (float x, float y)
+float GLSLmod (float x, float y)
 {
-   return x - y * floor (x/y);
+   return x - y * floor (x / y);
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -110,7 +118,7 @@ DeclareEntryPoint (KaleidoTurbine_Dx)
       scale = 1.8 * (amount - 0.5) + 0.1; // Phase 2, kaleido, tube (Z), weaken
    }
 
-   a = mod (a, tau);
+   a = GLSLmod (a, tau);
    a = abs (a - (tau / 2.0));
 
    sincos (a, p.y, p.x);
@@ -121,11 +129,12 @@ DeclareEntryPoint (KaleidoTurbine_Dx)
    else color = MirrorPixel (BgK, p);                 // Kaleido phase 2
 
    // Fan phase 1
+
    if ((a > amount) && (amount < 0.5) && (fan)) color = ReadPixel (Fg, uv1);
 
    // Fan phase 2
+
    if ((a > 1.0 - amount) && (amount > 0.5) && (fan)) color = ReadPixel (Bg, uv1);
 
-   return lerp (ReadPixel (Fg, uv1), color, tex2D (Mask, uv3).x);
+   return color;
 }
-
