@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-07-13
 // @Author khaver
 // @Author jwrl
 // @Created 2016-01-22
@@ -9,13 +9,36 @@
  into or out of standard video, blended foregrounds and titles.  Images fade into or out
  of mosaic tiles or blocks progressively over the duration of the transition.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+   [*]Amount:  The normal keyframed transition progress.
+   [*]Tiles
+      [*]Mode: Choose the tile type.
+      [*]Size: Sets the tile size
+      [*]Aspect: Sets the tile aspect ratio.
+   [*]Enable blend transitions:  Changes the mode from opaque video to transparent
+      video such as titles and the like.
+   [*]Blend settings
+      [*]Source:  Selects between an extracted video source and transparent video.
+      [*]Transition into blend:  Selects between transitioning into or out of a
+         blended video source.
+      [*]Fine tune:  Fine tunes the separation of an extracted video source from
+         its background.
+      [*]Show foreground key:  Showing the key helps in setting up the clip.
+      [*]Swap sources:  This can be necessary when using a folded delta key
+         (extracted) transition.
+
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect TileTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-13 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack to fix Linux lerp()/mix() bug.
@@ -41,25 +64,23 @@ DeclareLightworksEffect ("Tile transitions", "Mix", "Geometric transitions", "Bu
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",       kNoGroup,         kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareIntParam (SetTechnique, "Mode", "Tiles", 0, "Mosaic tiles|Coloured blocks|Break apart to tiles|Materialise from tiles");
-DeclareFloatParam (TileSize, "Size", "Tiles", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Aspect, "Aspect ratio", "Tiles", kNoFlags, 1.0, 0.25, 4.0);
+DeclareIntParam (SetTechnique,     "Mode",         "Tiles", 0, "Mosaic tiles|Coloured blocks|Break apart to tiles|Materialise from tiles");
+DeclareFloatParam (TileSize,       "Size",         "Tiles",          kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Aspect,         "Aspect",       "Tiles",          kNoFlags, 1.0, 0.25, 4.0);
 
-DeclareBoolParam (Blended, "Enable blend transitions", kNoGroup, false);
+DeclareBoolParam  (Blended,        "Enable blend transitions",       kNoGroup, false);
 
-DeclareIntParam (Source, "Source", "Blend settings", 0, "Extracted foreground|Image key/Title pre 2023.2, no input|Image or title without connected input");
-DeclareBoolParam (SwapDir, "Transition into blend", "Blend settings", true);
-DeclareFloatParam (KeyGain, "Key adjustment", "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam (ShowKey, "Show foreground key", "Blend settings", false);
-DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
+DeclareIntParam   (Source,         "Source",       "Blend settings", 0, "Extracted foreground|Image key or title (disconnect input)");
+DeclareBoolParam  (SwapDir,        "Transition into blend",          "Blend settings", true);
+DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend settings", false);
+DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
 DeclareFloatParam (_OutputAspectRatio);
 DeclareFloatParam (_LengthFrames);
@@ -160,15 +181,12 @@ DeclareEntryPoint (Mosaics)
 {
    float4 Fgnd = tex2D (Fg_M, uv3);
    float4 Bgnd = tex2D (Bg_M, uv3);
-   float4 maskBg, retval = Bgnd;
+   float4 retval = Bgnd;
 
    float2 xy;
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = _TransparentBlack;
-      }
+      if (ShowKey) { retval = Fgnd; }
       else {
          if (SwapDir) {
             xy = (TileSize > 0.0) ? fn_block_gen (uv3, cos (Amount * HALF_PI)) : uv3;
@@ -182,13 +200,9 @@ DeclareEntryPoint (Mosaics)
          }
 
          retval.a = Fgnd.a;
-         maskBg = Bgnd;
       }
-
-      retval = lerp (maskBg, retval, retval.a);
    }
    else {
-      maskBg = Fgnd;
       xy = uv3;
 
       if (TileSize > 0.0) {
@@ -202,7 +216,7 @@ DeclareEntryPoint (Mosaics)
       retval = tex2D (Bg_M, xy);
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -240,21 +254,19 @@ DeclareEntryPoint (Blocks)
 {
    float4 Fgnd = tex2D (Fg_C, uv3);
    float4 Bgnd = tex2D (Bg_C, uv3);
-   float4 maskBg, retval = Bgnd;
+   float4 retval = Bgnd;
 
    float alpha, amount;
 
    if (Blended) {
-      if (ShowKey) return lerp (_TransparentBlack, Fgnd, Fgnd.a * tex2D (Mask, uv3).x);
+      if (ShowKey) return lerp (_TransparentBlack, Fgnd, Fgnd.a);
 
-      maskBg = Bgnd;
       alpha = Fgnd.a;
       amount = SwapDir ? 1.0 - Amount : Amount;
       retval = lerp (Bgnd, Fgnd, Fgnd.a);
       Fgnd.rgb = retval.rgb;
    }
    else {
-      maskBg = Fgnd;
       alpha = 1.0;
       amount = Amount;
    }
@@ -278,7 +290,7 @@ DeclareEntryPoint (Blocks)
       retval = level >= range ? tex2D (Tiles_C, xy1) : retval;
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -319,7 +331,7 @@ DeclareEntryPoint (BreakTiles)
 {
    float4 Fgnd = tex2D (Fg_B, uv3);
    float4 Bgnd = tex2D (Bg_B, uv3);
-   float4 maskBg, retval = Bgnd;
+   float4 retval = Bgnd;
 
    float2 uv = uv3;
 
@@ -328,30 +340,23 @@ DeclareEntryPoint (BreakTiles)
    float offset = floor (uv.x * dsplc);
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = _TransparentBlack;
-      }
+      if (ShowKey) { retval = Fgnd; }
       else {
          offset = SwapDir ? (1.0 - (ceil (frac (offset / 2.0)) * 2.0)) * (1.0 - amount)
                           : ((ceil (frac (offset / 2.0)) * 2.0) - 1.0) * amount;
          uv.y += offset / _OutputAspectRatio;
 
          retval = ReadPixel (Tiles_B, uv);
-         maskBg = Bgnd;
       }
-
-      retval = lerp (maskBg, retval, retval.a);
    }
    else {
-      maskBg = Fgnd;
       offset = (1.0 - (ceil (frac (offset / 2.0)) * 2.0)) * (1.0 - amount);
       uv.y += offset / _OutputAspectRatio;
       retval = ReadPixel (Tiles_B, uv);
       retval = lerp (Fgnd, retval, retval.a);
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -390,7 +395,7 @@ DeclareEntryPoint (JoinTiles)
 {
    float4 Fgnd = tex2D (Fg_J, uv3);
    float4 Bgnd = tex2D (Bg_J, uv3);
-   float4 maskBg, retval = Bgnd;
+   float4 retval = Bgnd;
 
    float2 uv = uv3;
 
@@ -399,28 +404,21 @@ DeclareEntryPoint (JoinTiles)
    float offset = floor (uv.x * dsplc);
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = _TransparentBlack;
-      }
+      if (ShowKey) { retval = Fgnd; }
       else {
          offset = SwapDir ? (1.0 - (ceil (frac (offset / 2.0)) * 2.0)) * (1.0 - amount)
                           : ((ceil (frac (offset / 2.0)) * 2.0) - 1.0) * amount;
          uv.y += offset / _OutputAspectRatio;
 
          retval = ReadPixel (Tiles_J, uv);
-         maskBg = Bgnd;
       }
-
-      retval = lerp (maskBg, retval, retval.a);
    }
    else {
-      maskBg = Fgnd;
       offset  = ((ceil (frac (offset / 2.0)) * 2.0) - 1.0) * amount;
       uv.y += offset / _OutputAspectRatio;
       retval = ReadPixel (Tiles_J, uv);
       retval = lerp (Bgnd, retval, retval.a);
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
