@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-07-13
 // @Author jwrl
 // @Created 2018-06-12
 
@@ -8,13 +8,36 @@
  used is quite different to that used in the original keyed version that triggered this.
  Non-linearities that at the time were considered quite acceptable were really not.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+   [*]Amount:  The normal keyframed transition progress.
+   [*]Rotation
+      [*]Rotation axis: Sets the axis around which the rotation takes place.
+      [*]Swap rotation direction: Self explanatory.
+      [*]Z offset: Sets the camera position from where the rotation is being viewed.
+   [*]Enable blend transitions:  Changes the mode from opaque video to transparent
+      video such as titles and the like.
+   [*]Blend settings
+      [*]Source:  Selects between an extracted video source and transparent video.
+      [*]Transition into blend:  Selects between transitioning into or out of a
+         blended video source.
+      [*]Fine tune:  Fine tunes the separation of an extracted video source from
+         its background.
+      [*]Show foreground key:  Showing the key helps in setting up the clip.
+      [*]Swap sources:  This can be necessary when using a folded delta key
+         (extracted) transition.
+
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect RotationTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-13 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack to fix Linux lerp()/mix() bug.
@@ -40,25 +63,23 @@ DeclareLightworksEffect ("Rotation transition", "Mix", "Geometric transitions", 
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",        kNoGroup,         kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareIntParam (SetTechnique, "Rotation axis", "Rotation", 0, "Vertical|Horizontal");
-DeclareBoolParam (Reverse, "Swap rotation direction", "Rotation", false);
-DeclareFloatParam (Offset, "Z offset", "Rotation", kNoFlags, 0.5, 0.0, 1.0);
+DeclareIntParam   (SetTechnique,   "Rotation axis", "Rotation", 0,    "Vertical|Horizontal");
+DeclareBoolParam  (Reverse,        "Swap rotation direction", "Rotation", false);
+DeclareFloatParam (Offset,         "Z offset",      "Rotation",       kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareBoolParam (Blended, "Enable blend transitions", kNoGroup, false);
+DeclareBoolParam  (Blended,        "Enable blend transitions",        kNoGroup, false);
 
-DeclareIntParam (Source, "Source", "Blend settings", 0, "Extracted foreground|Image key/Title pre 2023.2, no input|Image or title without connected input");
-DeclareBoolParam (SwapDir, "Transition into blend", "Blend settings", true);
-DeclareFloatParam (KeyGain, "Key adjustment", "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam (ShowKey, "Show foreground key", "Blend settings", false);
-DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
+DeclareIntParam   (Source,         "Source",        "Blend settings", 0, "Extracted foreground|Image key or title (disconnect input)");
+DeclareBoolParam  (SwapDir,        "Transition into blend",           "Blend settings", true);
+DeclareFloatParam (KeyGain,        "Fine tune",     "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (ShowKey,        "Show foreground key",             "Blend settings", false);
+DeclareBoolParam  (SwapSource,     "Swap sources",  "Blend settings", false);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -93,12 +114,12 @@ float4 fn_initFg (sampler F, float2 xy1, sampler B, float2 xy2)
       Bgnd = ReadPixel (B, xy2);
    }
 
-   if (Source == 0) { Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb)); }
-   else if (Source == 1) { Fgnd.a = pow (Fgnd.a, 0.375 + (KeyGain / 2.0)); }
+   if (Source == 0) Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb));
 
-   if (Fgnd.a == 0.0) Fgnd.rgb = Fgnd.aaa;
+   // If alpha is zero we need any video to be blanked.  We do NOT need it to be
+   // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd;
+   return Fgnd.a == 0.0 ? _TransparentBlack : Fgnd;
 }
 
 float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
@@ -139,7 +160,7 @@ bool fn_3Drotate (float2 tl, float2 tr, float2 bl, float2 br, inout float2 uv)
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 // technique RotationTrans_V
@@ -157,21 +178,18 @@ DeclareEntryPoint (RotationTrans_V)
 {
    float4 Fgnd = tex2D (Fg_V, uv3);
    float4 Bgnd = tex2D (Bg_V, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    float2 xy = uv3;
 
    float amount = Amount;
-   float masked = tex2D (Mask, uv3).x;
 
    if (Blended) {
-      if (ShowKey) return lerp (_TransparentBlack, Fgnd, Fgnd.a * masked);
+      if (ShowKey) return lerp (_TransparentBlack, Fgnd, Fgnd.a);
 
-      maskBg = Bgnd;
       amount /= 2.0;
       if (SwapDir) amount += 0.5;
    }
-   else maskBg = Fgnd;
 
    float scale = lerp (0.1, 0.025, Offset);
    float L = (1.0 - cos (amount * PI)) * 0.5;
@@ -207,7 +225,7 @@ DeclareEntryPoint (RotationTrans_V)
    }
    else retval = InRange ? tex2D (Premix_V, xy) : _TransparentBlack;
 
-   return lerp (maskBg, retval, masked);
+   return retval;
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -227,21 +245,18 @@ DeclareEntryPoint (RotationTrans_H)
 {
    float4 Fgnd = tex2D (Fg_H, uv3);
    float4 Bgnd = tex2D (Bg_H, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    float2 xy = uv3;
 
    float amount = Amount;
-   float masked = tex2D (Mask, uv3).x;
 
    if (Blended) {
-      if (ShowKey) return lerp (_TransparentBlack, Fgnd, Fgnd.a * masked);
+      if (ShowKey) return lerp (_TransparentBlack, Fgnd, Fgnd.a);
 
-      maskBg = Bgnd;
       amount /= 2.0;
       if (SwapDir) amount += 0.5;
    }
-   else maskBg = Fgnd;
 
    float scale = lerp (0.1, 0.025, Offset);
    float B = (cos (amount * PI) + 1.0) * 0.5;
@@ -277,5 +292,5 @@ DeclareEntryPoint (RotationTrans_H)
    }
    else retval = InRange ? tex2D (Premix_H, xy) : _TransparentBlack;
 
-   return lerp (maskBg, retval, masked);
+   return retval;
 }
