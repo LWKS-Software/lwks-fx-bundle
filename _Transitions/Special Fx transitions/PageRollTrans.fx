@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-06-13
+// @Released 2026-07-14
 // @Author khaver
 // @Author Eduardo Castineyra
 // @Created 2018-06-01
@@ -7,7 +7,18 @@
 /**
  This is the classic page turn transition.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+   [*]Amount:  The normal keyframed transition progress.
+   [*]Page radius:  Sets the roll amount of the page turn.
+   [*]Image on back:   This switch shows a partial mix of the foreground image
+      on the reverse side of the page turn.
+   [*]Direction:  Self explanatory.
+   [*]Reverse:  Instead of revealing the incoming under the outgoing the page
+      turn overlays the incoming over the outgoing.
+
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -31,13 +42,14 @@
 //
 // Version history:
 //
+// Updated 2026-07-14 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
+//
 // Updated 2023-06-13 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-03-04 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Page Roll transition", "Mix", "Special Fx transitions", "Page Roll Transition", CanSize);
 
@@ -47,21 +59,15 @@ DeclareLightworksEffect ("Page Roll transition", "Mix", "Special Fx transitions"
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
-
-DeclareFloatParam (radius, "Page Radius", kNoGroup, kNoFlags, 0.2, 0.0, 1.0);
-
-DeclareBoolParam (BACK, "Image on backside", kNoGroup, true);
-
-DeclareIntParam (Direction, "Direction", kNoGroup, 0, "Top left to bottom right|Bottom left to top right|Top right to bottom left|Bottom right to top left|Left to right|Right to left|Top to bottom|Bottom to top");
-
-DeclareBoolParam (REVERSE, "Reverse", kNoGroup, false);
+DeclareFloatParamAnimated (Amount, "Amount",        kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (radius,         "Page radius",   kNoGroup, kNoFlags, 0.2, 0.0, 1.0);
+DeclareBoolParam  (BACK,           "Image on back", kNoGroup, true);
+DeclareIntParam   (Direction,      "Direction",     kNoGroup, 0, "Top left to bottom right|Bottom left to top right|Top right to bottom left|Bottom right to top left|Left to right|Right to left|Top to bottom|Bottom to top");
+DeclareBoolParam  (REVERSE,        "Reverse",       kNoGroup, false);
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
@@ -181,7 +187,6 @@ DeclareEntryPoint (PageRoll)
 
    shadow *= smoothstep (-rad, rad, (maxt - (cf.x + (PX * rad))));
 
-   float4 maskBg = tex2D (Fgd, uv3);
    float4 retval, curr, next;
 
    if (REVERSE) {
@@ -200,6 +205,5 @@ DeclareEntryPoint (PageRoll)
    retval = prog == 1.0 ? next : cf.x > 0.0 ? curr : next * shadow;
    retval.a = 1.0;
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
-
