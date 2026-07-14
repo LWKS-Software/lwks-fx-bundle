@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-09-05
+// @Released 2026-07-14
 // @Author schrauber
 // @Author jwrl
 // @Created 2024-08-30
@@ -9,14 +9,16 @@
  as a transition.  It drifts the image off as if it was made up of dust particles
  being blown away.  It's a very nice effect.  The parameters are:
 
-   Amount:  What it says.  Ramps the effect off over the transition duration.
-   Grain size:  Adjusts the size of the grain sampling.
-   Decay Rate:  At 100%, the largest amount is blown away at the beginning.
-   Revolutions:  Wind direction (has an adjustment range of 3 rotations).
-   Spread angle:  This parameter could also be called range.  See below.
-   Blend mode:  Mixes between Normal blending (0%) and Screen mode blending (100%).
-   Fade to blend mode:  Fades from normal to the blend setting over the first 20%
-     of the transition.
+   [*]Amount:  The normal keyframed transition progress.
+   [*]Grain size:  Adjusts the size of the grain sampling.
+   [*]Decay rate:  At 100%, the largest amount is blown away at the beginning.
+   [*]Wind direction
+      [*]Revolutions:  Wind direction (has an adjustment range of 3 revolutions).
+      [*]Spread:  This parameter could also be called range.  See below.
+   [*]Fg blend modes: 0% is Normal, 100% is Screen blend mode
+      [*]Blend mode:  Mixes between Normal blending (0%) and Screen mode (100%).
+      [*]Fade to blend mode:  Fades from normal to the blend setting over the
+         first 20% of the transition.
 
  With the spread angle set to 0° all grains are blown in the same direction giving
  a streaky effect.  At 360° the grains spread evenly in all directions.  With the
@@ -30,6 +32,9 @@
 // Lightworks user effect BlownAway.fx
 //
 // Version history:
+//
+// Updated 2026-07-14 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Modified 2024-09-05 by jwrl.
 // Added schrauber's grain size adjustment, with a different noise generator to provide
@@ -50,17 +55,15 @@ DeclareInputs (Fg, Bg);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 0.2, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",      kNoGroup,         kNoFlags, 0.2, 0.0, 1.0);
+DeclareFloatParam (GrainSize,      "Grain size",  kNoGroup,         kNoFlags, 1.0, 1.0, 5.0);
+DeclareFloatParam (DecayRate,      "Decay rate",  kNoGroup,         kNoFlags, 0.7, 0.0, 1.0);
 
-DeclareFloatParam (GrainSize, "Grain size", kNoGroup, kNoFlags, 1.0, 1.0, 5.0);
-DeclareFloatParam (DecayRate, "Decay Rate", kNoGroup, kNoFlags, 0.7, 0.0, 1.0);
+DeclareFloatParam (Revolutions,    "Revolutions", "Wind direction", kNoFlags,  0.4, 0.0,   3.0);
+DeclareFloatParam (SpreadAngle,    "Spread",      "Wind direction", kNoFlags, 40.0, 0.0, 360.0);
 
-DeclareFloatParam (Revolutions, "Revolutions",  "Wind direction", kNoFlags,  0.4, 0.0,   3.0);
-DeclareFloatParam (SpreadAngle, "Spread angle", "Wind direction", kNoFlags, 40.0, 0.0, 360.0);
-
-DeclareFloatParam (BlendMode, "Blend mode", "Fg blend modes: 0% is Normal, 100% is Screen blend mode", kNoFlags, 0.0, 0.0, 1.0);
-
-DeclareBoolParam (FadeToBlend, "Fade to blend mode", "Fg blend modes: 0% is Normal, 100% is Screen blend mode", true);
+DeclareFloatParam (BlendMode,      "Blend mode",  "Fg blend modes: 0% is Normal, 100% is Screen blend mode", kNoFlags, 0.0, 0.0, 1.0);
+DeclareBoolParam  (FadeToBlend,    "Fade to blend mode", "Fg blend modes: 0% is Normal, 100% is Screen blend mode", true);
 
 DeclareFloatParam (_OutputAspectRatio);
 
