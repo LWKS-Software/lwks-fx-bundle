@@ -1,11 +1,22 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-07-14
 // @Author jwrl
 // @Created 2018-07-09
 
 /**
  This is a difference (delta) key driving a Star Trek-like transporter transition.  It's
  definitely not intended to be a copy of any of the Star Trek versions of the effect.
+
+   [*]Amount:  The normal keyframed transition progress.
+   [*]Star settings
+      [*]Centre size:  Sets the size of the centre of the stars.
+      [*]Arm length:  Sets the length of the star points or arms.
+      [*]Density:  Sets the number of stars.
+      [*]Colour:  Self explanatory.
+   [*]Key settings
+      [*]Set up key:  Selects whether a fade in or out is required, and provides setup adjustment.
+      [*]Key clip:  Effectively a key clip or tolerance setting.
+      [*]Key gain:  Fine tunes the key.
 
  It is set up to be used in the same way as a dissolve and the delta key is only ever used
  to control the area that the sparkles occupy.  For it to work properly both the incoming
@@ -16,13 +27,19 @@
  transition the foreground starts a linear fade in, reaching full value at 70% of the
  transition progress.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect TransporterTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-14 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with float4 _TransparentBlack to fix Linux lerp()/mix() bug.
@@ -41,24 +58,20 @@ DeclareLightworksEffect ("Transporter transition", "Mix", "Special Fx transition
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",      kNoGroup,        kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareFloatParam (starSize, "Centre size", "Star settings", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (starLength, "Arm length", "Star settings", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (starStrength, "Density", "Star settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareFloatParam (starSize,       "Centre size", "Star settings", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (starLength,     "Arm length",  "Star settings", kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam (starStrength,   "Density",     "Star settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareColourParam (starColour,    "Colour",      "Star settings", kNoFlags, 0.9, 0.75, 0.0, 1.0);
 
-DeclareColourParam (starColour, "Colour", "Star settings", kNoFlags, 0.9, 0.75, 0.0, 1.0);
-
-DeclareIntParam (KeySetup, "Set up key", "Key settings", 0, "Transition fade in|Transition fade out|Show foreground over black|Show key over black");
-
-DeclareFloatParam (KeyClip, "Key threshold", "Key settings", kNoFlags, 0.0, 0.0, 1.0);
-DeclareFloatParam (KeyGain, "Key adjustment", "Key settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareIntParam   (KeySetup,       "Set up key",  "Key settings", 0, "Transition fade in|Transition fade out|Show foreground over black|Show key over black");
+DeclareFloatParam (KeyClip,        "Key clip",    "Key settings",  kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (KeyGain,        "Key gain",    "Key settings",  kNoFlags, 0.25, 0.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -79,7 +92,7 @@ DeclareFloatParam (_OutputAspectRatio);
 float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 //-----------------------------------------------------------------------------------------//
@@ -108,46 +121,42 @@ DeclarePass (Sparkles)
 
    float4 retval;
 
-   if (tex2D (Mask, uv3).x > 0.0) {
+   // /*Now we generate the key by calculating the difference between foreground and
+   // background.  We get the differences of R, G and B independently and use the
+   // maximum value so obtained to get the cleanest key possible.  It doesn't have
+   // to be fantastic, because it will only be used to gate the sparkle noise.
 
-      // Now we generate the key by calculating the difference between foreground and
-      // background.  We get the differences of R, G and B independently and use the
-      // maximum value so obtained to get the cleanest key possible.  It doesn't have
-      // to be fantastic, because it will only be used to gate the sparkle noise.
+   float3 Fgnd = tex2D (Fgd, uv3).rgb;
+   float3 Bgnd = tex2D (Bgd, uv3).rgb;
 
-      float3 Fgnd = tex2D (Fgd, uv3).rgb;
-      float3 Bgnd = tex2D (Bgd, uv3).rgb;
+   float kDiff = distance (Bgnd.g, Fgnd.g);
 
-      float kDiff = distance (Bgnd.g, Fgnd.g);
+   kDiff = max (kDiff, distance (Bgnd.r, Fgnd.r));
+   kDiff = max (kDiff, distance (Bgnd.b, Fgnd.b));
 
-      kDiff = max (kDiff, distance (Bgnd.r, Fgnd.r));
-      kDiff = max (kDiff, distance (Bgnd.b, Fgnd.b));
+   retval = smoothstep (KeyClip, KeyClip + KeyGain, kDiff).xxxx;
 
-      retval = smoothstep (KeyClip, KeyClip + KeyGain, kDiff).xxxx;
+   // Produce the noise required for the stars.
 
-      // Produce the noise required for the stars.
+   float scale = (1.0 - starSize) * 800.0;
+   float seed = Amount;
+   float Y = saturate ((round (uv3.y * scale) / scale) + 0.000123);
 
-      float scale = (1.0 - starSize) * 800.0;
-      float seed = Amount;
-      float Y = saturate ((round (uv3.y * scale) / scale) + 0.000123);
+   scale *= _OutputAspectRatio;
 
-      scale *= _OutputAspectRatio;
+   float X = saturate ((round (uv3.x * scale) / scale) + 0.00013);
+   float rndval = frac (sin ((X * 13.9898) + (Y * 79.233) + seed) * 43758.5453);
 
-      float X = saturate ((round (uv3.x * scale) / scale) + 0.00013);
-      float rndval = frac (sin ((X * 13.9898) + (Y * 79.233) + seed) * 43758.5453);
+   rndval = sin (X) + cos (Y) + rndval * 1000.0;
 
-      rndval = sin (X) + cos (Y) + rndval * 1000.0;
+   // Now gate the noise for the stars, slicing the noise at variable values to
+   // control the star density.
 
-      // Now gate the noise for the stars, slicing the noise at variable values to
-      // control the star density.
+   float amt = frac (fmod (rndval, 17.0) * fmod (rndval, 94.0));
+   float alpha = abs (cos (Amount * PI));
 
-      float amt = frac (fmod (rndval, 17.0) * fmod (rndval, 94.0));
-      float alpha = abs (cos (Amount * PI));
-
-      amt = smoothstep (0.975 - (starStrength * 0.375), 1.0, amt);
-      retval.z *= (amt <= alpha) ? 0.0 : amt;
-   }
-   else retval = _TransparentBlack;
+   amt = smoothstep (0.975 - (starStrength * 0.375), 1.0, amt);
+   retval.z *= (amt <= alpha) ? 0.0 : amt;
 
    return retval;
 }
