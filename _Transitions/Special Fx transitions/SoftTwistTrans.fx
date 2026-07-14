@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-07-14
 // @Author jwrl
 // @Created 2017-11-08
 
@@ -9,13 +9,42 @@
  range of effect variations possible with different combinations of settings is almost
  inifinite.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+   [*]Amount:  The normal keyframed transition progress.
+   [*]Transition profile:  Selects one of four different profiles that are supported
+      by this effect.
+   [*]Ripples
+      [*]Softness:
+      [*]Amount:
+      [*]Width:
+   [*]Twists
+      [*]Amount:
+      [*]Show twist axis:
+      [*]Twist axis:
+   [*]Enable blend transitions:  Changes the mode from opaque video to transparent
+      video such as titles and the like.
+   [*]Blend settings
+      [*]Source:  Selects between an extracted video source and transparent video.
+      [*]Transition into blend:  Selects between transitioning into or out of a
+         blended video source.
+      [*]Fine tune:  Fine tunes the separation of an extracted video source from
+         its background.
+      [*]Show foreground key:  Showing the key helps in setting up the clip.
+      [*]Swap sources:  This can be necessary when using a folded delta key
+         (extracted) transition.
+
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect SoftTwistTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-14 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with 0.0.xxxx to fix Linux lerp()/mix() bug.
@@ -41,33 +70,28 @@ DeclareLightworksEffect ("Soft twist transition", "Mix", "Special Fx transitions
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",                kNoGroup,         kNoFlags, 1.0, 0.0, 1.0);
+DeclareIntParam   (TransProfile,   "Transition profile",    kNoGroup,  1, "Left > right profile A|Left > right profile B|Right > left profile A|Right > left profile B");
 
-DeclareIntParam (TransProfile, "Transition profile", kNoGroup, 1, "Left > right profile A|Left > right profile B|Right > left profile A|Right > left profile B");
+DeclareFloatParam (Width,          "Softness",              "Ripples",        kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Ripples,        "Amount",                "Ripples",        kNoFlags, 0.6, 0.0, 1.0);
+DeclareFloatParam (Spread,         "Width",                 "Ripples",        kNoFlags, 0.15, 0.0, 1.0);
 
-DeclareFloatParam (Width, "Softness", "Ripples", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Ripples, "Ripple amount", "Ripples", kNoFlags, 0.6, 0.0, 1.0);
-DeclareFloatParam (Spread, "Ripple width", "Ripples", kNoFlags, 0.15, 0.0, 1.0);
+DeclareFloatParam (Twists,         "Amount",                "Twists",         kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam (Show_Axis,       "Show twist axis",       "Twists",         false);
+DeclareFloatParam (Twist_Axis,     "Twist axis",            "Twists",         kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareFloatParam (Twists, "Twist amount", "Twists", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (Blended,        "Enable blend transitions", kNoGroup, false);
 
-DeclareBoolParam (Show_Axis, "Show twist axis", "Twists", false);
-
-DeclareFloatParam (Twist_Axis, "Twist axis", "Twists", kNoFlags, 0.5, 0.0, 1.0);
-
-DeclareBoolParam (Blended, "Enable blend transitions", kNoGroup, false);
-
-DeclareIntParam (Source, "Source", "Blend settings", 0, "Extracted foreground|Image key/Title pre 2023.2, no input|Image or title without connected input");
-DeclareBoolParam (SwapDir, "Transition into blend", "Blend settings", true);
-DeclareFloatParam (KeyGain, "Key adjustment", "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam (ShowKey, "Show foreground key", "Blend settings", false);
-DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
+DeclareIntParam   (Source,         "Source",                "Blend settings", 0, "Extracted foreground|Image key or title (disconnect input)");
+DeclareBoolParam  (SwapDir,        "Transition into blend", "Blend settings", true);
+DeclareFloatParam (KeyGain,        "Fine tune",             "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (ShowKey,        "Show foreground key",   "Blend settings", false);
+DeclareBoolParam  (SwapSource,     "Swap sources",          "Blend settings", false);
 
 DeclareFloatParam (_OutputHeight);
 
@@ -104,11 +128,11 @@ DeclarePass (Fgd)
    }
 
    if (Source == 0) { Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb)); }
-   else if (Source == 1) { Fgnd.a = pow (Fgnd.a, 0.375 + (KeyGain / 2.0)); }
 
-   if (Fgnd.a == 0.0) Fgnd.rgb = Fgnd.aaa;
+   // If alpha is zero we need any video to be blanked.  We do NOT need it to be
+   // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd;
+   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
 }
 
 DeclarePass (Bgd)
@@ -124,10 +148,10 @@ DeclareEntryPoint (TwisterTrans)
 {
    float4 Fgnd = tex2D (Fgd, uv3);
 
-   if (Blended && ShowKey) return lerp (0.0.xxxx, Fgnd, Fgnd.a * tex2D (Mask, uv3).x);
+   if (Blended && ShowKey) return lerp (0.0.xxxx, Fgnd, Fgnd.a);
 
    float4 Bgnd = tex2D (Bgd, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    float2 xy;
 
@@ -170,14 +194,11 @@ DeclareEntryPoint (TwisterTrans)
    xy = float2 (uv3.x, twistAxis + (T_Axis / twists) - offset);   // Foreground X is uv3.x, foreground Y is modulated uv3.y
 
    if (Blended) {
-      maskBg = Bgnd;
-      xy.y += offset * float (Mode * 2);
-
-      Fgnd = ReadPixel (Fgd, xy);
+      xy.y  += offset * float (Mode * 2);
+      Fgnd   = ReadPixel (Fgd, xy);
       retval = lerp (Bgnd, Fgnd, Fgnd.a * amount);
    }
    else {
-      maskBg = Fgnd;
       Bgnd = ReadPixel (Bgd, xy);                                 // This version of the background has the modulation applied
 
       ripples  = max (0.0, RIPPLES * maxVis);
@@ -191,8 +212,6 @@ DeclareEntryPoint (TwisterTrans)
       Fgnd = ReadPixel (Fgd, xy);                                 // Get the second partial composite
       retval = lerp (Fgnd, Bgnd, amount);                         // Dissolve between the halves
    }
-
-   retval = lerp (maskBg, retval, tex2D (Mask, uv3).x);           // Mask now, because we can't afford to mask the twist axis
 
    if (Show_Axis) {
 
