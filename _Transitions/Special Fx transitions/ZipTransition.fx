@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-12-14
+// @Released 2026-07-14
 // @Author jwrl
 // @Author khaver
 // @Author Eduardo Castineyra
@@ -10,14 +10,14 @@
  to reveal the incoming video, or zips the incoming video closed to hide the outgoing.  The
  zip moves in either the horizontal or vertical direction.  The settings are:
 
-   * Amount:  Self explanatory.
-   * Zip settings
-      * Direction:  Sets the zip to top to bottom, bottom to top, left to right or
-        right to left.
-      * Curl width:  Adjusts the width of the zip curl.
-      * Curl shading:  Adjusts the shading density on the curve
-      * Translucency:  Adjusts the visibility of the unzipped zip curl.
-      * Open or shut:  Opens or closes the zip.
+   [*]Amount:  Self explanatory.
+   [*]Zip settings
+      [*]Direction:  Sets the zip to top to bottom, bottom to top, left to right or
+         right to left.
+      [*]Curl width:  Adjusts the width of the zip curl.
+      [*]Curl shading:  Adjusts the shading density on the curve
+      [*]Translucency:  Adjusts the visibility of the unzipped zip curl.
+      [*]Open or shut:  Opens or closes the zip.
 
  Shading in the page roll effect was fixed and could not be adjusted.  In this effect it's
  variable, and the value that is used as the default matches the original fixed setting.
@@ -35,6 +35,11 @@
  nonlinearities which I have done my best to address.  The result is not perfect.  Some
  setting combinations will give transitions that start a few frames later than expected
  and/or end a few frames early.  I have not been able to solve that.
+
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -58,6 +63,9 @@
 //
 // Version history:
 //
+// Updated 2026-07-14 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
+//
 // Built 2024-12-14 by jwrl.
 //-----------------------------------------------------------------------------------------//
 
@@ -73,15 +81,13 @@ DeclareInputs (Fg, Bg);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",       kNoGroup,       kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareIntParam   (SetTechnique, "Direction",    "Zip settings", 0, "Top to bottom|Bottom to top|Left to right|Right to left");
-
-DeclareFloatParam (CurlWidth,    "Curl width",   "Zip settings", kNoFlags, 0.2, 0.0, 1.0);
-DeclareFloatParam (Shading,      "Curl shading", "Zip settings", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Translucency, "Translucency", "Zip settings", kNoFlags, 0.5, 0.0, 1.0);
-
-DeclareIntParam   (OpenShut,     "Open or shut", "Zip settings", 0, "Open zip|Close zip");
+DeclareIntParam   (SetTechnique,   "Direction",    "Zip settings", 0, "Top to bottom|Bottom to top|Left to right|Right to left");
+DeclareFloatParam (CurlWidth,      "Curl width",   "Zip settings", kNoFlags, 0.2, 0.0, 1.0);
+DeclareFloatParam (Shading,        "Curl shading", "Zip settings", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Translucency,   "Translucent",  "Zip settings", kNoFlags, 0.5, 0.0, 1.0);
+DeclareIntParam   (OpenShut,       "Open or shut", "Zip settings", 0, "Open zip|Close zip");
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -194,7 +200,7 @@ float4 ZipPass (sampler F, sampler B, float2 xy)
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 //----------  Top to bottom  --------------------------------------------------------------//
@@ -428,4 +434,3 @@ DeclareEntryPoint (Zipper_3)
 
    return uv3.y <= 0.5 ? ReadPixel (Ztop_3, xy1) : ReadPixel (Zbot_3, xy2);
 }
-
