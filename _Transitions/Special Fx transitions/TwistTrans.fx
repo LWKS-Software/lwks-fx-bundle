@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-17
+// @Released 2026-07-14 jwrl
 // @Author jwrl
 // @Created 2021-08-01
 
@@ -9,7 +9,15 @@
  and whistles such as adjustable blending and softness.  If you need that have a look at
  Twister_Dx.fx instead.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+   [*]Amount:  The normal keyframed transition progress.
+   [*]Transition profile:  Selects one of four different profiles that are supported
+      by this effect.
+   [*]Twist width:  Self explanatory.
+
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -17,13 +25,14 @@
 //
 // Version history:
 //
+// Updated 2026-07-14 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
+//
 // Updated 2023-05-17 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-03-04 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Twist transition", "Mix", "Special Fx transitions", "Twists one image to another vertically or horizontally", CanSize);
 
@@ -33,17 +42,13 @@ DeclareLightworksEffect ("Twist transition", "Mix", "Special Fx transitions", "T
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
-
-DeclareIntParam (SetTechnique, "Transition profile", kNoGroup, 0, "Left > right|Right > left|Top > bottom|Bottom > top"); 
-
-DeclareFloatParam (Spread, "Twist width", kNoGroup, kNoFlags, 0.1, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",             kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareIntParam   (SetTechnique,   "Transition profile", kNoGroup, 0, "Left > right|Right > left|Top > bottom|Bottom > top");
+DeclareFloatParam (Spread,         "Twist width",        kNoGroup, kNoFlags, 0.1, 0.0, 1.0);
 
 DeclareFloatParam (_OutputHeight);
 
@@ -58,7 +63,7 @@ DeclareFloatParam (_OutputHeight);
 #define PI 3.1415926536
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// shaders
 //-----------------------------------------------------------------------------------------//
 
 // technique Twistit_LR
@@ -79,9 +84,7 @@ DeclareEntryPoint (Twistit_LR)
 
    float2 xy = float2 (uv3.x, ((uv3.y - 0.5) / twist) + 0.5);
 
-   float4 retval = twist > 0.0 ? ReadPixel (Bg_LR, xy) : ReadPixel (Fg_LR, float2 (xy.x, 1.0 - xy.y));
-
-   return lerp (tex2D (Fg_LR, uv3), retval, tex2D (Mask, uv3).x);
+   return twist > 0.0 ? ReadPixel (Bg_LR, xy) : ReadPixel (Fg_LR, float2 (xy.x, 1.0 - xy.y));
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -104,9 +107,7 @@ DeclareEntryPoint (Twistit_RL)
 
    float2 xy = float2 (uv3.x, ((uv3.y - 0.5) / twist) + 0.5);
 
-   float4 retval = twist > 0.0 ? ReadPixel (Bg_RL, xy) : ReadPixel (Fg_RL, float2 (xy.x, 1.0 - xy.y));
-
-   return lerp (tex2D (Fg_RL, uv3), retval, tex2D (Mask, uv3).x);
+   return twist > 0.0 ? ReadPixel (Bg_RL, xy) : ReadPixel (Fg_RL, float2 (xy.x, 1.0 - xy.y));
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -129,9 +130,7 @@ DeclareEntryPoint (Twistit_TB)
 
    float2 xy = float2 (((uv3.x - 0.5) / twist) + 0.5, uv3.y);
 
-   float4 retval = twist > 0.0 ? ReadPixel (Bg_TB, xy) : ReadPixel (Fg_TB, float2 (1.0 - xy.x, xy.y));
-
-   return lerp (tex2D (Fg_TB, uv3), retval, tex2D (Mask, uv3).x);
+   return twist > 0.0 ? ReadPixel (Bg_TB, xy) : ReadPixel (Fg_TB, float2 (1.0 - xy.x, xy.y));
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -154,8 +153,5 @@ DeclareEntryPoint (Twistit_BT)
 
    float2 xy = float2 (((uv3.x - 0.5) / twist) + 0.5, uv3.y);
 
-   float4 retval = twist > 0.0 ? ReadPixel (Bg_BT, xy) : ReadPixel (Fg_BT, float2 (1.0 - xy.x, xy.y));
-
-   return lerp (tex2D (Fg_BT, uv3), retval, tex2D (Mask, uv3).x);
+   return twist > 0.0 ? ReadPixel (Bg_BT, xy) : ReadPixel (Fg_BT, float2 (1.0 - xy.x, xy.y));
 }
-
