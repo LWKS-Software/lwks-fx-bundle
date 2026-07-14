@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-17
+// @Released 2026-07-14
 // @Author jwrl
 // @Created 2021-07-25
 
@@ -9,10 +9,23 @@
  intensity and hue of the flames can be adjusted and can be positioned in frame by
  either dragging the centre point of the effect or by adjusting the position sliders.
 
+   [*]Amount:  The normal keyframed transition progress.
+   [*]Transition mode:  Sets the fireball to expand, contract or simply dissolve
+      over the transition in and out.
+   [*]Fireball
+      [*]Flicker rate:  Self explanatory.
+      [*]Flame hue:  Self explanatory.
+      [*]Intensity:  Self explanatory.
+      [*]Position X:  Sets the horizontal position of the centre of the fireball.
+      [*]Position Y:  Sets the vertical position of the centre of the fireball.
+
  Unlike the original "Fireball transition" there is a third option that first fills
  the frame with the hot centre colour then dissolves to the second video source.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -29,13 +42,14 @@
 //
 // Version history:
 //
+// Updated 2026-07-14 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
+//
 // Updated 2023-05-17 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-03-04 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Fireball transitions", "Mix", "Special Fx transitions", "Uses hot fireballs to transition between video sources", CanSize);
 
@@ -45,22 +59,18 @@ DeclareLightworksEffect ("Fireball transitions", "Mix", "Special Fx transitions"
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",          kNoGroup,   kNoFlags, 1.0, 0.0, 1.0);
+DeclareIntParam   (SetTechnique,   "Transition mode", kNoGroup,   0, "Expand fireball|Contract fireball|Fill and dissolve");
 
-DeclareIntParam (SetTechnique, "Transition mode", kNoGroup, 0, "Expand fireball|Contract fireball|Fill and dissolve");
-
-DeclareFloatParam (Speed, "Flicker rate", kNoGroup, "DisplayAsPercentage", 0.5, 0.0, 2.0);
-DeclareFloatParam (Hue, "Flame hue", kNoGroup, kNoFlags, 0.0, -180.0, 180.0);
-DeclareFloatParam (Intensity, "Flame intensity", kNoGroup, "DisplayAsPercentage", 1.0, 0.5, 1.5);
-
-DeclareFloatParam (PosX, "Fireball position", kNoGroup, "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (PosY, "Fireball position", kNoGroup, "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (Speed,          "Flicker rate",    "Fireball", "DisplayAsPercentage", 0.5, 0.0, 2.0);
+DeclareFloatParam (Hue,            "Flame hue",       "Fireball", kNoFlags,         0.0, -180.0, 180.0);
+DeclareFloatParam (Intensity,      "Intensity",       "Fireball", "DisplayAsPercentage", 1.0, 0.5, 1.5);
+DeclareFloatParam (PosX,           "Position",        "Fireball", "SpecifiesPointX",     0.5, 0.0, 1.0);
+DeclareFloatParam (PosY,           "Position",        "Fireball", "SpecifiesPointY",     0.5, 0.0, 1.0);
 
 DeclareFloatParam (_Progress);
 DeclareFloatParam (_Length);
@@ -139,7 +149,7 @@ float4 fn_hueShift (float4 rgb)
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 // technique Expand fireball
@@ -152,8 +162,6 @@ DeclarePass (Bg_E)
 
 DeclareEntryPoint (Fireballs_E)
 {
-   float4 maskBg = tex2D (Fg_E, uv3);
-
    float2 xy = float2 ((uv3.x - PosX) * _OutputAspectRatio, 1.0 - uv3.y - PosY);
 
    float amount = Amount * Amount;
@@ -198,7 +206,7 @@ DeclareEntryPoint (Fireballs_E)
 
    float4 retval = lerp (Fgnd, Bgnd, circle);
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -213,8 +221,6 @@ DeclarePass (Bg_C)
 
 DeclareEntryPoint (Fireballs_C)
 {
-   float4 maskBg = tex2D (Fg_C, uv3);
-
    float2 xy = float2 ((uv3.x - PosX) * _OutputAspectRatio, 1.0 - uv3.y - PosY);
 
    float amount = (Amount * (Amount - 2.0)) + 1.0;
@@ -259,7 +265,7 @@ DeclareEntryPoint (Fireballs_C)
 
    float4 retval = lerp (Fgnd, Bgnd, circle);
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -309,12 +315,10 @@ DeclareEntryPoint (Fireballs_D)
    retval = saturate (fn_hueShift (retval * Intensity));
    amount = saturate ((Amount * 3.0) - 2.0);
 
-   float4 maskBg = tex2D (Fg_D, uv3);
-   float4 Fgnd = lerp (maskBg, retval, min (1.0, fire));
+   float4 Fgnd = lerp (tex2D (Fg_D, uv3), retval, min (1.0, fire));
    float4 Bgnd = tex2D (Bg_D, uv3);
 
    retval = lerp (Fgnd, Bgnd, amount);
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
-
