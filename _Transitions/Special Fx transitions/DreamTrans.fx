@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2026-07-14
 // @Author jwrl
 // @Created 2018-11-10
 
@@ -9,18 +9,43 @@
  remainder of the effect.  It simulates Hollywood's classic dream effect.  The default
  settings give exactly that result.
 
+   [*]Amount:  The normal keyframed transition progress.
+   [*]Wave type:   Chooses the wave type used from waves or ripples.
+   [*]Frequency:   Sets the wave or ripple frequency.
+   [*]Speed:   Sets the wave or ripple speed.
+   [*]Blur:   Sets the wave or ripple blurriness
+   [*]Strength X:  Adjusts the horizontal strength of the waves or ripples.
+   [*]Strength Y:  Adjusts the vertical strength of the waves or ripples.
+   [*]Enable blend transitions:  Changes the mode from opaque video to transparent
+      video such as titles and the like.
+   [*]Blend settings
+      [*]Source:  Selects between an extracted video source and transparent video.
+      [*]Transition into blend:  Selects between transitioning into or out of a
+         blended video source.
+      [*]Fine tune:  Fine tunes the separation of an extracted video source from
+         its background.
+      [*]Show foreground key:  Showing the key helps in setting up the clip.
+      [*]Swap sources:  This can be necessary when using a folded delta key
+         (extracted) transition.
+
  It's based on khaver's water effect, but some parameters have been changed to better
  mimic the original film effect.  Two directional blurs have also been added, one very
  much weaker than the other.  Their comparative strengths depend on the predominant
  direction of the wave effect.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect DreamTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-14 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
@@ -35,8 +60,6 @@
 // Conversion 2023-03-04 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
 
-#include "_utils.fx"
-
 DeclareLightworksEffect ("Dream sequence", "Mix", "Special Fx transitions", "Ripples the images as it dissolves between them", CanSize);
 
 //-----------------------------------------------------------------------------------------//
@@ -45,30 +68,24 @@ DeclareLightworksEffect ("Dream sequence", "Mix", "Special Fx transitions", "Rip
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",        kNoGroup,         kNoFlags, 0.5, 0.0, 1.0);
+DeclareIntParam   (WaveType,       "Wave type",     kNoGroup, 0,      "Waves|Ripples");
+DeclareFloatParam (Frequency,      "Frequency",     kNoGroup,         kNoFlags, 0.2, 0.0, 1.0);
+DeclareFloatParam (Speed,          "Speed",         kNoGroup,         kNoFlags, 25.0, 0.0, 125.0);
+DeclareFloatParam (BlurAmt,        "Blur",          kNoGroup,         kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (StrengthX,      "Strength",      kNoGroup,         "SpecifiesPointX", 0.0, 0.0, 1.0);
+DeclareFloatParam (StrengthY,      "Strength",      kNoGroup,         "SpecifiesPointY", 0.2, 0.0, 1.0);
+DeclareBoolParam  (Blended,        "Enable blend transitions",        kNoGroup, false);
 
-DeclareIntParam (WaveType, "Wave type", kNoGroup, 0, "Waves|Ripples");
-
-DeclareFloatParam (Frequency, "Frequency", kNoGroup, "SpecifiesPointX", 0.2, 0.0, 1.0);
-DeclareFloatParam (Speed, "Speed", kNoGroup, kNoFlags, 25.0, 0.0, 125.0);
-DeclareFloatParam (BlurAmt, "Blur", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
-
-DeclareFloatParam (StrengthX, "Strength", kNoGroup, "SpecifiesPointX", 0.0, 0.0, 1.0);
-DeclareFloatParam (StrengthY, "Strength", kNoGroup, "SpecifiesPointY", 0.2, 0.0, 1.0);
-
-DeclareBoolParam (Blended, "Enable blend transitions", kNoGroup, false);
-
-DeclareIntParam (Source, "Source", "Blend settings", 0, "Extracted foreground|Image key/Title pre 2023.2, no input|Image or title without connected input");
-DeclareBoolParam (SwapDir, "Transition into blend", "Blend settings", true);
-DeclareFloatParam (KeyGain, "Key adjustment", "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam (ShowKey, "Show foreground key", "Blend settings", false);
-DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
+DeclareIntParam   (Source,         "Source",        "Blend settings", 0, "Extracted foreground|Image key or title (disconnect input)");
+DeclareBoolParam  (SwapDir,        "Transition into blend",           "Blend settings", true);
+DeclareFloatParam (KeyGain,        "Fine tune",     "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (ShowKey,        "Show foreground key",             "Blend settings", false);
+DeclareBoolParam  (SwapSource,     "Swap sources",  "Blend settings", false);
 
 DeclareFloatParam (_Progress);
 
@@ -174,7 +191,7 @@ float2 fn_XYwave (float2 xy1, float2 xy2, float amt)
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 DeclarePass (Fgd)
@@ -193,11 +210,11 @@ DeclarePass (Fgd)
    }
 
    if (Source == 0) { Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb)); }
-   else if (Source == 1) { Fgnd.a = pow (Fgnd.a, 0.375 + (KeyGain / 2.0)); }
 
-   if (Fgnd.a == 0.0) Fgnd.rgb = Fgnd.aaa;
+   // If alpha is zero we need any video to be blanked.  We do NOT need it to be
+   // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd;
+   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
 }
 
 DeclarePass (Bgd)
@@ -286,7 +303,7 @@ DeclareEntryPoint (Dream_Dx)
 {
    float4 Fgnd = tex2D (Fgd, uv3);
    float4 Bgnd = tex2D (Bgd, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    float blur = (StrengthY > StrengthX) ? WaveType == 0 ? (BlurAmt / 2.0) : (BlurAmt * 2.0)
                                         : WaveType == 0 ? (BlurAmt * 2.0) : (BlurAmt / 2.0);
@@ -294,10 +311,7 @@ DeclareEntryPoint (Dream_Dx)
    float2 offset = float2 (0.0, blur) * OFFSET;
 
    if (Blended) {
-      if (ShowKey) {
-         maskBg = kTransparentBlack;
-         retval = Fgnd;
-      }
+      if (ShowKey) { retval = Fgnd; }
       else {
          float2 blurriness = 0.0.xx;
 
@@ -311,16 +325,9 @@ DeclareEntryPoint (Dream_Dx)
 
          retval = SwapDir ? lerp (tex2D (BlurY, uv3), retval, 1.0 - Amount)
                           : lerp (tex2D (BlurY, uv3), retval, Amount);
-         maskBg = Bgnd;
       }
-
-      retval = lerp (maskBg, retval, retval.a);
    }
-   else {
-      retval = (blur > 0.0) ? fn_blur_sub (BlurY, uv3, offset) : tex2D (BlurY, uv3);
-      maskBg = Fgnd;
-   }
+   else retval = (blur > 0.0) ? fn_blur_sub (BlurY, uv3, offset) : tex2D (BlurY, uv3);
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
-
