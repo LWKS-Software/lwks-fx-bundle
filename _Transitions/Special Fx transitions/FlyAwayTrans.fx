@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-17
+// @Released 2026-07-14
 // @Author schrauber
 // @Released 2016-08-03
 
@@ -12,7 +12,28 @@
  final destination is possible, but the default is a destination just outside of
  the screen.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+   [*]Progress:  The normal keyframed transition progress.
+   [*]Outgoing clip settings
+   [*]Setup shape and border:   This switch disables the transition so that
+      the shape of the effect and the border thickness can be set.
+      [*]Shape:  Adjust the strength of the distortion.
+      [*]Border X:  Sets the width of the border.
+      [*]Border Y:  Sets the height of the border.
+      [*]Border:  Sets the border colour.
+   [*]Flight path
+      [*]End point X:  Sets the horizontal position of the end point.
+      [*]End point Y:  Sets the vertical position of the end point.
+   [*]Fluttering
+      [*]Start:  Sets the time in the transition at which the flutter starts.
+      [*]Frequency:  Sets the speed of the fluttering.
+      [*]Amplitude:  Sets the fluttering size.
+   [*]Zoom cycle:  Sets the zoom range.
+   [*]Cyclical Y:  Sets the vertical amplitude of the flutter cycle.
+
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -20,13 +41,14 @@
 //
 // Version history:
 //
+// Updated 2026-07-14 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
+//
 // Updated 2023-05-17 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-03-04 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Fly away transition", "Mix", "Special Fx transitions", "Flies the outgoing image out to reveal the incoming", CanSize);
 
@@ -36,31 +58,27 @@ DeclareLightworksEffect ("Fly away transition", "Mix", "Special Fx transitions",
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (reduction, "Progress", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParamAnimated (reduction, "Progress",   kNoGroup,                 kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareBoolParam (Setup, "Setup shape and border", "Outgoing clip settings", false);
+DeclareBoolParam  (Setup,             "Setup shape and border", "Outgoing clip settings", false);
+DeclareFloatParam (layout,            "Shape",      "Outgoing clip settings", kNoFlags, 1.2, 0.8, 1.5);
+DeclareFloatParam (borderX,           "Border X",   "Outgoing clip settings", "DisplayAsPercentage", 0.2, -1.0, 1.0);
+DeclareFloatParam (borderY,           "Border Y",   "Outgoing clip settings", "DisplayAsPercentage", 0.2, -1.0, 1.0);
+DeclareColourParam (Colour,           "Border",     "Outgoing clip settings", kNoFlags, 0.0, 0.0, 1.0);
 
-DeclareFloatParam (layout, "Shape", "Outgoing clip settings", kNoFlags, 1.2, 0.8, 1.5);
-DeclareFloatParam (borderX, "Border X", "Outgoing clip settings", "DisplayAsPercentage", 0.2, -1.0, 1.0);
-DeclareFloatParam (borderY, "Border Y", "Outgoing clip settings", "DisplayAsPercentage", 0.2, -1.0, 1.0);
+DeclareFloatParam (Xcentre,           "End point",  "Flight path",            "SpecifiesPointX", 1.1, -0.2, 1.5);
+DeclareFloatParam (Ycentre,           "End point",  "Flight path",            "SpecifiesPointY", 0.9, -0.2, 1.5);
 
-DeclareColourParam (Colour, "Border colour", "Outgoing clip settings", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam (StartFlight,       "Start",      "Fluttering",             kNoFlags, 0.5, 0.1, 0.9);
+DeclareFloatParam (frequency,         "Frequency",  "Fluttering",             kNoFlags, 50.0, 0.0, 100.0);
+DeclareFloatParam (amplitude,         "Amplitude",  "Fluttering",             kNoFlags, 0.03, 0.0, 0.1);
 
-DeclareFloatParam (Xcentre, "Destination", "Flight path", "SpecifiesPointX", 1.1, -0.2, 1.5);
-DeclareFloatParam (Ycentre, "Destination", "Flight path", "SpecifiesPointY", 0.9, -0.2, 1.5);
-
-DeclareFloatParam (StartFlight, "Flutter start", "Fluttering", kNoFlags, 0.5, 0.1, 0.9);
-DeclareFloatParam (frequency, "Frequency", "Fluttering", kNoFlags, 50.0, 0.0, 100.0);
-DeclareFloatParam (amplitude, "Amplitude", "Fluttering", kNoFlags, 0.03, 0.0, 0.1);
-
-DeclareFloatParam (fluttering_zoom, "Cyclical zoom", kNoGroup, kNoFlags, 8.0, 0.0, 20.0);
-DeclareFloatParam (fluttering_y, "Cyclical Y", kNoGroup, kNoFlags, 8.0, 0.0, 20.0);
+DeclareFloatParam (fluttering_zoom,   "Zoom cycle", kNoGroup,                 kNoFlags, 8.0, 0.0, 20.0);
+DeclareFloatParam (fluttering_y,      "Cyclical Y", kNoGroup,                 kNoFlags, 8.0, 0.0, 20.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -75,7 +93,7 @@ DeclareFloatParam (_Progress);
 #endif
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 DeclarePass (Fgd)
@@ -168,6 +186,5 @@ DeclareEntryPoint (FlyAwayTrans)
    else if (any (border > 0.5)) { retval = float4 (Colour.rgb, 1.0); }    // Opaque coloured border
    else retval = tex2D (Fgd, xydistortion);
 
-   return lerp (tex2D (Fgd, uv3), retval, tex2D (Mask, uv3).x);
+   return retval;
 }
-
