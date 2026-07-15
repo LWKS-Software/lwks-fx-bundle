@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-06-14
+// @Released 2026-07-15
 // @Author jwrl
 // @Created 2021-06-04
 
@@ -9,13 +9,22 @@
  provided in an earlier version of this effect transparent black has been used.  This
  gives maximum flexibility when using aspect ratios that don't match the sequence.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+   [*]Amount:  The normal keyframed transition progress.
+   [*]Transition:  Chooses whether to split the outgoing video horizontally or vertically.
+
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect SplitAndZoomTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-15 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-06-14 jwrl.
 // Added keyed foreground viewing to help set up delta key.
@@ -28,8 +37,6 @@
 // Conversion 2023-03-04 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
 
-#include "_utils.fx"
-
 DeclareLightworksEffect ("Split and zoom transition", "Mix", "Transform transitions", "Splits the outgoing video to reveal the incoming shot zooming out of black", CanSize);
 
 //-----------------------------------------------------------------------------------------//
@@ -38,15 +45,13 @@ DeclareLightworksEffect ("Split and zoom transition", "Mix", "Transform transiti
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",     kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareIntParam (SetTechnique, "Transition", kNoGroup, 0, "Split horizontally|Split vertically");
+DeclareIntParam   (SetTechnique,   "Transition", kNoGroup, 0, "Split horizontally|Split vertically");
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -61,10 +66,10 @@ DeclareIntParam (SetTechnique, "Transition", kNoGroup, 0, "Split horizontally|Sp
 #define HALF_PI 1.5707963268
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
-// technique SpinAndZoom_Dx (pinch to reveal)
+// technique SpinAndZoom_H (pinch to reveal)
 
 DeclarePass (Fg_H)
 { return ReadPixel (Fg, uv1); }
@@ -72,7 +77,7 @@ DeclarePass (Fg_H)
 DeclarePass (Bg_H)
 { return ReadPixel (Bg, uv2); }
 
-DeclareEntryPoint (SplitAndZoom_Dx_H)
+DeclareEntryPoint (SplitAndZoom_H)
 {
    float pos = Amount / 2.0;
 
@@ -90,12 +95,12 @@ DeclareEntryPoint (SplitAndZoom_Dx_H)
       retval = ReadPixel (Fg_H, xy1);
    }
 
-   return lerp (tex2D (Fg_H, uv3), retval, tex2D (Mask, uv3).x);
+   return retval;
 }
 
 //-----------------------------------------------------------------------------------------//
 
-// technique SpinAndZoom_Dx (expand to reveal)
+// technique SpinAndZoom_V (expand to reveal)
 
 DeclarePass (Fg_V)
 { return ReadPixel (Fg, uv1); }
@@ -103,7 +108,7 @@ DeclarePass (Fg_V)
 DeclarePass (Bg_V)
 { return ReadPixel (Bg, uv2); }
 
-DeclareEntryPoint (SplitAndZoom_Dx_V)
+DeclareEntryPoint (SplitAndZoom_V)
 {
    float pos = Amount / 2.0;
 
@@ -121,6 +126,5 @@ DeclareEntryPoint (SplitAndZoom_Dx_V)
       retval = ReadPixel (Fg_V, xy1);
    }
 
-   return lerp (tex2D (Fg_V, uv3), retval, tex2D (Mask, uv3).x);
+   return retval;
 }
-
