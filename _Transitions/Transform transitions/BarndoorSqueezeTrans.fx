@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2026-07-15
 // @Author jwrl
 // @Created 2017-08-25
 
@@ -9,19 +9,41 @@
  depending on the user setting.  In normal video mode it squeezes the split video
  out to the edges or expands it from the edges of frame.
 
+   [*]Amount:  The normal keyframed transition progress.
+   [*]Transition direction:  Sets expansion or compression horizontally or
+      vertically.  Expansion / compression is overriden by blend mode.
+   [*]Enable blend transitions:  Changes the mode from opaque video to transparent
+      video such as titles and the like.
+   [*]Blend settings
+      [*]Split centre:  In blend mode, sets the centre point for the split.
+      [*]Source:  Selects between an extracted video source and transparent video.
+      [*]Transition into blend:  Selects between transitioning into or out of a
+         blended video source.
+      [*]Fine tune:  Fine tunes the separation of an extracted video source from
+         its background.
+      [*]Show foreground key:  Showing the key helps in setting up the clip.
+      [*]Swap sources:  This can be necessary when using a folded delta key
+         (extracted) transition.
+
  When dealing with blended video there is a slight difference in behaviour.  In that
  mode it moves the separated foreground image halves apart and squeezes them to the
  edges of the screen only when it's an outgoing transition.  When it's an incoming
  transition it only expands the halves from the edges.  This means that for blended
  effects the expand and squeeze settings behave identically.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect BarndoorSqueezeTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-15 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
@@ -37,8 +59,6 @@
 // Conversion 2023-03-04 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
 
-#include "_utils.fx"
-
 DeclareLightworksEffect ("Barn door squeeze transition", "Mix", "Transform transitions", "Splits the video and squeezes the halves apart horizontally or vertically", CanSize);
 
 //-----------------------------------------------------------------------------------------//
@@ -47,25 +67,20 @@ DeclareLightworksEffect ("Barn door squeeze transition", "Mix", "Transform trans
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",       kNoGroup,         kNoFlags, 1.0, 0.0, 1.0);
+DeclareIntParam   (SetTechnique,   "Transition direction",           kNoGroup, 0, "Expand horizontal|Expand vertical|Squeeze horizontal|Squeeze vertical");
+DeclareBoolParam  (Blended,        "Enable blend transitions",       kNoGroup, false);
 
-DeclareIntParam (SetTechnique, "Transition direction", kNoGroup, 0, "Expand horizontal|Expand vertical|Squeeze horizontal|Squeeze vertical");
-
-DeclareBoolParam (Blended, "Enable blend transitions", kNoGroup, false);
-
-DeclareFloatParam (Split, "Split centre", "Blend settings", kNoFlags, 0.5, 0.0, 1.0);
-
-DeclareIntParam (Source, "Source", "Blend settings", 0, "Extracted foreground|Image key/Title pre 2023.2, no input|Image or title without connected input");
-DeclareBoolParam (SwapDir, "Transition into blend", "Blend settings", true);
-DeclareFloatParam (KeyGain, "Key adjustment", "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam (ShowKey, "Show foreground key", "Blend settings", false);
-DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
+DeclareFloatParam (Split,          "Split centre", "Blend settings", kNoFlags, 0.5, 0.0, 1.0);
+DeclareIntParam   (Source,         "Source",       "Blend settings", 0, "Extracted foreground|Image key or title (disconnect input)");
+DeclareBoolParam  (SwapDir,        "Transition into blend",          "Blend settings", true);
+DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend settings", false);
+DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -95,11 +110,11 @@ float4 fn_initFg (sampler F, float2 xy1, sampler B, float2 xy2)
    }
 
    if (Source == 0) { Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb)); }
-   else if (Source == 1) { Fgnd.a = pow (Fgnd.a, 0.375 + (KeyGain / 2.0)); }
 
-   if (Fgnd.a == 0.0) Fgnd.rgb = Fgnd.aaa;
+   // If alpha is zero we need any video to be blanked.  We do NOT need it to be
+   // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd;
+   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
 }
 
 float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
@@ -112,7 +127,7 @@ float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 // technique BarndoorExpand_Eh
@@ -127,17 +142,14 @@ DeclareEntryPoint (BarndoorExpand_Eh)
 {
    float4 Fgnd = tex2D (Fg_Eh, uv3);
    float4 Bgnd = tex2D (Bg_Eh, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    float2 xy1, xy2;
 
    float negAmt, posAmt;
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = kTransparentBlack;
-      }
+      if (ShowKey) { retval = Fgnd; }
       else {
          float Amt = SwapDir ? Amount : 1.0 - Amount;
          float amount = Amt - 1.0;
@@ -150,14 +162,9 @@ DeclareEntryPoint (BarndoorExpand_Eh)
 
          retval = (uv3.x > posAmt) ? tex2D (Fg_Eh, xy1)
                 : (uv3.x < negAmt) ? tex2D (Fg_Eh, xy2) : kTransparentBlack;
-         maskBg = Bgnd;
       }
-
-      retval = lerp (maskBg, retval, retval.a);
    }
    else {
-      maskBg = Fgnd;
-
       negAmt = Amount / 2.0;
       posAmt = 1.0 - negAmt;
 
@@ -168,7 +175,7 @@ DeclareEntryPoint (BarndoorExpand_Eh)
                (uv3.x < negAmt) ? tex2D (Bg_Eh, xy2) : Fgnd;
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -185,17 +192,14 @@ DeclareEntryPoint (BarndoorExpand_Ev)
 {
    float4 Fgnd = tex2D (Fg_Ev, uv3);
    float4 Bgnd = tex2D (Bg_Ev, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    float2 xy1, xy2;
 
    float negAmt, posAmt;
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = kTransparentBlack;
-      }
+      if (ShowKey) { retval = Fgnd; }
       else {
          float Amt = SwapDir ? Amount : 1.0 - Amount;
          float amount = Amt - 1.0;
@@ -208,14 +212,9 @@ DeclareEntryPoint (BarndoorExpand_Ev)
 
          retval = (uv3.y > posAmt) ? tex2D (Fg_Ev, xy1)
                 : (uv3.y < negAmt) ? tex2D (Fg_Ev, xy2) : kTransparentBlack;
-         maskBg = Bgnd;
       }
-
-      retval = lerp (maskBg, retval, retval.a);
    }
    else {
-      maskBg = Fgnd;
-
       negAmt = Amount / 2.0;
       posAmt = 1.0 - negAmt;
 
@@ -226,7 +225,7 @@ DeclareEntryPoint (BarndoorExpand_Ev)
              : (uv3.y < negAmt) ? tex2D (Bg_Ev, xy2) : Fgnd;
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -243,17 +242,14 @@ DeclareEntryPoint (BarndoorSqueeze_Sh)
 {
    float4 Fgnd = tex2D (Fg_Sh, uv3);
    float4 Bgnd = tex2D (Bg_Sh, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    float2 xy1, xy2;
 
    float negAmt, posAmt;
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = kTransparentBlack;
-      }
+      if (ShowKey) { retval = Fgnd; }
       else {
          float Amt = SwapDir ? Amount : 1.0 - Amount;
          float amount = Amt - 1.0;
@@ -266,14 +262,9 @@ DeclareEntryPoint (BarndoorSqueeze_Sh)
 
          retval = (uv3.x > posAmt) ? tex2D (Fg_Sh, xy1)
                 : (uv3.x < negAmt) ? tex2D (Fg_Sh, xy2) : kTransparentBlack;
-         maskBg = Bgnd;
       }
-
-      retval = lerp (maskBg, retval, retval.a);
    }
    else {
-      maskBg = Fgnd;
-
       negAmt = 1.0 - Amount;
       posAmt = (1.0 + Amount) / 2.0;
 
@@ -286,7 +277,7 @@ DeclareEntryPoint (BarndoorSqueeze_Sh)
                (uv3.x < negAmt) ? tex2D (Fg_Sh, xy2) : Bgnd;
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -303,17 +294,14 @@ DeclareEntryPoint (BarndoorSqueeze_Sv)
 {
    float4 Fgnd = tex2D (Fg_Sv, uv3);
    float4 Bgnd = tex2D (Bg_Sv, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    float2 xy1, xy2;
 
    float negAmt, posAmt;
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = kTransparentBlack;
-      }
+      if (ShowKey) { retval = Fgnd; }
       else {
          float Amt = SwapDir ? Amount : 1.0 - Amount;
          float amount = Amt - 1.0;
@@ -326,14 +314,9 @@ DeclareEntryPoint (BarndoorSqueeze_Sv)
 
          retval = (uv3.y > posAmt) ? tex2D (Fg_Sv, xy1)
                 : (uv3.y < negAmt) ? tex2D (Fg_Sv, xy2) : kTransparentBlack;
-         maskBg = Bgnd;
       }
-
-      retval = lerp (maskBg, retval, retval.a);
    }
    else {
-      maskBg = Fgnd;
-
       negAmt = 1.0 - Amount;
       posAmt = (1.0 + Amount) / 2.0;
 
@@ -346,6 +329,5 @@ DeclareEntryPoint (BarndoorSqueeze_Sv)
                (uv3.y < negAmt) ? tex2D (Fg_Sv, xy2) : Bgnd;
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
-
