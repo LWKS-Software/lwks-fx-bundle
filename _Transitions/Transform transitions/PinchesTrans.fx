@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2026-07-15
 // @Author jwrl
 // @Created 2017-09-08
 
@@ -7,6 +7,24 @@
  This effect is a range of linear, radial and X pinches that pinch the outgoing video
  to a user-defined point to reveal the incoming shot.  It can also reverse the process
  to bring in the incoming video.
+
+   [*]Amount:  The normal keyframed transition progress.
+   [*]Transition:  Chooses whether to do a linear pinch, a radial one or an X pinch.
+   [*]Change pinch direction:  Self explanatory.
+   [*]Pinch centre
+      [*]Position X:  Sets the horizontal pinch centre.
+      [*]Position Y:  Sets the vertical pinch centre.
+   [*]Enable blend transitions:  Changes the mode from opaque video to transparent
+      video such as titles and the like.
+   [*]Blend settings
+      [*]Source:  Selects between an extracted video source and transparent video.
+      [*]Transition into blend:  Selects between transitioning into or out of a
+         blended video source.
+      [*]Fine tune:  Fine tunes the separation of an extracted video source from
+         its background.
+      [*]Show foreground key:  Showing the key helps in setting up the clip.
+      [*]Swap sources:  This can be necessary when using a folded delta key
+         (extracted) transition.
 
  The direction swap for the X pinch has been deliberately made asymmetric.  Subjectively
  it looked better to have the pinch established before the zoom out started, but to run
@@ -16,13 +34,19 @@
  It can also be used to pinch an outgoing blended foreground to clear the background
  video.  It can also reverse the process to bring in the foreground.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect PinchTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-15 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
@@ -38,8 +62,6 @@
 // Conversion 2023-03-04 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
 
-#include "_utils.fx"
-
 DeclareLightworksEffect ("Pinch transitions", "Mix", "Transform transitions", "Pinches video to a user-defined point to either hide or reveal it", CanSize);
 
 //-----------------------------------------------------------------------------------------//
@@ -48,28 +70,24 @@ DeclareLightworksEffect ("Pinch transitions", "Mix", "Transform transitions", "P
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",       kNoGroup,         kNoFlags, 1.0, 0.0, 1.0);
+DeclareIntParam   (SetTechnique,   "Transition",   kNoGroup, 0,      "Linear pinch|Radial pinch|X pinch");
+DeclareBoolParam  (ChangeDir,      "Change pinch direction",         kNoGroup, true);
 
-DeclareIntParam (SetTechnique, "Transition", kNoGroup, 0, "Linear pinch|Radial pinch|X pinch");
+DeclareFloatParam (centreX,        "Position",     "Pinch centre",   "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (centreY,        "Position",     "Pinch centre",   "SpecifiesPointY", 0.5, 0.0, 1.0);
 
-DeclareBoolParam (ChangeDir, "Change pinch direction", kNoGroup, true);
+DeclareBoolParam  (Blended,        "Enable blend transitions",       kNoGroup, false);
 
-DeclareFloatParam (centreX, "Position", "Pinch centre", "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (centreY, "Position", "Pinch centre", "SpecifiesPointY", 0.5, 0.0, 1.0);
-
-DeclareBoolParam (Blended, "Enable blend transitions", kNoGroup, false);
-
-DeclareIntParam (Source, "Source", "Blend settings", 0, "Extracted foreground|Image key/Title pre 2023.2, no input|Image or title without connected input");
-DeclareBoolParam (SwapDir, "Transition into blend", "Blend settings", true);
-DeclareFloatParam (KeyGain, "Key adjustment", "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam (ShowKey, "Show foreground key", "Blend settings", false);
-DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
+DeclareIntParam   (Source,         "Source",       "Blend settings", 0, "Extracted foreground|Image key or title (disconnect input)");
+DeclareBoolParam  (SwapDir,        "Transition into blend",          "Blend settings", true);
+DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend settings", false);
+DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -103,11 +121,11 @@ float4 fn_initFg (sampler F, float2 xy1, sampler B, float2 xy2)
    }
 
    if (Source == 0) { Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb)); }
-   else if (Source == 1) { Fgnd.a = pow (Fgnd.a, 0.375 + (KeyGain / 2.0)); }
 
-   if (Fgnd.a == 0.0) Fgnd.rgb = Fgnd.aaa;
+   // If alpha is zero we need any video to be blanked.  We do NOT need it to be
+   // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd;
+   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
 }
 
 float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
@@ -120,7 +138,7 @@ float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 // technique PinchTrans_L
@@ -135,17 +153,14 @@ DeclareEntryPoint (Pinch_L)
 {
    float4 Fgnd = tex2D (Fg_L, uv3);
    float4 Bgnd = tex2D (Bg_L, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    float2 centre, scale, xy;
 
    float amount;
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = kTransparentBlack;
-      }
+      if (ShowKey) { retval = Fgnd; }
       else {
          amount = Amount * 0.5;
 
@@ -165,14 +180,9 @@ DeclareEntryPoint (Pinch_L)
          xy = (xy * scale) + MID_PT;
 
          retval = ReadPixel (Fg_L, xy);
-         maskBg = Bgnd;
       }
-
-      retval = lerp (maskBg, retval, retval.a);
    }
    else {
-      maskBg = Fgnd;
-
       if (ChangeDir) {
          centre = lerp (float2 (centreX, 1.0 - centreY), MID_PT, Amount);
          xy = (uv3 - centre) * (1.0 + pow ((1.0 - sin (Amount * HALF_PI)), 4.0) * 128.0);
@@ -195,7 +205,7 @@ DeclareEntryPoint (Pinch_L)
       }
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -212,17 +222,14 @@ DeclareEntryPoint (PinchTrans_R)
 {
    float4 Fgnd = tex2D (Fg_R, uv3);
    float4 Bgnd = tex2D (Bg_R, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    float2 xy;
 
    float progress, rfrnc, scale;
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = kTransparentBlack;
-      }
+      if (ShowKey) { retval = Fgnd; }
       else {
          if (SwapDir) {
             progress = (1.0 - Amount) / 2.14;
@@ -238,14 +245,9 @@ DeclareEntryPoint (PinchTrans_R)
          xy = ((uv3 - MID_PT) * scale * scale) + MID_PT;
 
          retval = ReadPixel (Fg_R, xy);
-         maskBg = Bgnd;
       }
-
-      retval = lerp (maskBg, retval, retval.a);
    }
    else {
-      maskBg = Fgnd;
-
       progress = ChangeDir ? Amount / 2.14 : (1.0 - Amount) / 2.14;
       rfrnc = (distance (uv3, MID_PT) * 32.0) + 1.0;
       scale = lerp (1.0, pow (rfrnc, -1.0) * 24.0, progress);
@@ -262,7 +264,7 @@ DeclareEntryPoint (PinchTrans_R)
       }
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -294,17 +296,14 @@ DeclareEntryPoint (xPinch_Fx_I)
 {
    float4 Fgnd = tex2D (Fg_X, uv3);
    float4 Bgnd = tex2D (Bg_X, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    float2 xy;
 
    float progress, scale;
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         Bgnd = kTransparentBlack;
-      }
+      if (ShowKey) { Bgnd = kTransparentBlack; }
       else {
          if (SwapDir) { progress = 1.0 - cos (sin ((1.0 - Amount) * QUARTER_PI)); }
          else progress = 1.0 - cos (sin (Amount * QUARTER_PI));
@@ -314,8 +313,6 @@ DeclareEntryPoint (xPinch_Fx_I)
 
          retval = ReadPixel (Pinch, xy);
       }
-
-      maskBg = Bgnd;
    }
    else {
       if (ChangeDir) { progress = 1.0 - cos (max (0.0, Amount - 0.25) * HALF_PI); }
@@ -328,11 +325,7 @@ DeclareEntryPoint (xPinch_Fx_I)
       xy = ((uv3 - MID_PT) * scale) + MID_PT;
 
       retval = ReadPixel (Pinch, xy);
-      maskBg = Fgnd;
    }
 
-   retval = lerp (Bgnd, retval, retval.a);
-
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return lerp (Bgnd, retval, retval.a);
 }
-
