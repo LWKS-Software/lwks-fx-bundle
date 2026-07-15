@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-05-24
+// @Released 2026-07-15
 // @Author jwrl
 // @Created 2017-08-26
 
@@ -7,13 +7,33 @@
  This is similar to the alpha corner squeeze effect, except that it expands the blended
  foreground from the corners or compresses it to the corners of the screen.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+   [*]Amount:  The normal keyframed transition progress.
+   [*]Transition:  Sets the squeeze / expansion mode. Overriden in blend mode.
+   [*]Enable blend transitions:  Changes the mode from opaque video to transparent
+      video such as titles and the like.
+   [*]Blend settings
+      [*]Source:  Selects between an extracted video source and transparent video.
+      [*]Transition into blend:  Selects between transitioning into or out of a
+         blended video source.
+      [*]Fine tune:  Fine tunes the separation of an extracted video source from
+         its background.
+      [*]Show foreground key:  Showing the key helps in setting up the clip.
+      [*]Swap sources:  This can be necessary when using a folded delta key
+         (extracted) transition.
+
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // User effect CornerSqueezeTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-15 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with 0.0.xxxx to fix Linux lerp()/mix() bug.
@@ -40,23 +60,19 @@ DeclareLightworksEffect ("Corner squeeze transition", "Mix", "Transform transiti
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",       kNoGroup,         kNoFlags, 1.0, 0.0, 1.0);
+DeclareIntParam   (Ttype,          "Transition",   kNoGroup,         0, "Squeeze to corners|Expand from corners");
+DeclareBoolParam  (Blended,        "Enable blend transitions",       kNoGroup, false);
 
-DeclareIntParam (Ttype, "Transition", "Standard video", 0, "Squeeze to corners|Expand from corners");
-
-DeclareBoolParam (Blended, "Enable blend transitions", kNoGroup, false);
-
-DeclareIntParam (Source, "Source", "Blend settings", 0, "Extracted foreground|Image key/Title pre 2023.2, no input|Image or title without connected input");
-DeclareBoolParam (SwapDir, "Transition into blend", "Blend settings", true);
-DeclareFloatParam (KeyGain, "Key adjustment", "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam (ShowKey, "Show foreground key", "Blend settings", false);
-DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
+DeclareIntParam   (Source,         "Source",       "Blend settings", 0, "Extracted foreground|Image key or title (disconnect input)");
+DeclareBoolParam  (SwapDir,        "Transition into blend",          "Blend settings", true);
+DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend settings", false);
+DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -67,7 +83,7 @@ DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
 #endif
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 DeclarePass (Fgd)
@@ -86,11 +102,11 @@ DeclarePass (Fgd)
    }
 
    if (Source == 0) { Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb)); }
-   else if (Source == 1) { Fgnd.a = pow (Fgnd.a, 0.375 + (KeyGain / 2.0)); }
 
-   if (Fgnd.a == 0.0) Fgnd.rgb = Fgnd.aaa;
+   // If alpha is zero we need any video to be blanked.  We do NOT need it to be
+   // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd;
+   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
 }
 
 DeclarePass (Bgd)
@@ -141,10 +157,9 @@ DeclareEntryPoint (CornerSqueezeTrans)
 {
    float4 Fgnd = tex2D (Fgd, uv3);
 
-   if (Blended && ShowKey) { return lerp (0.0.xxxx, Fgnd, Fgnd.a * tex2D (Mask, uv3).x); }
+   if (Blended && ShowKey) { return Fgnd; }
 
    float4 Bgnd = tex2D (Bgd, uv3);
-   float4 maskBg = Blended ? Bgnd : Fgnd;
    float4 retval = !Blended && Ttype ? Fgnd : Bgnd;
 
    float negAmt, posAmt;
@@ -171,7 +186,5 @@ DeclareEntryPoint (CornerSqueezeTrans)
    Fgnd = (uv3.y > posAmt) ? tex2D (Horiz, xy1) :
           (uv3.y < negAmt) ? tex2D (Horiz, xy2) : kTransparentBlack;
 
-   retval = lerp (retval, Fgnd, Fgnd.a);
-
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return lerp (retval, Fgnd, Fgnd.a);
 }
