@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-06-22
+// @Released 2026-07-16
 // @Author jwrl
 // @Created 2024-06-22
 
@@ -7,12 +7,23 @@
  This effect wipes the incoming video on using a series of semicircular wipes.  It does
  not provide a separate blend mode setting because with this style of effect it's not
  at all necessary.  All four wipe directions are provided.
+
+   [*]Progress:  The normal keyframed transition progress.
+   [*]Wipe direction:  This can the wipes to travel from right to left and vice versa,
+      and top to bottom and vice versa.
+
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher   In all
+ respects this behaves as the earlier versions did, and can be installed on Lightworks
+ versions 2023.1 and above.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect Semicircles.fx
 //
 // Version history:
+//
+// Updated 2026-07-16 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Built 2024-06-22 jwrl.
 //-----------------------------------------------------------------------------------------//
@@ -30,9 +41,8 @@ DeclareInput (Bg, Linear);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Progress", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
-
-DeclareIntParam (SetTechnique, "Wipe direction", kNoGroup, 0, "Right to left|Left to right|Bottom to top|Top to bottom");
+DeclareFloatParamAnimated (Amount, "Progress",       kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareIntParam (SetTechnique,     "Wipe direction", kNoGroup, 0, "Right to left|Left to right|Bottom to top|Top to bottom");
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -65,7 +75,7 @@ float CircleGenVert (float2 xy, float offset_1, float offset_2)
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 //--  Left wipe  --------------------------------------------------------------------------//
@@ -224,4 +234,3 @@ DeclareEntryPoint (SemicirclesDown)
 
    return lerp (Outgoing, Incoming, saturate (wipe));
 }
-
