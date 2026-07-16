@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-04-03
+// @Released 2026-07-16
 // @Author jwrl
 // @Created 2024-04-03
 
@@ -11,13 +11,36 @@
  area is always pushed in the opposite direction to the central area to reveal the
  incoming media instead of being independently adjustable.
 
+   [*]Amount:  The normal keyframed transition progress.
+   [*]Direction pf push: Selects the four possible push combinations - see above.
+   [*]Box parameters
+      [*]Width: Adjusts the width of the centre box area.
+      [*]Height: Adjusts the height of the centre box area.
+      [*]Position X: Sets the horizontal centre point of the centre box, effectively moving it.
+      [*]Position Y: As above, but adjusts the vertical position.
+   [*]Outer levels: Allows the outer level to dip then rise back again during the transition. See below.
+   [*]Enable blend transitions:  Changes the mode from opaque video to transparent
+      video such as titles and the like.
+   [*]Blend settings
+      [*]Source:  Selects between an extracted video source and transparent video.
+      [*]Transition into blend:  Selects between transitioning into or out of a
+         blended video source.
+      [*]Fine tune:  Fine tunes the separation of an extracted video source from
+         its background.
+      [*]Show foreground key:  Showing the key helps in setting up the clip.
+      [*]Swap sources:  This can be necessary when using a folded delta key
+         (extracted) transition.
+
  As with the earlier effect, in normal mode the background can be reduced in level
  as the transition takes place to help separate it from the centre area,  This is
  disabled in blended transition mode.  For consistency with other effects masking
  has been provided even though it seems a little pointless given the nature of this
  effect and the fact that transitions with masking code don't use it.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -25,10 +48,11 @@
 //
 // Version history:
 //
+// Updated 2026-07-16 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
+//
 // Built 2024-04-03 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Contrapush", "Mix", "Wipe transitions", "Pushes the centre and edge video areas in opposite directions", CanSize);
 
@@ -38,30 +62,26 @@ DeclareLightworksEffect ("Contrapush", "Mix", "Wipe transitions", "Pushes the ce
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Progress", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Progress",     kNoGroup,         kNoFlags, 1.0, 0.0, 1.0);
+DeclareIntParam   (SetTechnique,   "Direction of push", kNoGroup, 0, "Box left / outer right|Box right / outer left|Box up / outer down|Box down / outer up");
 
-DeclareIntParam (SetTechnique, "Direction of push", kNoGroup, 0, "Box left / outer right|Box right / outer left|Box up / outer down|Box down / outer up");
+DeclareFloatParam (BoxWidth,       "Width",        "Box parameters", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (BoxHeight,      "Height",       "Box parameters", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (BoxPosX,        "Position",     "Box parameters", "SpecifiesPointX", 0.5, 0.0, 1.0);
+DeclareFloatParam (BoxPosY,        "Position",     "Box parameters", "SpecifiesPointY", 0.5, 0.0, 1.0);
 
-DeclareFloatParam (BoxWidth,  "Width",  "Box parameters", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (BoxHeight, "Height", "Box parameters", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (BoxPosX, "Position", "Box parameters", "SpecifiesPointX", 0.5, 0.0, 1.0);
-DeclareFloatParam (BoxPosY, "Position", "Box parameters", "SpecifiesPointY", 0.5, 0.0, 1.0);
+DeclareFloatParam (DarkenOuter,    "Outer levels", kNoGroup,         kNoFlags, 0.5, 0.0, 1.0);
+DeclareBoolParam  (Blended,        "Enable blend transitions",       kNoGroup, false);
 
-DeclareFloatParam (DarkenOuter, "Outer levels", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
-
-DeclareBoolParam (Blended, "Enable blend transitions", kNoGroup, false);
-
-DeclareIntParam (Source, "Source", "Blend settings", 0, "Extracted foreground|Image key/Title pre 2023.2, no input|Image key or title without input");
-DeclareBoolParam (SwapDir, "Transition into blend", "Blend settings", true);
-DeclareFloatParam (KeyGain, "Key adjustment", "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam (ShowKey, "Show foreground key", "Blend settings", false);
-DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
+DeclareIntParam   (Source,         "Source",       "Blend settings", 0, "Extracted foreground|Image key or title (disconnect input)");
+DeclareBoolParam  (SwapDir,        "Transition into blend",          "Blend settings", true);
+DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend settings", false);
+DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -90,11 +110,11 @@ float4 keygen (sampler F, float2 xy1, sampler B, float2 xy2)
    else Bgnd = ReadPixel (B, xy2);
 
    if (Source == 0) { Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb)); }
-   else if (Source == 1) { Fgnd.a = pow (Fgnd.a, 0.375 + (KeyGain / 2.0)); }
 
-   if (Fgnd.a == 0.0) Fgnd.rgb = Fgnd.aaa;
+   // If alpha is zero we need any video to be blanked.  We do NOT need it to be
+   // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd;
+   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
 }
 
 float4 initFg (sampler F, float2 xy1, sampler B, float2 xy2)
@@ -177,7 +197,7 @@ bool Hlimits (float2 xy, out float A, out float B)
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 // Box left / outer right
 
@@ -224,7 +244,7 @@ DeclareEntryPoint (ContraPush_0)
    }
    else if (!inside) retval = IsOutOfBounds (xy3) ? tex2D (Bb0, xy4) : tex2D (Fb0, xy3);
 
-   return lerp (Bgd, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
 
 //--  Box right / outer left  -------------------------------------------------------------//
@@ -270,7 +290,7 @@ DeclareEntryPoint (ContraPush_1)
    }
    else if (!inside) retval = IsOutOfBounds (xy3) ? tex2D (Fb1, xy4) : tex2D (Bb1, xy3);
 
-   return lerp (Bgd, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
 
 //--  Box up / outer down  ----------------------------------------------------------------//
@@ -318,7 +338,7 @@ DeclareEntryPoint (Contrapush_2)
    }
    else if (!inside) retval = IsOutOfBounds (xy3) ? tex2D (Bb2, xy4) : tex2D (Fb2, xy3);
 
-   return lerp (Bgd, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
 
 //--  Box down / outer up  ----------------------------------------------------------------//
@@ -366,6 +386,5 @@ DeclareEntryPoint (Contrapush_3)
    }
    else if (!inside) retval = IsOutOfBounds (xy3) ? tex2D (Fb3, xy4) : tex2D (Bb3, xy3);
 
-   return lerp (Bgd, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
-
