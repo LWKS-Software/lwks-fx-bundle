@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-17
+// @Released 2026-07-16
 // @Author jwrl
 // @Created 2021-06-12
 
@@ -10,10 +10,23 @@
  up or down, and the centre area of the background can optionally be blanked.  The
  various combinations amount to a possible total of 32 variants.
 
+   [*]Amount:  The normal keyframed transition progress.
+   [*]Blank centre area in outer:  Sets centre media to opaque black if it exceeds
+      the box boundary.
+   [*]Center direction:  Sets the pan direction of the centre push between left,
+      right, up or down.
+   [*]Outer direction:  Sets the pan direction of the outer push between left,
+      right, up or down.
+   [*]Outer levels:  Allows the outer level to dip then rise back again during the
+      transition.
+
  As well, the background can be reduced in level as the transition takes place to
  help separate it from the centre.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -21,13 +34,14 @@
 //
 // Version history:
 //
+// Updated 2026-07-16 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
+//
 // Updated 2023-05-17 jwrl.
 // Effect renamed from "Sunder transition".
 //
 // Conversion 2023-03-04 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Compound push", "Mix", "Wipe transitions", kNoNotes, CanSize);
 
@@ -37,20 +51,15 @@ DeclareLightworksEffect ("Compound push", "Mix", "Wipe transitions", kNoNotes, C
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
-
-DeclareBoolParam (BlankCentre, "Blank centre area in outer", kNoGroup, false);
-
-DeclareIntParam (CentrePan, "Center direction", kNoGroup, 0, "Pan left|Pan right|Tilt up|Tilt down");
-DeclareIntParam (OuterPan, "Outer direction", kNoGroup, 0, "Pan left|Pan right|Tilt up|Tilt down");
-
-DeclareFloatParam (DarkenOuter, "Outer levels", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",           kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareBoolParam  (BlankCentre,    "Blank centre area in outer", kNoGroup, false);
+DeclareIntParam   (CentrePan,      "Center direction", kNoGroup, 0, "Pan left|Pan right|Tilt up|Tilt down");
+DeclareIntParam   (OuterPan,       "Outer direction",  kNoGroup, 0, "Pan left|Pan right|Tilt up|Tilt down");
+DeclareFloatParam (DarkenOuter,    "Outer levels",     kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -129,7 +138,7 @@ float4 OuterDown (sampler F, sampler B, float2 xy)
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 DeclarePass (Fg_C)
@@ -162,7 +171,7 @@ DeclarePass (Bg_O)
 
 DeclareEntryPoint (Sunder)
 {
-   float4 retval, maskBg = tex2D (Fg_C, uv3);
+   float4 retval;
 
    if (Boxed (uv3)) {
       retval = CentrePan == 0 ? CentreLeft (Fg_C, Bg_C, uv3)
@@ -175,6 +184,5 @@ DeclareEntryPoint (Sunder)
              : OuterPan == 2 ? OuterUp (Fg_O, Bg_O, uv3) : OuterDown (Fg_O, Bg_O, uv3);
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
-
