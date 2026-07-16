@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-02
+// @Released 2026-07-16
 // @Author jwrl
 // @Created 2023-03-04
 
@@ -8,13 +8,37 @@
  horizontally or vertically to reveal the incoming image.  This updated version adds
  the ability to choose whether to wipe the outgoing image out or the incoming image in.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+   [*]Amount:  The normal keyframed transition progress.
+   [*]Strip direction:  Sets the direction of movement of the slices.
+   [*]Strip type:  Sets the section of the strips which moves first.
+   [*]Strip number:  Sets the number of strips that will occupy the full screen.
+   [*]Slice incoming video:  Switches whether incoming or outgoing video is sliced.
+      Overridden by blend mode.
+   [*]Enable blend transitions:   Changes the mode from opaque video to transparent
+      video such as titles and the like.
+   [*]Blend settings
+      [*]Source:  Selects between an extracted video source and transparent video.
+      [*]Transition into blend:  Selects between transitioning into or out of a
+         blended video source.
+      [*]Fine tune:  Fine tunes the separation of an extracted video source from
+         its background.
+      [*]Show foreground key:  Showing the key helps in setting up the clip.
+      [*]Swap sources:  This can be necessary when using a folded delta key
+         (extracted) transition.
+
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
+ the revision process has meant the removal of masking.  In all other respects this
+ behaves as the earlier versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect SliceTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-16 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
@@ -29,8 +53,6 @@
 // Conversion 2023-03-04 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
 
-#include "_utils.fx"
-
 DeclareLightworksEffect ("Sliced transition", "Mix", "Wipe transitions", "Separates and splits the image into strips which move on or off horizontally or vertically", CanSize);
 
 //-----------------------------------------------------------------------------------------//
@@ -39,26 +61,22 @@ DeclareLightworksEffect ("Sliced transition", "Mix", "Wipe transitions", "Separa
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParamAnimated (Amount, "Amount",          kNoGroup,         kNoFlags, 1.0, 0.0, 1.0);
+DeclareIntParam   (SetTechnique,   "Strip direction", kNoGroup, 1,      "Right to left|Left to right|Top to bottom|Bottom to top");
+DeclareIntParam   (Mode,           "Strip type",      kNoGroup, 0,      "Mode A|Mode B");
+DeclareFloatParam (StripNumber,    "Strip number",    kNoGroup,         kNoFlags, 10.0, 5.0, 20.0);
+DeclareBoolParam  (Direction,      "Slice incoming video", kNoGroup,    false);
+DeclareBoolParam  (Blended,        "Enable blend transitions",          kNoGroup, false);
 
-DeclareIntParam (SetTechnique, "Strip direction", kNoGroup, 1, "Right to left|Left to right|Top to bottom|Bottom to top");
-DeclareIntParam (Mode, "Strip type", kNoGroup, 0, "Mode A|Mode B");
-DeclareFloatParam (StripNumber, "Strip number", kNoGroup, kNoFlags, 10.0, 5.0, 20.0);
-DeclareBoolParam (Direction, "Slice incoming video", kNoGroup, false);
-
-DeclareBoolParam (Blended, "Enable blend transitions", kNoGroup, false);
-
-DeclareIntParam (Source, "Source", "Blend settings", 0, "Extracted foreground|Image key/Title pre 2023.2, no input|Image or title without connected input");
-DeclareBoolParam (SwapDir, "Transition into blend", "Blend settings", true);
-DeclareFloatParam (KeyGain, "Key adjustment", "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam (ShowKey, "Show foreground key", "Blend settings", false);
-DeclareBoolParam (SwapSource, "Swap sources", "Blend settings", false);
+DeclareIntParam   (Source,         "Source",          "Blend settings", 0, "Extracted foreground|Image key or title (disconnect input)");
+DeclareBoolParam  (SwapDir,        "Transition into blend",             "Blend settings", true);
+DeclareFloatParam (KeyGain,        "Fine tune",       "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam  (ShowKey,        "Show foreground key",               "Blend settings", false);
+DeclareBoolParam  (SwapSource,     "Swap sources",    "Blend settings", false);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -88,11 +106,11 @@ float4 fn_initFg (sampler F, float2 xy1, sampler B, float2 xy2)
    }
 
    if (Source == 0) { Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb)); }
-   else if (Source == 1) { Fgnd.a = pow (Fgnd.a, 0.375 + (KeyGain / 2.0)); }
 
-   if (Fgnd.a == 0.0) Fgnd.rgb = Fgnd.aaa;
+   // If alpha is zero we need any video to be blanked.  We do NOT need it to be
+   // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd;
+   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
 }
 
 float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
@@ -105,7 +123,7 @@ float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 // technique Slice right to left
@@ -120,7 +138,7 @@ DeclareEntryPoint (SliceRight)
 {
    float4 Fgnd = tex2D (Fg_R, uv3);
    float4 Bgnd = tex2D (Bg_R, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    float2 xy = uv3;
 
@@ -128,6 +146,8 @@ DeclareEntryPoint (SliceRight)
    float amount_0, amount_1, amount_2;
 
    if (Blended) {
+      float4 maskBg;
+
       if (ShowKey) {
          retval = Fgnd;
          maskBg = kTransparentBlack;
@@ -155,8 +175,6 @@ DeclareEntryPoint (SliceRight)
       retval = lerp (maskBg, retval, retval.a);
    }
    else {
-      maskBg = Fgnd;
-
       amount_0 = Direction ? 1.0 - Amount : Amount;
       amount_1 = (1.0 - pow (1.0 - amount_0, 3.0)) / (strips * 2.0);
       amount_2 = pow (amount_0, 3.0);
@@ -168,7 +186,7 @@ DeclareEntryPoint (SliceRight)
       else retval = (IsOutOfBounds (xy)) ? Bgnd : tex2D (Fg_R, xy);
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -185,7 +203,7 @@ DeclareEntryPoint (SliceLeft)
 {
    float4 Fgnd = tex2D (Fg_L, uv3);
    float4 Bgnd = tex2D (Bg_L, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    float2 xy = uv3;
 
@@ -193,6 +211,8 @@ DeclareEntryPoint (SliceLeft)
    float amount_0, amount_1, amount_2;
 
    if (Blended) {
+      float4 maskBg;
+
       if (ShowKey) {
          retval = Fgnd;
          maskBg = kTransparentBlack;
@@ -220,8 +240,6 @@ DeclareEntryPoint (SliceLeft)
       retval = lerp (maskBg, retval, retval.a);
    }
    else {
-      maskBg = Fgnd;
-
       amount_0 = Direction ? 1.0 - Amount : Amount;
       amount_1 = (1.0 - pow (1.0 - amount_0, 3.0)) / (strips * 2.0);
       amount_2 = pow (amount_0, 3.0);
@@ -233,7 +251,7 @@ DeclareEntryPoint (SliceLeft)
       else retval = (IsOutOfBounds (xy)) ? Bgnd : tex2D (Fg_L, xy);
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -250,7 +268,7 @@ DeclareEntryPoint (SliceTop)
 {
    float4 Fgnd = tex2D (Fg_T, uv3);
    float4 Bgnd = tex2D (Bg_T, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    float2 xy = uv3;
 
@@ -258,6 +276,8 @@ DeclareEntryPoint (SliceTop)
    float amount_0, amount_1, amount_2;
 
    if (Blended) {
+      float4 maskBg;
+
       if (ShowKey) {
          retval = Fgnd;
          maskBg = kTransparentBlack;
@@ -285,8 +305,6 @@ DeclareEntryPoint (SliceTop)
       retval = lerp (maskBg, retval, retval.a);
    }
    else {
-      maskBg = Fgnd;
-
       amount_0 = Direction ? 1.0 - Amount : Amount;
       amount_1 = (1.0 - pow (1.0 - amount_0, 3.0)) / (strips * 2.0);
       amount_2 = pow (amount_0, 3.0);
@@ -298,7 +316,7 @@ DeclareEntryPoint (SliceTop)
       else retval = (IsOutOfBounds (xy)) ? Bgnd : tex2D (Fg_T, xy);
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -315,7 +333,7 @@ DeclareEntryPoint (SliceBottom)
 {
    float4 Fgnd = tex2D (Fg_B, uv3);
    float4 Bgnd = tex2D (Bg_B, uv3);
-   float4 maskBg, retval;
+   float4 retval;
 
    float2 xy = uv3;
 
@@ -323,6 +341,8 @@ DeclareEntryPoint (SliceBottom)
    float amount_0, amount_1, amount_2;
 
    if (Blended) {
+      float4 maskBg;
+
       if (ShowKey) {
          retval = Fgnd;
          maskBg = kTransparentBlack;
@@ -350,8 +370,6 @@ DeclareEntryPoint (SliceBottom)
       retval = lerp (maskBg, retval, retval.a);
    }
    else {
-      maskBg = Fgnd;
-
       amount_0 = Direction ? 1.0 - Amount : Amount;
       amount_1 = (1.0 - pow (1.0 - amount_0, 3.0)) / (strips * 2.0);
       amount_2 = pow (amount_0, 3.0);
@@ -363,6 +381,5 @@ DeclareEntryPoint (SliceBottom)
       else retval = (IsOutOfBounds (xy)) ? Bgnd : tex2D (Fg_B, xy);
    }
 
-   return lerp (maskBg, retval, tex2D (Mask, uv3).x);
+   return retval;
 }
-
