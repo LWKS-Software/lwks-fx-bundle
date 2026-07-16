@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2024-06-01
+// @Released 2026-07-16
 // @Author jwrl
 // @Created 2024-06-01
 
@@ -8,14 +8,27 @@
  incoming video.  The trailing edge of the outgoing video is smeared and faded out
  over the incoming video.
 
+   [*]Amount:  The normal keyframed transition progress.
+   [*]Smear length:  Adjusts the amount of trailing edge smear that will follow
+      the outgoing video.
+   [*]Transition direction:  Selects the direction that the push will move - right,
+      left, up or down.
+
  Because it relies on having a hard full frame edge in the video this effect does
  not support blended images.
+
+  NOTE:  This effect has been revised for Lightworks version 2026 and higher   In all
+ respects this behaves as the earlier versions did, and can be installed on Lightworks
+ versions 2023.1 and above.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect SmearWipe.fx
 //
 // Version history:
+//
+// Updated 2026-07-16 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Built 2024-06-01 jwrl
 //-----------------------------------------------------------------------------------------//
@@ -33,11 +46,9 @@ DeclareInput (Bg, Linear);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (Amount, "Amount", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
-
-DeclareFloatParam (SmearLen, "Smear length", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
-
-DeclareIntParam (SetTechnique, "Transition direction", kNoGroup, 0, "Wipe right|Wipe left|Wipe up|Wipe down");
+DeclareFloatParamAnimated (Amount, "Amount",               kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (SmearLen,       "Smear length",         kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareIntParam   (SetTechnique,   "Transition direction", kNoGroup, 0, "Wipe right|Wipe left|Wipe up|Wipe down");
 
 DeclareFloatParam (_OutputWidth);
 DeclareFloatParam (_OutputHeight);
@@ -93,7 +104,7 @@ float4 SmearSoften (sampler S, float2 uv)
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 // technique SmearWipeRight
@@ -265,4 +276,3 @@ DeclareEntryPoint (SmearWipeDown)
 
    return lerp (Bgnd, Fgnd, Fgnd.a);
 }
-
