@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2025-08-05
+// @Released 2026-07-16
 // @Author jwrl
 // @Created 2025-07-20
 
@@ -10,20 +10,27 @@
  The blur reaches its maximum at the centre of the push and follows a curved path in
  and out.  It's simple to set up, having just five parameters.
 
-   * Push direction:  Selects a push from left to right, right to left, top to bottom
-     and bottom to top.
-   * Progress:  Sets and shows the progress of the push.
-   * Overlap
-      * Amount:  Adjusts the amount of overlap between the two sources.
-      * Edge mix:  Adjusts the width of the overlap mix.  It's limited to the
-        available overlap.
-   * Blur:  Controls the amount of the blur in the direction of the push.
+   [*]Push direction:  Selects a push from left to right, right to left, top to bottom
+      and bottom to top.
+   [*]Progress:  Sets and shows the progress of the push.
+   [*]Overlap
+      [*]Amount:  Adjusts the amount of overlap between the two sources.
+      [*]Edge mix:  Adjusts the width of the overlap mix.  It's limited to the
+         available overlap.
+   [*]Blur:  Controls the amount of the blur in the direction of the push.
+
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher   In all
+ respects this behaves as the earlier versions did, and can be installed on Lightworks
+ versions 2023.1 and above.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect AdjustablePush.fx
 //
 // Version history:
+//
+// Updated 2026-07-16 jwrl.
+// Revised for compatability with LW versions 2026 and higher.
 //
 // Modified 2025-08-05 jwrl.
 // Rewritten to correct edge overflow problems when the frame isn't filled.
@@ -47,14 +54,13 @@ DeclareInputs (Fg, Bg);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareIntParam (SetTechnique, "Push direction", kNoGroup, 0, "Left to right|Right to left|Top to bottom|Bottom to top");
+DeclareIntParam   (SetTechnique,     "Push direction", kNoGroup,  0, "Left to right|Right to left|Top to bottom|Bottom to top");
+DeclareFloatParamAnimated (Progress, "Progress",       kNoGroup,  kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareFloatParamAnimated (Progress, "Progress", kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Amount,           "Amount",         "Overlap", kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (EdgeMix,          "Edge mix",       "Overlap", kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareFloatParam (Amount,  "Amount",   "Overlap", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (EdgeMix, "Edge mix", "Overlap", kNoFlags, 1.0, 0.0, 1.0);
-
-DeclareFloatParam (Blur,    "Blur",      kNoGroup, kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam (Blur,             "Blur",           kNoGroup,  kNoFlags, 0.5, 0.0, 1.0);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -172,7 +178,7 @@ float4 directionalBlurY (sampler video, float2 uv)
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 //-----  Push left to right  --------------------------------------------------------------//
