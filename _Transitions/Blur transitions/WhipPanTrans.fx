@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-10
+// @Released 2026-07-17
 // @Author jwrl
 // @Created 2020-07-19
 
@@ -36,7 +36,7 @@
 //
 // Version history:
 //
-// Updated 2026-07-10 jwrl.
+// Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-08-02 jwrl.
@@ -155,9 +155,7 @@ DeclarePass (Fgd)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   if (Fgnd.a == 0.0) Fgnd = kTransparentBlack;
-
-   return Fgnd;
+   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
 }
 
 DeclarePass (Bgd)
@@ -202,6 +200,8 @@ DeclareEntryPoint (WhipPanTrans)
     
             retval /= 61;
          }
+
+         retval = lerp (Bgnd, retval, retval.a);
       }
    }
    else {
