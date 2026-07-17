@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-14
+// @Released 2026-07-17
 // @Author jwrl
 // @Created 2017-10-30
 
@@ -38,7 +38,7 @@
 //
 // Version history:
 //
-// Updated 2026-07-14 jwrl.
+// Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2024-05-24 jwrl.
@@ -138,7 +138,7 @@ DeclareEntryPoint (SineTrans)
 {
    float4 Fgnd = tex2D (Fgd, uv3);
 
-   if (Blended && ShowKey) return lerp (0.0.xxxx, Fgnd, Fgnd.a);
+   if (Blended && ShowKey) return Fgnd;
 
    float4 Bgnd = tex2D (Bgd, uv3);
    float4 retval;
