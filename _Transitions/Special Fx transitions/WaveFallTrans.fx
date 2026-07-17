@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-14
+// @Released 2026-07-17
 // @Author jwrl
 // @Created 2018-06-13
 
@@ -36,7 +36,7 @@
 //
 // Version history:
 //
-// Updated 2026-07-14 jwrl.
+// Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-08-02 jwrl.
@@ -154,7 +154,7 @@ DeclareEntryPoint (WaveFallTrans)
 
          Fgnd = ReadPixel (Fgd, xy);
          retval = lerp (Bgnd, Fgnd, saturate ((1.0 - amount) * 5.0));
-         retval.a = Fgnd.a;
+         retval = lerp (Bgnd, retval, Fgnd.a);
       }
    }
    else {
