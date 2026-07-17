@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-15
+// @Released 2026-07-17
 // @Author jwrl
 // @Created 2018-06-13
 
@@ -29,7 +29,7 @@
 //
 // Version history:
 //
-// Updated 2026-07-15 jwrl.
+// Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-08-02 jwrl.
@@ -116,22 +116,18 @@ DeclareEntryPoint (SqueezeRight)
 {
    float4 Fgnd, Bgnd;
 
-   if (ShowKey) {
-      Fgnd = tex2D (Fg_R, uv3);
-      Bgnd = kTransparentBlack;
-   }
-   else {
-      float2 xy;
+   if (ShowKey) return tex2D (Fg_R, uv3);
 
-      if (!SwapDir) {
-         xy = (Amount == 1.0) ? float2 (2.0, uv3.y)
-                              : float2 ((uv3.x - 1.0) / (1.0 - Amount) + 1.0, uv3.y);
-      }
-      else xy = (Amount == 0.0) ? float2 (2.0, uv3.y) : float2 (uv3.x / Amount, uv3.y);
+   float2 xy;
 
-      Bgnd = tex2D (Bg_R, uv3);
-      Fgnd = ReadPixel (Fg_R, xy);
+   if (!SwapDir) {
+      xy = (Amount == 1.0) ? float2 (2.0, uv3.y)
+                           : float2 ((uv3.x - 1.0) / (1.0 - Amount) + 1.0, uv3.y);
    }
+   else xy = (Amount == 0.0) ? float2 (2.0, uv3.y) : float2 (uv3.x / Amount, uv3.y);
+
+   Bgnd = tex2D (Bg_R, uv3);
+   Fgnd = ReadPixel (Fg_R, xy);
 
    return lerp (Bgnd, Fgnd, Fgnd.a);
 }
@@ -150,21 +146,17 @@ DeclareEntryPoint (SqueezeDown)
 {
    float4 Fgnd, Bgnd;
 
-   if (ShowKey) {
-      Fgnd = tex2D (Fg_D, uv3);
-      Bgnd = kTransparentBlack;
-   }
-   else {
-      float2 xy;
+   if (ShowKey) return tex2D (Fg_R, uv3);
 
-      if (!SwapDir) {
-         xy = (Amount == 1.0) ? float2 (uv3.x, 2.0) : float2 (uv3.x, (uv3.y - 1.0) / (1.0 - Amount) + 1.0);
-      }
-      else xy = (Amount == 0.0) ? float2 (uv3.x, 2.0) : float2 (uv3.x, uv3.y / Amount);
+   float2 xy;
 
-      Bgnd = tex2D (Bg_D, uv3);
-      Fgnd = ReadPixel (Fg_D, xy);
+   if (!SwapDir) {
+      xy = (Amount == 1.0) ? float2 (uv3.x, 2.0) : float2 (uv3.x, (uv3.y - 1.0) / (1.0 - Amount) + 1.0);
    }
+   else xy = (Amount == 0.0) ? float2 (uv3.x, 2.0) : float2 (uv3.x, uv3.y / Amount);
+
+   Bgnd = tex2D (Bg_D, uv3);
+   Fgnd = ReadPixel (Fg_D, xy);
 
    return lerp (Bgnd, Fgnd, Fgnd.a);
 }
@@ -183,21 +175,17 @@ DeclareEntryPoint (SqueezeLeft)
 {
    float4 Fgnd, Bgnd;
 
-   if (ShowKey) {
-      Fgnd = tex2D (Fg_L, uv3);
-      Bgnd = kTransparentBlack;
-   }
-   else {
-      float2 xy;
+   if (ShowKey) return tex2D (Fg_R, uv3);
 
-      if (!SwapDir) {
-         xy = (Amount == 1.0) ? float2 (2.0, uv3.y) : float2 (uv3.x  / (1.0 - Amount), uv3.y);
-      }
-      else xy = (Amount == 0.0) ? float2 (2.0, uv3.y) : float2 ((uv3.x - 1.0) / Amount + 1.0, uv3.y);
+   float2 xy;
 
-      Bgnd = tex2D (Bg_L, uv3);
-      Fgnd = ReadPixel (Fg_L, xy);
+   if (!SwapDir) {
+      xy = (Amount == 1.0) ? float2 (2.0, uv3.y) : float2 (uv3.x  / (1.0 - Amount), uv3.y);
    }
+   else xy = (Amount == 0.0) ? float2 (2.0, uv3.y) : float2 ((uv3.x - 1.0) / Amount + 1.0, uv3.y);
+
+   Bgnd = tex2D (Bg_L, uv3);
+   Fgnd = ReadPixel (Fg_L, xy);
 
    return lerp (Bgnd, Fgnd, Fgnd.a);
 }
@@ -216,21 +204,17 @@ DeclareEntryPoint (SqueezeUp)
 {
    float4 Fgnd, Bgnd;
 
-   if (ShowKey) {
-      Fgnd = tex2D (Fg_U, uv3);
-      Bgnd = kTransparentBlack;
-   }
-   else {
-      float2 xy;
+   if (ShowKey) return tex2D (Fg_R, uv3);
 
-      if (!SwapDir) {
-         xy = (Amount == 1.0) ? float2 (uv3.x, 2.0) : float2 (uv3.x, uv3.y  / (1.0 - Amount));
-      }
-      else xy = (Amount == 0.0) ? float2 (uv3.x, 2.0) : float2 (uv3.x, (uv3.y - 1.0) / Amount + 1.0);
+   float2 xy;
 
-      Bgnd = tex2D (Bg_U, uv3);
-      Fgnd = ReadPixel (Fg_U, xy);
+   if (!SwapDir) {
+      xy = (Amount == 1.0) ? float2 (uv3.x, 2.0) : float2 (uv3.x, uv3.y  / (1.0 - Amount));
    }
+   else xy = (Amount == 0.0) ? float2 (uv3.x, 2.0) : float2 (uv3.x, (uv3.y - 1.0) / Amount + 1.0);
+
+   Bgnd = tex2D (Bg_U, uv3);
+   Fgnd = ReadPixel (Fg_U, xy);
 
    return lerp (Bgnd, Fgnd, Fgnd.a);
 }
