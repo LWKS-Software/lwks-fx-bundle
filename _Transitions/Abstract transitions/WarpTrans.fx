@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-09
+// @Released 2026-07-17
 // @Author jwrl
 // @Created 2016-05-10
 
@@ -38,7 +38,7 @@
 //
 // Version history:
 //
-// Updated 2026-07-09 jwrl.
+// Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-08-02 jwrl.
@@ -116,9 +116,7 @@ float4 fn_initFg (sampler F, float2 xy1, sampler B, float2 xy2)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   if (Fgnd.a == 0.0) Fgnd = kTransparentBlack;
-
-   return Fgnd;
+   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
 }
 
 float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
@@ -131,7 +129,7 @@ float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 // technique Warp_0
@@ -171,7 +169,7 @@ DeclareEntryPoint (Warp_0)
          }
 
          Fgnd = tex2D (Fg_0, xy);
-         retval = lerp (Bgnd, Fgnd, amount);
+         retval = lerp (Bgnd, Fgnd, Fgnd.a * amount);
       }
    }
    else {
@@ -227,7 +225,7 @@ DeclareEntryPoint (Warp_1)
 
          xy = lerp (xy, uv3, amount);
          Fgnd = tex2D (Fg_1, xy);
-         retval = lerp (Bgnd, Fgnd, amount);
+         retval = lerp (Bgnd, Fgnd, Fgnd.a * amount);
       }
    }
    else {
