@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-09
+// @Released 2026-07-17
 // @Author jwrl
 // @Created 2016-12-10
 
@@ -31,7 +31,7 @@
 //
 // Version history:
 //
-// Updated 2026-07-09 jwrl.
+// Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-08-02 jwrl.
@@ -102,9 +102,7 @@ DeclarePass (Fgd)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   if (Fgnd.a == 0.0) Fgnd = kTransparentBlack;
-
-   return Fgnd;
+   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
 }
 
 DeclarePass (Bgd)
@@ -125,7 +123,7 @@ DeclareEntryPoint (Erosion)
    float a_1, a_2;
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd.a; }
+      if (ShowKey) { retval = lerp (kTransparentBlack, Fgnd, Fgnd.a); }
       else {
          a_1 = Amount > 0.5 ? 1.0 - (sin (Amount * PI) / 2.0) : sin (Amount * PI) / 2.0;
 
