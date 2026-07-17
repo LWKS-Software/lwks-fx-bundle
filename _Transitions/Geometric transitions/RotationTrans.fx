@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-13
+// @Released 2026-07-17
 // @Author jwrl
 // @Created 2018-06-12
 
@@ -36,7 +36,7 @@
 //
 // Version history:
 //
-// Updated 2026-07-13 jwrl.
+// Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2024-05-24 jwrl.
@@ -185,7 +185,7 @@ DeclareEntryPoint (RotationTrans_V)
    float amount = Amount;
 
    if (Blended) {
-      if (ShowKey) return lerp (_TransparentBlack, Fgnd, Fgnd.a);
+      if (ShowKey) return Fgnd;
 
       amount /= 2.0;
       if (SwapDir) amount += 0.5;
@@ -252,7 +252,7 @@ DeclareEntryPoint (RotationTrans_H)
    float amount = Amount;
 
    if (Blended) {
-      if (ShowKey) return lerp (_TransparentBlack, Fgnd, Fgnd.a);
+      if (ShowKey) return Fgnd;
 
       amount /= 2.0;
       if (SwapDir) amount += 0.5;
