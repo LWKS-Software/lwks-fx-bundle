@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-13
+// @Released 2026-07-17
 // @Author khaver
 // @Author jwrl
 // @Created 2016-01-22
@@ -37,7 +37,7 @@
 //
 // Version history:
 //
-// Updated 2026-07-13 jwrl.
+// Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2024-05-24 jwrl.
@@ -70,7 +70,7 @@ DeclareInputs (Fg, Bg);
 
 DeclareFloatParamAnimated (Amount, "Amount",       kNoGroup,         kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareIntParam (SetTechnique,     "Mode",         "Tiles", 0, "Mosaic tiles|Coloured blocks|Break apart to tiles|Materialise from tiles");
+DeclareIntParam   (SetTechnique,   "Mode",         "Tiles", 0, "Mosaic tiles|Coloured blocks|Break apart to tiles|Materialise from tiles");
 DeclareFloatParam (TileSize,       "Size",         "Tiles",          kNoFlags, 0.5, 0.0, 1.0);
 DeclareFloatParam (Aspect,         "Aspect",       "Tiles",          kNoFlags, 1.0, 0.25, 4.0);
 
@@ -127,11 +127,11 @@ float4 fn_initFg (sampler F, float2 xy1, sampler B, float2 xy2)
    }
 
    if (Source == 0) { Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb)); }
-   else if (Source == 1) { Fgnd.a = pow (Fgnd.a, 0.375 + (KeyGain / 2.0)); }
 
-   if (Fgnd.a == 0.0) Fgnd.rgb = Fgnd.aaa;
+   // If alpha is zero we need any video to be blanked.  We do NOT need it to be
+   // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd;
+   return Fgnd.a == 0.0 ? _TransparentBlack : Fgnd;
 }
 
 float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
@@ -186,21 +186,20 @@ DeclareEntryPoint (Mosaics)
    float2 xy;
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         if (SwapDir) {
-            xy = (TileSize > 0.0) ? fn_block_gen (uv3, cos (Amount * HALF_PI)) : uv3;
-            Fgnd = ReadPixel (Fg_M, xy);
-            retval = lerp (Bgnd, Fgnd, Amount);
-         }
-         else {
-            xy = (TileSize > 0.0) ? fn_block_gen (uv3, sin (Amount * HALF_PI)) : uv3;
-            Fgnd = ReadPixel (Fg_M, xy);
-            retval = lerp (Bgnd, Fgnd, 1.0 - Amount);
-         }
+      if (ShowKey) return Fgnd;
 
-         retval.a = Fgnd.a;
+      if (SwapDir) {
+         xy = (TileSize > 0.0) ? fn_block_gen (uv3, cos (Amount * HALF_PI)) : uv3;
+         Fgnd = ReadPixel (Fg_M, xy);
+         retval = lerp (Bgnd, Fgnd, Amount);
       }
+      else {
+         xy = (TileSize > 0.0) ? fn_block_gen (uv3, sin (Amount * HALF_PI)) : uv3;
+         Fgnd = ReadPixel (Fg_M, xy);
+         retval = lerp (Bgnd, Fgnd, 1.0 - Amount);
+      }
+
+      retval = lerp (Bgnd, retval, Fgnd.a);
    }
    else {
       xy = uv3;
@@ -259,7 +258,7 @@ DeclareEntryPoint (Blocks)
    float alpha, amount;
 
    if (Blended) {
-      if (ShowKey) return lerp (_TransparentBlack, Fgnd, Fgnd.a);
+      if (ShowKey) return Fgnd;
 
       alpha = Fgnd.a;
       amount = SwapDir ? 1.0 - Amount : Amount;
@@ -347,6 +346,7 @@ DeclareEntryPoint (BreakTiles)
          uv.y += offset / _OutputAspectRatio;
 
          retval = ReadPixel (Tiles_B, uv);
+         retval = lerp (Bgnd, retval, retval.a);
       }
    }
    else {
@@ -411,6 +411,7 @@ DeclareEntryPoint (JoinTiles)
          uv.y += offset / _OutputAspectRatio;
 
          retval = ReadPixel (Tiles_J, uv);
+         retval = lerp (Bgnd, retval, retval.a);
       }
    }
    else {
