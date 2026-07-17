@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-09
+// @Released 2026-07-17
 // @Author jwrl
 // @Created 2017-01-03
 
@@ -45,7 +45,7 @@
 //
 // Version history:
 //
-// Updated 2026-07-09 jwrl.
+// Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2024-05-24 jwrl.
@@ -124,9 +124,7 @@ float4 fn_initFg (sampler F, float2 xy1, sampler B, float2 xy2)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   if (Fgnd.a == 0.0) Fgnd = _TransparentBlack;
-
-   return Fgnd;
+   return Fgnd.a == 0.0 ? _TransparentBlack : Fgnd;
 }
 
 float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
@@ -169,7 +167,7 @@ DeclareEntryPoint (NonAdd)
          Fgnd = lerp (_TransparentBlack, Fgnd, amount);
 
          retval = max (lerp (Bgnd, _TransparentBlack, amount), Fgnd);
-         retval.a = alpha;
+         retval = lerp (Bgnd, retval, alpha);
       }
    }
    else {
@@ -210,7 +208,7 @@ DeclareEntryPoint (NonAddUltra)
 
          Fgnd.a *= (1.0 - abs (amount - 0.5)) * 2.0;
          retval = max (lerp (Bgnd, _TransparentBlack, amount), lerp (_TransparentBlack, Fgnd, amount));
-         retval.a = alpha;
+         retval = lerp (Bgnd, retval, alpha);
       }
    }
    else {
@@ -248,12 +246,9 @@ DeclareEntryPoint (Trig)
    if (Blended) {
       if (ShowKey) { retval = Fgnd; }
       else {
-         float alpha  = Fgnd.a;
-
          if (!SwapDir) amount = 1.0 - amount;
 
-         retval = lerp (Bgnd, Fgnd, amount);
-         retval.a = alpha;
+         retval = lerp (Bgnd, Fgnd, Fgnd.a * amount);
       }
    }
    else retval = lerp (Fgnd, Bgnd, amount);
@@ -284,12 +279,9 @@ DeclareEntryPoint (Quad)
    if (Blended) {
       if (ShowKey) { retval = Fgnd; }
       else {
-         float alpha  = Fgnd.a;
-
          if (!SwapDir) amount = 1.0 - amount;
 
-         retval = lerp (Bgnd, Fgnd, amount);
-         retval.a = alpha;
+         retval = lerp (Bgnd, Fgnd, Fgnd.a * amount);
       }
    }
    else retval = lerp (Fgnd, Bgnd, amount);
