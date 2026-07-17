@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-15
+// @Released 2026-07-17
 // @Author jwrl
 // @Created 2017-08-25
 
@@ -42,7 +42,7 @@
 //
 // Version history:
 //
-// Updated 2026-07-15 jwrl.
+// Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-08-02 jwrl.
@@ -162,6 +162,7 @@ DeclareEntryPoint (BarndoorExpand_Eh)
 
          retval = (uv3.x > posAmt) ? tex2D (Fg_Eh, xy1)
                 : (uv3.x < negAmt) ? tex2D (Fg_Eh, xy2) : kTransparentBlack;
+         retval = lerp (Bgnd, retval, retval.a);
       }
    }
    else {
@@ -212,6 +213,7 @@ DeclareEntryPoint (BarndoorExpand_Ev)
 
          retval = (uv3.y > posAmt) ? tex2D (Fg_Ev, xy1)
                 : (uv3.y < negAmt) ? tex2D (Fg_Ev, xy2) : kTransparentBlack;
+         retval = lerp (Bgnd, retval, retval.a);
       }
    }
    else {
@@ -262,6 +264,7 @@ DeclareEntryPoint (BarndoorSqueeze_Sh)
 
          retval = (uv3.x > posAmt) ? tex2D (Fg_Sh, xy1)
                 : (uv3.x < negAmt) ? tex2D (Fg_Sh, xy2) : kTransparentBlack;
+         retval = lerp (Bgnd, retval, retval.a);
       }
    }
    else {
@@ -314,6 +317,7 @@ DeclareEntryPoint (BarndoorSqueeze_Sv)
 
          retval = (uv3.y > posAmt) ? tex2D (Fg_Sv, xy1)
                 : (uv3.y < negAmt) ? tex2D (Fg_Sv, xy2) : kTransparentBlack;
+         retval = lerp (Bgnd, retval, retval.a);
       }
    }
    else {
