@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-09
+// @Released 2026-07-17
 // @Author jwrl
 // @Created 2022-06-01
 
@@ -20,7 +20,7 @@
    [*]Posterize preprocess
       [*]Poster depth:  Sets the number of posterization steps to use when generating
          the flat colours.
-      [*]Preblur:  Blurs the image befoe generating the flat colours.
+      [*]Preblur:  Blurs the image before generating the flat colours.
       [*]Saturation:  Adjusts the image saturation before posterizing.
       [*]Gamma:  Adjusts the image gamma before posterizing.
    [*]Posterize postprocess
@@ -51,7 +51,7 @@
 //
 // Version history:
 //
-// Updated 2026-07-09 jwrl.
+// Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-08-02 jwrl.
@@ -255,9 +255,7 @@ DeclarePass (Fgd)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   if (Fgnd.a == 0.0) Fgnd = kTransparentBlack;
-
-   return Fgnd;
+   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
 }
 
 DeclarePass (Bgd)
@@ -387,9 +385,11 @@ DeclareEntryPoint (ToonTrans)
             retval = lerp (Fgnd, retval, saturate (Amount * 2.0));
             retval = lerp (retval, Bgnd, saturate ((Amount - 0.5) * 2.0));
          }
+
+         retval = lerp (Bgnd, retval, Fgnd.a);
       }
    }
-   else retval = fn_technique (Mixed, ToonSub, uv3, Amount) * Fgnd.a;
+   else retval = lerp (Fgnd, fn_technique (Mixed, ToonSub, uv3, Amount), Fgnd.a);
 
    return retval;
 }
