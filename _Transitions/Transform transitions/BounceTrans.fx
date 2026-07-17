@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-15
+// @Released 2026-07-17
 // @Author jwrl
 // @Created 2022-07-30
 
@@ -53,7 +53,7 @@
 //
 // Version history:
 //
-// Updated 2026-07-15 jwrl.
+// Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-08-02 jwrl.
@@ -213,6 +213,7 @@ DeclareEntryPoint (Bounce)
          xy /= scale;
          xy += cL;
          retval = tex2D (Fgd, xy);
+         retval = lerp (Bgnd, retval, retval.a);
       }
    }
    else {
