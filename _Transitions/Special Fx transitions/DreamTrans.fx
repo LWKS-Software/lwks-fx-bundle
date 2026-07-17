@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-14
+// @Released 2026-07-17
 // @Author jwrl
 // @Created 2018-11-10
 
@@ -44,7 +44,7 @@
 //
 // Version history:
 //
-// Updated 2026-07-14 jwrl.
+// Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-08-02 jwrl.
@@ -325,6 +325,7 @@ DeclareEntryPoint (Dream_Dx)
 
          retval = SwapDir ? lerp (tex2D (BlurY, uv3), retval, 1.0 - Amount)
                           : lerp (tex2D (BlurY, uv3), retval, Amount);
+         retval = lerp (Bgnd, retval, retval.a);
       }
    }
    else retval = (blur > 0.0) ? fn_blur_sub (BlurY, uv3, offset) : tex2D (BlurY, uv3);
