@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-15
+// @Released 2026-07-17
 // @Author jwrl
 // @Created 2016-05-10
 
@@ -35,7 +35,7 @@
 //
 // Version history:
 //
-// Updated 2026-07-15 jwrl.
+// Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-08-02 jwrl.
@@ -162,7 +162,7 @@ DeclareEntryPoint (Stretch_H)
 
          Fgnd = tex2D (Fg_H, xy);
          retval = lerp (Bgnd, Fgnd, 1.0 - dissAmt);
-         retval.a = Fgnd.a;
+         retval = lerp (Bgnd, retval, Fgnd.a);
       }
    }
    else {
@@ -217,7 +217,7 @@ DeclareEntryPoint (Stretch_V)
 
          Fgnd = tex2D (Fg_V, xy);
          retval = lerp (Bgnd, Fgnd, 1.0 - dissAmt);
-         retval.a = Fgnd.a;
+         retval = lerp (Bgnd, retval, Fgnd.a);
       }
    }
    else {
