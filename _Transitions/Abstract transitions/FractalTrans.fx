@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-09
+// @Released 2026-07-17
 // @Author Robert Schütze
 // @Author jwrl
 // @Created 2016-05-21
@@ -43,7 +43,7 @@
 //
 // Version history:
 //
-// Updated 2026-07-09 jwrl.
+// Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-08-02 jwrl.
@@ -138,9 +138,7 @@ DeclarePass (Fgd)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   if (Fgnd.a == 0.0) Fgnd = kTransparentBlack;
-
-   return Fgnd;
+   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
 }
 
 DeclarePass (Bgd)
@@ -171,11 +169,12 @@ DeclareEntryPoint (FractalTrans)
    float4 retval = tex2D (Fractal, uv3);
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
+      if (ShowKey) { retval = Fgnd; }     // Fgnd is already alpha masked in the Fgd pass.
       else {
          float amount = SwapDir ? 1.0 - Amount : Amount;
 
          retval = fn_technique (Fgnd, Bgnd, retval, amount);
+         retval = lerp (Bgnd, retval, Fgnd.a);
       }
    }
    else retval = fn_technique (Fgnd, Bgnd, retval, Amount);
