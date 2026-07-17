@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-09
+// @Released 2026-07-17
 // @Author jwrl
 // @Created 2016-07-30
 
@@ -32,7 +32,7 @@
 //
 // Version history:
 //
-// Updated 2026-07-09 jwrl.
+// Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2024-05-24 jwrl.
@@ -108,9 +108,7 @@ DeclarePass (Fgd)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   if (Fgnd.a == 0.0) Fgnd = _TransparentBlack;
-
-   return Fgnd;
+   return Fgnd.a == 0.0 ? _TransparentBlack : Fgnd;
 }
 
 DeclarePass (Bgd)
@@ -135,7 +133,7 @@ DeclareEntryPoint (OpticalDissolve)
 
          retval = lerp (_TransparentBlack, Bgnd, pow (amount, 2.0));
          retval += lerp (Fgnd, _TransparentBlack, amount);
-         retval.a = Fgnd.a;
+         retval = lerp (Bgnd, retval, Fgnd.a);
       }
    }
    else {
