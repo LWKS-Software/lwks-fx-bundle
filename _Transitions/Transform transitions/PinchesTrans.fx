@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-15
+// @Released 2026-07-17
 // @Author jwrl
 // @Created 2017-09-08
 
@@ -45,7 +45,7 @@
 //
 // Version history:
 //
-// Updated 2026-07-15 jwrl.
+// Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2023-08-02 jwrl.
@@ -180,6 +180,7 @@ DeclareEntryPoint (Pinch_L)
          xy = (xy * scale) + MID_PT;
 
          retval = ReadPixel (Fg_L, xy);
+         retval = lerp (Bgnd, retval, retval.a);
       }
    }
    else {
@@ -245,6 +246,7 @@ DeclareEntryPoint (PinchTrans_R)
          xy = ((uv3 - MID_PT) * scale * scale) + MID_PT;
 
          retval = ReadPixel (Fg_R, xy);
+         retval = lerp (Bgnd, retval, retval.a);
       }
    }
    else {
@@ -303,7 +305,7 @@ DeclareEntryPoint (xPinch_Fx_I)
    float progress, scale;
 
    if (Blended) {
-      if (ShowKey) { Bgnd = kTransparentBlack; }
+      if (ShowKey) { retval = Fgnd; }
       else {
          if (SwapDir) { progress = 1.0 - cos (sin ((1.0 - Amount) * QUARTER_PI)); }
          else progress = 1.0 - cos (sin (Amount * QUARTER_PI));
@@ -312,6 +314,7 @@ DeclareEntryPoint (xPinch_Fx_I)
          xy = ((uv3 - MID_PT) * scale) + MID_PT;
 
          retval = ReadPixel (Pinch, xy);
+         retval = lerp (Bgnd, retval, retval.a);
       }
    }
    else {
@@ -325,7 +328,8 @@ DeclareEntryPoint (xPinch_Fx_I)
       xy = ((uv3 - MID_PT) * scale) + MID_PT;
 
       retval = ReadPixel (Pinch, xy);
+      retval = lerp (Bgnd, retval, retval.a);
    }
 
-   return lerp (Bgnd, retval, retval.a);
+   return retval;
 }
