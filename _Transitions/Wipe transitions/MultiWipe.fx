@@ -18,11 +18,12 @@
          transition.
       [*]Overlap:  This can be set to provide no overlap, or an overlap up to 75%
          of each individual wipe duration.
+   [*]Unblended mode
       [*]Build direction:  Sets the order in which the wipes are built.
-      [*]Transition direction:   Sets whether the transition wipes the incoming
-         video in or the outgoing video out.
+      [*]Transition sense:   Sets whether the transition wipes the incoming video
+         in or the outgoing video out.
    [*]Enable blend transitions:  Changes the mode from opaque video to transparent
-      video such as titles and the like.
+      media such as titles and the like.
    [*]Blend settings
       [*]Source:  Selects between an extracted video source and transparent video.
       [*]Transition into blend:  Selects between transitioning into or out of a
@@ -60,6 +61,9 @@
 //
 // Version history:
 //
+// Updated 2026-07-24 jwrl.
+// Fixed delta key bug.
+//
 // Updated 2026-07-16 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
 //
@@ -89,8 +93,9 @@ DeclareFloatParam (CentreY,        "Centre",           "Set up",         "Specif
 DeclareIntParam   (WipeShape,      "Wipe shape",       "Set up", 0,      "Circle|Square");
 DeclareIntParam   (SetTechnique,   "Number of shapes", "Set up", 2,      "One|Two|Three|Four|Five");
 DeclareFloatParam (Overlap,        "Overlap",          "Set up",         "DisplayAsPercentage", 0.0, 0.0, 0.75);
-DeclareIntParam   (BuildDirection, "Build direction",  "Set up",         0, "Forward|Reverse");
-DeclareIntParam   (TransDirection, "Transition direction", "Set up",     0, "Incoming|Outgoing");
+
+DeclareIntParam   (BuildDirection, "Build direction",  "Unblended mode", 0, "Forward|Reverse");
+DeclareIntParam   (TransDirection, "Transition sense", "Unblended mode", 0, "Incoming|Outgoing");
 
 DeclareBoolParam  (Blended,        "Enable blend transitions",           kNoGroup, false);
 
@@ -179,15 +184,21 @@ float4 initBg (sampler Ff, float2 xy1, sampler Bb, float2 xy2)
 
 float4 initKey (sampler Ff, sampler Bb, float2 xy)
 {
-   float4 retval = tex2D (Ff, xy);
+   float4 Fgnd = tex2D (Ff, xy);
 
-   if (Blended && (Source < 2)) {
-      if (Source == 1) { retval.a = pow (retval.a, 0.375 + (KeyGain / 2.0)); }
+   if (Blended) {
+      if (Source == 0) {
+         Fgnd.a = smoothstep (0.0, KeyGain, distance (tex2D (Bb, xy).rgb, Fgnd.rgb));
+      }
 
-      if (retval.a == 0.0) retval = _TransparentBlack;
+      // If alpha is zero we need any video to be blanked.  We do NOT need it to be
+      // multiplied, so this is the simplest way to fix things.
+
+      if (Fgnd.a == 0.0) Fgnd = _TransparentBlack;
    }
+   else Fgnd.a = 1.0;
 
-   return retval;
+   return Fgnd;
 }
 
 // The mask value is calculated by this function, as are the X-Y coordinates to be used
