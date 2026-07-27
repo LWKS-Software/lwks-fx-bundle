@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-17
+// @Released 2026-07-27
 // @Author jwrl
 // @Created 2022-06-01
 
@@ -50,6 +50,9 @@
 // Lightworks user effect ToonTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-27 jwrl.
+// Added checkerboard alpha display to show key.
 //
 // Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
@@ -113,6 +116,8 @@ DeclareFloatParam (_OutputHeight);
 #ifdef WINDOWS
 #define PROFILE ps_3_0
 #endif
+
+#define _TransparentBlack 0.0.xxxx
 
 #define ONE_THIRD  0.3333333333
 #define PI         3.1415926536
@@ -231,6 +236,21 @@ float4 fn_technique (sampler M, sampler T, float2 uv, float amount)
    return retval;
 }
 
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
+}
+
 //-----------------------------------------------------------------------------------------//
 // Shaders
 //-----------------------------------------------------------------------------------------//
@@ -255,7 +275,7 @@ DeclarePass (Fgd)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
+   return Fgnd.a == 0.0 ? _TransparentBlack : Fgnd;
 }
 
 DeclarePass (Bgd)
@@ -373,21 +393,20 @@ DeclareEntryPoint (ToonTrans)
    float4 maskBg, retval;
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         retval = fn_technique (Mixed, ToonSub, uv3, 0.5);
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
-         if (SwapDir) {
-            retval = lerp (Bgnd, retval, saturate (Amount * 2.0));
-            retval = lerp (retval, Fgnd, saturate ((Amount - 0.5) * 2.0));
-         }
-         else {
-            retval = lerp (Fgnd, retval, saturate (Amount * 2.0));
-            retval = lerp (retval, Bgnd, saturate ((Amount - 0.5) * 2.0));
-         }
+      retval = fn_technique (Mixed, ToonSub, uv3, 0.5);
 
-         retval = lerp (Bgnd, retval, Fgnd.a);
+      if (SwapDir) {
+         retval = lerp (Bgnd, retval, saturate (Amount * 2.0));
+         retval = lerp (retval, Fgnd, saturate ((Amount - 0.5) * 2.0));
       }
+      else {
+         retval = lerp (Fgnd, retval, saturate (Amount * 2.0));
+         retval = lerp (retval, Bgnd, saturate ((Amount - 0.5) * 2.0));
+      }
+
+      retval = lerp (Bgnd, retval, Fgnd.a);
    }
    else retval = lerp (Fgnd, fn_technique (Mixed, ToonSub, uv3, Amount), Fgnd.a);
 
