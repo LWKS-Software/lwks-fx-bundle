@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-10
+// @Released 2026-07-27
 // @Author jwrl
 // @Created 2021-06-20
 
@@ -34,6 +34,9 @@
 // Lightworks user effect DirectionalBlurTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-27 jwrl.
+// Added checkerboard alpha display to show key.
 //
 // Updated 2026-07-10 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
@@ -78,6 +81,9 @@ DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
 DeclareFloatParam (_OutputAspectRatio);
 
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
+
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
@@ -86,12 +92,29 @@ DeclareFloatParam (_OutputAspectRatio);
 #define PROFILE ps_3_0
 #endif
 
+#define _TransparentBlack 0.0.xxxx
+
 #define PI      3.1415926536
 #define HALF_PI 1.5707963268
 
 //-----------------------------------------------------------------------------------------//
 // Functions
 //-----------------------------------------------------------------------------------------//
+
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
+}
 
 float4 fn_transition (sampler vid, float2 uv, float2 blur)
 {
@@ -141,7 +164,7 @@ DeclarePass (Fgd)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   if (Fgnd.a == 0.0) Fgnd = kTransparentBlack;
+   if (Fgnd.a == 0.0) Fgnd = _TransparentBlack;
 
    return Fgnd;
 }
@@ -182,18 +205,18 @@ DeclareEntryPoint (DirectionalBlurTrans)
    sincos (radians (-Angle), blur.y, blur.x);
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         float amt = Amount + Amount;
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
-         if (!SwapDir) {
-            retval = fn_transition (Mixed, uv3, blur * saturate (Amount));
-            amt = 2.0 - amt;
-         }
-         else retval = fn_transition (Mixed, uv3, blur * (1.0 - saturate (Amount)));
+      float amt = Amount + Amount;
 
-         retval.a *= sin (saturate (amt) * HALF_PI);
+       if (!SwapDir) {
+         retval = fn_transition (Mixed, uv3, blur * saturate (Amount));
+         amt = 2.0 - amt;
       }
+      else retval = fn_transition (Mixed, uv3, blur * (1.0 - saturate (Amount)));
+
+      retval.a *= sin (saturate (amt) * HALF_PI);
+      retval = lerp (Bgnd, retval, retval.a);
    }
    else retval = fn_transition (Mixed, uv3, blur * sin (saturate (Amount) * PI));
 
