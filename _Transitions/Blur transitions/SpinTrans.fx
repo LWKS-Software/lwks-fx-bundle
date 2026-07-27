@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-17
+// @Released 2026-07-27
 // @Author rakusan
 // @Author jwrl
 // @Created 2016-02-15
@@ -41,6 +41,9 @@
 // Lightworks user effect SpinTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-27 jwrl.
+// Added checkerboard alpha display to show key.
 //
 // Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
@@ -89,6 +92,9 @@ DeclareBoolParam  (SwapSource,     "Swap sources",   "Blend settings", false);
 DeclareFloatParam (_OutputAspectRatio);
 DeclareFloatParam (_LengthFrames);
 
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
+
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
@@ -96,6 +102,8 @@ DeclareFloatParam (_LengthFrames);
 #ifdef WINDOWS
 #define PROFILE ps_3_0
 #endif
+
+#define _TransparentBlack 0.0.xxxx
 
 #define RANGE_1    24
 #define RANGE_2    48
@@ -110,6 +118,21 @@ DeclareFloatParam (_LengthFrames);
 //-----------------------------------------------------------------------------------------//
 // Functions
 //-----------------------------------------------------------------------------------------//
+
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
+}
 
 float4 fn_FgBlur (sampler F, float2 uv, int base)
 {
@@ -197,7 +220,7 @@ DeclarePass (Fgd)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
+   return Fgnd.a == 0.0 ? _TransparentBlack : Fgnd;
 }
 
 DeclarePass (Bgd)
@@ -250,14 +273,13 @@ DeclareEntryPoint (SpinTrans)
    Fg_vid += tex2D (Rot_3, uv3) + tex2D (Rot_4, uv3);
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         float amount = SwapDir ? Amount * _LengthFrames / (_LengthFrames - 1.0) : 1.0 - Amount;
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
-         Fg_vid *= 1.4585;
-         retval = lerp (Fgnd, Fg_vid, saturate ((1.0 - amount) * 8.0));
-         retval = lerp (Bgnd, retval, retval.a * amount);
-      }
+      float amount = SwapDir ? Amount * _LengthFrames / (_LengthFrames - 1.0) : 1.0 - Amount;
+
+      Fg_vid *= 1.4585;
+      retval = lerp (Fgnd, Fg_vid, saturate ((1.0 - amount) * 8.0));
+      retval = lerp (Bgnd, retval, retval.a * amount);
    }
    else {
       retval  = tex2D (Bblur, uv3);
