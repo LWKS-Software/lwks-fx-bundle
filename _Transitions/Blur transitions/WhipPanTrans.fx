@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-17
+// @Released 2026-07-27
 // @Author jwrl
 // @Created 2020-07-19
 
@@ -35,6 +35,9 @@
 // Lightworks user effect WhipPanTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-27 jwrl.
+// Added checkerboard alpha display to show key.
 //
 // Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
@@ -79,6 +82,8 @@ DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend sett
 DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
 DeclareFloatParam (_OutputAspectRatio);
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -87,6 +92,8 @@ DeclareFloatParam (_OutputAspectRatio);
 #ifdef WINDOWS
 #define PROFILE ps_3_0
 #endif
+
+#define _TransparentBlack 0.0.xxxx
 
 #define HALF_PI 1.5707963268
 
@@ -103,6 +110,21 @@ float4 MirrorPixel (sampler S, float2 xy)
    float2 xy1 = 1.0.xx - abs (2.0 * (frac (xy / 2.0) - 0.5.xx));
 
    return ReadPixel (S, xy1);
+}
+
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
 }
 
 float4 fn_transition (sampler vid, float2 uv, float amt)
@@ -155,7 +177,7 @@ DeclarePass (Fgd)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
+   return Fgnd.a == 0.0 ? _TransparentBlack : Fgnd;
 }
 
 DeclarePass (Bgd)
@@ -176,33 +198,14 @@ DeclareEntryPoint (WhipPanTrans)
    float amount = saturate (Amount);   // Just in case someone types in silly numbers
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         amount = SwapDir ? cos ((amount + 2.0) * HALF_PI) : sin (amount * HALF_PI);
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
-         float2 offs = _ang [Mode] * amount / 2.0;
-         float2 blur = offs * Spread;
-         float2 xy = uv3 + blur;
+      if (SwapDir) amount -= 1.0;
 
-         offs = abs (offs) * Offset;
+      float fadeAmt = pow (1.0 - abs (amount), 2.0);
 
-         if (Mode < 2) offs = -offs;
-
-         retval = ReadPixel (Fgd, uv3);
-
-         if (Spread > 0.0) {
-            blur *= 0.01;
-
-            for (int i = 0; i < 60; i++) {
-               xy += blur;
-               retval += ReadPixel (Fgd, (xy + offs));
-            }
-    
-            retval /= 61;
-         }
-
-         retval = lerp (Bgnd, retval, retval.a);
-      }
+      retval = fn_transition (Fgd, uv3, amount);
+      retval = lerp (Bgnd, retval, retval.a * fadeAmt);
    }
    else {
       amount *= 2.0;
