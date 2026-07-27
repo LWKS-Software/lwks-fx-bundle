@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-17
+// @Released 2026-07-27
 // @Author jwrl
 // @Created 2017-01-03
 
@@ -45,6 +45,9 @@
 //
 // Version history:
 //
+// Updated 2026-07-27 jwrl.
+// Added checkerboard alpha display to show key.
+//
 // Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
 //
@@ -87,6 +90,9 @@ DeclareFloatParam (KeyGain,        "Fine tune",             "Blend settings", kN
 DeclareBoolParam  (ShowKey,        "Show foreground key",   "Blend settings", false);
 DeclareBoolParam  (SwapSource,     "Swap sources",          "Blend settings", false);
 
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
+
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
@@ -95,10 +101,10 @@ DeclareBoolParam  (SwapSource,     "Swap sources",          "Blend settings", fa
 #define PROFILE ps_3_0
 #endif
 
+#define _TransparentBlack 0.0.xxxx
+
 #define PI      3.1415926536
 #define HALF_PI 1.5707963268
-
-float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
 // Functions
@@ -136,8 +142,23 @@ float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
    return Bgnd;
 }
 
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
+}
+
 //-----------------------------------------------------------------------------------------//
-// Shadows
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 // Non-add
@@ -157,18 +178,17 @@ DeclareEntryPoint (NonAdd)
    float amount;
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         float alpha = Fgnd.a;
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
-         amount = SwapDir ? Amount : 1.0 - Amount;
+      float alpha = Fgnd.a;
 
-         Fgnd.a *= (1.0 - abs (Amount - 0.5)) * 2.0;
-         Fgnd = lerp (_TransparentBlack, Fgnd, amount);
+      amount = SwapDir ? Amount : 1.0 - Amount;
 
-         retval = max (lerp (Bgnd, _TransparentBlack, amount), Fgnd);
-         retval = lerp (Bgnd, retval, alpha);
-      }
+      Fgnd.a *= (1.0 - abs (Amount - 0.5)) * 2.0;
+      Fgnd = lerp (_TransparentBlack, Fgnd, amount);
+
+      retval = max (lerp (Bgnd, _TransparentBlack, amount), Fgnd);
+      retval = lerp (Bgnd, retval, alpha);
    }
    else {
       amount = (1.0 - abs (Amount - 0.5)) * 2.0;
@@ -200,16 +220,15 @@ DeclareEntryPoint (NonAddUltra)
    float amount;
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         float alpha  = Fgnd.a;
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
-         amount = SwapDir ? Amount : 1.0 - Amount;
+      float alpha  = Fgnd.a;
 
-         Fgnd.a *= (1.0 - abs (amount - 0.5)) * 2.0;
-         retval = max (lerp (Bgnd, _TransparentBlack, amount), lerp (_TransparentBlack, Fgnd, amount));
-         retval = lerp (Bgnd, retval, alpha);
-      }
+      amount = SwapDir ? Amount : 1.0 - Amount;
+
+      Fgnd.a *= (1.0 - abs (amount - 0.5)) * 2.0;
+      retval = max (lerp (Bgnd, _TransparentBlack, amount), lerp (_TransparentBlack, Fgnd, amount));
+      retval = lerp (Bgnd, retval, alpha);
    }
    else {
       amount = (1.0 - abs (Amount - 0.5)) * 2.0;
@@ -244,12 +263,11 @@ DeclareEntryPoint (Trig)
    amount = lerp (Amount, 1.0 - amount, curve);
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         if (!SwapDir) amount = 1.0 - amount;
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
-         retval = lerp (Bgnd, Fgnd, Fgnd.a * amount);
-      }
+      if (!SwapDir) amount = 1.0 - amount;
+
+      retval = lerp (Bgnd, Fgnd, Fgnd.a * amount);
    }
    else retval = lerp (Fgnd, Bgnd, amount);
 
@@ -277,12 +295,11 @@ DeclareEntryPoint (Quad)
    amount = lerp (Amount, amount, Strength + 1.0);
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         if (!SwapDir) amount = 1.0 - amount;
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
-         retval = lerp (Bgnd, Fgnd, Fgnd.a * amount);
-      }
+      if (!SwapDir) amount = 1.0 - amount;
+
+      retval = lerp (Bgnd, Fgnd, Fgnd.a * amount);
    }
    else retval = lerp (Fgnd, Bgnd, amount);
 
