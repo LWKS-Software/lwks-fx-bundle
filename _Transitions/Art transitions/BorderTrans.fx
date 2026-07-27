@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-09
+// @Released 2026-07-27
 // @Author jwrl
 // @Created 2018-06-11
 
@@ -41,11 +41,14 @@
 //
 // Version history:
 //
+// Updated 2026-07-27 jwrl.
+// Added checkerboard alpha display to show key.
+//
 // Updated 2026-07-09 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2024-05-24 jwrl.
-// Replaced kTransparentBlack with float4 _TransparentBlack to fix Linux lerp()/mix() bug.
+// Replaced _TransparentBlack with float4 _TransparentBlack to fix Linux lerp()/mix() bug.
 //
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
@@ -74,22 +77,25 @@ DeclareInputs (Fg, Bg);
 
 DeclareFloatParamAnimated (Amount, "Amount",       kNoGroup,         kNoFlags, 0.5, 0.0, 1.0);
 
-DeclareFloatParam (Radius,         "Width",       "Borders",         kNoFlags, 0.3, 0.0, 1.0);
-DeclareFloatParam (Displace,       "Offset",      "Borders",         kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam  (Radius,        "Width",       "Borders",         kNoFlags, 0.3, 0.0, 1.0);
+DeclareFloatParam  (Displace,      "Offset",      "Borders",         kNoFlags, 0.5, 0.0, 1.0);
 
 DeclareColourParam (Colour_1,      "Outline 1",    "Colours",        kNoFlags, 0.6, 0.9, 1.0, 1.0);
 DeclareColourParam (Colour_2,      "Outline 2",    "Colours",        kNoFlags, 0.3, 0.6, 1.0, 1.0);
 DeclareColourParam (Colour_3,      "Outline 3",    "Colours",        kNoFlags, 0.9, 0.6, 1.0, 1.0);
 DeclareColourParam (Colour_4,      "Outline 4",    "Colours",        kNoFlags, 0.6, 0.3, 1.0, 1.0);
 
-DeclareIntParam   (Source,         "Source",       "Blend settings", 0, "Extracted foreground|Image key or title (disconnect input)");
-DeclareBoolParam  (SwapDir,        "Transition into blend",          "Blend settings", true);
-DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
-DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend settings", false);
-DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
+DeclareIntParam    (Source,        "Source",       "Blend settings", 0, "Extracted foreground|Image key or title (disconnect input)");
+DeclareBoolParam   (SwapDir,       "Transition into blend",          "Blend settings", true);
+DeclareFloatParam  (KeyGain,       "Fine tune",    "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
+DeclareBoolParam   (ShowKey,       "Show foreground key",            "Blend settings", false);
+DeclareBoolParam   (SwapSource,    "Swap sources", "Blend settings", false);
 
-DeclareFloatParam (_OutputAspectRatio);
-DeclareFloatParam (_Progress);
+DeclareFloatParam  (_Progress);
+
+DeclareFloatParam  (_OutputAspectRatio);
+DeclareFloatParam  (_OutputWidth);
+DeclareFloatParam  (_OutputHeight);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -98,6 +104,8 @@ DeclareFloatParam (_Progress);
 #ifdef WINDOWS
 #define PROFILE ps_3_0
 #endif
+
+#define _TransparentBlack 0.0.xxxx
 
 #define NotEqual(XY_1,XY_2) (any ((XY_1 - XY_2) != 0.0))
 
@@ -111,7 +119,24 @@ DeclareFloatParam (_Progress);
 
 #define HALF_PI  1.5707963268
 
-float4 _TransparentBlack = 0.0.xxxx;
+//-----------------------------------------------------------------------------------------//
+// Functions
+//-----------------------------------------------------------------------------------------//
+
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
+}
 
 //-----------------------------------------------------------------------------------------//
 // Shaders
@@ -135,7 +160,7 @@ DeclarePass (Fgd)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   if (Fgnd.a == 0.0) Fgnd = kTransparentBlack;
+   if (Fgnd.a == 0.0) Fgnd = _TransparentBlack;
 
    return Fgnd;
 }
@@ -147,7 +172,7 @@ DeclarePass (Super)
 {
    float4 retval = ReadPixel (Fgd, uv3);
 
-   if (ShowKey) return lerp (_TransparentBlack, retval, retval.a);
+   if (ShowKey) return ShowAlpha (retval, uv3);
 
    float2 radius = float2 (1.0, _OutputAspectRatio) * 0.00125;
    float2 xy1, xy2;
