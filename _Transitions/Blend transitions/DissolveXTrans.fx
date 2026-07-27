@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-09
+// @Released 2026-07-27
 // @Author khaver
 // @Author jwrl
 // @Created 2023-03-07
@@ -50,6 +50,9 @@
 //
 // Version history:
 //
+// Updated 2026-07-27 jwrl.
+// Added checkerboard alpha display to show key.
+//
 // Updated 2026-07-09 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
 //
@@ -92,6 +95,9 @@ DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings", kNoFlags, 0
 DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend settings", false);
 DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
+
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
@@ -99,6 +105,8 @@ DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 #ifdef WINDOWS
 #define PROFILE ps_3_0
 #endif
+
+#define _TransparentBlack 0.0.xxxx
 
 #define CrR     0.439
 #define CrG     0.368
@@ -116,8 +124,6 @@ DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 #define WHITE   (1.0).xxxx
 
 #define LUMA    float4(0.2989, 0.5866, 0.1145, 0.0)
-
-float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
 // Functions
@@ -164,6 +170,21 @@ float4 fn_hsv2rgb (float4 hsv)
    return float4 (hsv.z, p, q, hsv.w);
 }
 
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
+}
+
 float2 fn_init (sampler F, float2 xy1, out float4 Fgnd, sampler B, float2 xy2, out float4 Bgnd)
 {
    float2 retval;
@@ -188,18 +209,14 @@ float2 fn_init (sampler F, float2 xy1, out float4 Fgnd, sampler B, float2 xy2, o
          Fgnd = temp;
       }
 
-   if (Source == 0) Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb));
+      if (Source == 0) Fgnd.a = smoothstep (0.0, KeyGain, distance (Bgnd.rgb, Fgnd.rgb));
 
-   // If alpha is zero we need any video to be blanked.  We do NOT need it to be
-   // multiplied, so this is the simplest way to fix things.
+      // If alpha is zero we need any video to be blanked.  We do NOT need it to be
+      // multiplied, so this is the simplest way to fix things.
 
-   if (Fgnd.a == 0.0) Fgnd = _TransparentBlack;
+      if (Fgnd.a == 0.0) Fgnd = _TransparentBlack;
 
-      if (ShowKey) {
-         Bgnd = _TransparentBlack;
-         Fgnd = lerp (Bgnd, Fgnd, Fgnd.a);
-         retval = -1.0.xx;
-      }
+      if (ShowKey) { retval = -1.0.xx; }
    }
 
    return retval;
@@ -215,9 +232,9 @@ DeclareEntryPoint (Normal)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) Fgnd = lerp (Bgnd, Fgnd, Fgnd.a * (amount.x + amount.y) / 2.0);
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-   return Fgnd;
+   return lerp (Bgnd, Fgnd, Fgnd.a * (amount.x + amount.y) / 2.0);
 }
 
 //--------------------------------------- GROUP 1 -----------------------------------------//
@@ -228,14 +245,13 @@ DeclareEntryPoint (Darken)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) {
-      float4 blnd = lerp (Bgnd, min (Fgnd, Bgnd), amount.x);
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-      blnd = lerp (blnd, Fgnd, amount.y);
-      Fgnd = lerp (Bgnd, blnd, Fgnd.a);
-   }
+   float4 blnd = lerp (Bgnd, min (Fgnd, Bgnd), amount.x);
 
-   return Fgnd;
+   blnd = lerp (blnd, Fgnd, amount.y);
+
+   return lerp (Bgnd, blnd, Fgnd.a);
 }
 
 DeclareEntryPoint (Multiply)
@@ -244,14 +260,13 @@ DeclareEntryPoint (Multiply)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) {
-      float4 blnd = lerp (Bgnd, Bgnd * Fgnd, amount.x);
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-      blnd = lerp (blnd, Fgnd, amount.y);
-      Fgnd = lerp (Bgnd, blnd, Fgnd.a);
-   }
+   float4 blnd = lerp (Bgnd, Bgnd * Fgnd, amount.x);
 
-   return Fgnd;
+   blnd = lerp (blnd, Fgnd, amount.y);
+
+   return lerp (Bgnd, blnd, Fgnd.a);
 }
 
 DeclareEntryPoint (ColourBurn)
@@ -260,20 +275,18 @@ DeclareEntryPoint (ColourBurn)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) {
-      float4 blnd = Fgnd;
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-      blnd.r = (Fgnd.r == 0.0) ? Fgnd.r : max (1.0 - ((1.0 - Bgnd.r) / Fgnd.r), 0.0);
-      blnd.g = (Fgnd.g == 0.0) ? Fgnd.g : max (1.0 - ((1.0 - Bgnd.g) / Fgnd.g), 0.0);
-      blnd.b = (Fgnd.b == 0.0) ? Fgnd.b : max (1.0 - ((1.0 - Bgnd.b) / Fgnd.b), 0.0);
+   float4 blnd = Fgnd;
 
-      blnd = lerp (Bgnd, min (blnd, WHITE), amount.x);
+   blnd.r = (Fgnd.r == 0.0) ? Fgnd.r : max (1.0 - ((1.0 - Bgnd.r) / Fgnd.r), 0.0);
+   blnd.g = (Fgnd.g == 0.0) ? Fgnd.g : max (1.0 - ((1.0 - Bgnd.g) / Fgnd.g), 0.0);
+   blnd.b = (Fgnd.b == 0.0) ? Fgnd.b : max (1.0 - ((1.0 - Bgnd.b) / Fgnd.b), 0.0);
 
-      blnd = lerp (blnd, Fgnd, amount.y);
-      Fgnd = lerp (Bgnd, blnd, Fgnd.a);
-   }
+   blnd = lerp (Bgnd, min (blnd, WHITE), amount.x);
+   blnd = lerp (blnd, Fgnd, amount.y);
 
-   return Fgnd;
+   return lerp (Bgnd, blnd, Fgnd.a);
 }
 
 DeclareEntryPoint (LinearBurn)
@@ -282,14 +295,13 @@ DeclareEntryPoint (LinearBurn)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) {
-      float4 blnd = lerp (Bgnd, max (Fgnd + Bgnd - WHITE, _TransparentBlack), amount.x);
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-      blnd = lerp (blnd, Fgnd, amount.y);
-      Fgnd = lerp (Bgnd, blnd, Fgnd.a);
-   }
+   float4 blnd = lerp (Bgnd, max (Fgnd + Bgnd - WHITE, _TransparentBlack), amount.x);
 
-   return Fgnd;
+   blnd = lerp (blnd, Fgnd, amount.y);
+
+   return lerp (Bgnd, blnd, Fgnd.a);
 }
 
 DeclareEntryPoint (DarkerColour)
@@ -298,18 +310,16 @@ DeclareEntryPoint (DarkerColour)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) {
-         float  luma = dot (Bgnd, LUMA);
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-      float4 blnd = (dot (Fgnd, LUMA) < luma) ? Fgnd : Bgnd;
+   float  luma = dot (Bgnd, LUMA);
 
-      blnd = lerp (Bgnd, blnd, amount.x);
+   float4 blnd = (dot (Fgnd, LUMA) < luma) ? Fgnd : Bgnd;
 
-      blnd = lerp (blnd, Fgnd, amount.y);
-      Fgnd = lerp (Bgnd, blnd, Fgnd.a);
-   }
+   blnd = lerp (Bgnd, blnd, amount.x);
+   blnd = lerp (blnd, Fgnd, amount.y);
 
-   return Fgnd;
+   return lerp (Bgnd, blnd, Fgnd.a);
 }
 
 //--------------------------------------- GROUP 2 -----------------------------------------//
@@ -320,14 +330,13 @@ DeclareEntryPoint (Lighten)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) {
-      float4 blnd = lerp (Bgnd, max (Fgnd, Bgnd), amount.x);
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-      blnd = lerp (blnd, Fgnd, amount.y);
-      Fgnd = lerp (Bgnd, blnd, Fgnd.a);
-   }
+   float4 blnd = lerp (Bgnd, max (Fgnd, Bgnd), amount.x);
 
-   return Fgnd;
+   blnd = lerp (blnd, Fgnd, amount.y);
+
+   return lerp (Bgnd, blnd, Fgnd.a);
 }
 
 DeclareEntryPoint (Screen)
@@ -336,14 +345,13 @@ DeclareEntryPoint (Screen)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) {
-      float4 blnd = lerp (Bgnd, saturate (Fgnd + Bgnd - (Fgnd * Bgnd)), amount.x);
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-      blnd = lerp (blnd, Fgnd, amount.y);
-      Fgnd = lerp (Bgnd, blnd, Fgnd.a);
-   }
+   float4 blnd = lerp (Bgnd, saturate (Fgnd + Bgnd - (Fgnd * Bgnd)), amount.x);
 
-   return Fgnd;
+   blnd = lerp (blnd, Fgnd, amount.y);
+
+   return lerp (Bgnd, blnd, Fgnd.a);
 }
 
 DeclareEntryPoint (ColourDodge)
@@ -352,20 +360,19 @@ DeclareEntryPoint (ColourDodge)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) {
-      float4 blnd = Fgnd;
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-      blnd.r = (Fgnd.r == 1.0) ? 1.0 : Bgnd.r / (1.0 - Fgnd.r);
-      blnd.g = (Fgnd.g == 1.0) ? 1.0 : Bgnd.g / (1.0 - Fgnd.g);
-      blnd.b = (Fgnd.b == 1.0) ? 1.0 : Bgnd.b / (1.0 - Fgnd.b);
+   float4 blnd = Fgnd;
 
-      blnd = lerp (Bgnd, min (blnd, WHITE), amount.x);
+   blnd.r = (Fgnd.r == 1.0) ? 1.0 : Bgnd.r / (1.0 - Fgnd.r);
+   blnd.g = (Fgnd.g == 1.0) ? 1.0 : Bgnd.g / (1.0 - Fgnd.g);
+   blnd.b = (Fgnd.b == 1.0) ? 1.0 : Bgnd.b / (1.0 - Fgnd.b);
 
-      blnd = lerp (blnd, Fgnd, amount.y);
-      Fgnd = lerp (Bgnd, blnd, Fgnd.a);
-   }
+   blnd = lerp (Bgnd, min (blnd, WHITE), amount.x);
 
-   return Fgnd;
+   blnd = lerp (blnd, Fgnd, amount.y);
+
+   return lerp (Bgnd, blnd, Fgnd.a);
 }
 
 DeclareEntryPoint (LinearDodge)
@@ -374,14 +381,13 @@ DeclareEntryPoint (LinearDodge)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) {
-      float4 blnd = lerp (Bgnd, min (Fgnd + Bgnd, WHITE), amount.x);
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-      blnd = lerp (blnd, Fgnd, amount.y);
-      Fgnd = lerp (Bgnd, blnd, Fgnd.a);
-   }
+   float4 blnd = lerp (Bgnd, min (Fgnd + Bgnd, WHITE), amount.x);
 
-   return Fgnd;
+   blnd = lerp (blnd, Fgnd, amount.y);
+
+   return lerp (Bgnd, blnd, Fgnd.a);
 }
 
 DeclareEntryPoint (LighterColour)
@@ -390,17 +396,16 @@ DeclareEntryPoint (LighterColour)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) {
-      float  luma = dot (Bgnd, LUMA);
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-      float4 blnd = (dot (Fgnd, LUMA) > luma) ? Fgnd : Bgnd;
+   float  luma = dot (Bgnd, LUMA);
 
-      blnd = lerp (Bgnd, blnd, amount.x);
-      blnd = lerp (blnd, Fgnd, amount.y);
-      Fgnd = lerp (Bgnd, blnd, Fgnd.a);
-   }
+   float4 blnd = (dot (Fgnd, LUMA) > luma) ? Fgnd : Bgnd;
 
-   return Fgnd;
+   blnd = lerp (Bgnd, blnd, amount.x);
+   blnd = lerp (blnd, Fgnd, amount.y);
+
+   return lerp (Bgnd, blnd, Fgnd.a);
 }
 
 //--------------------------------------- GROUP 3 -----------------------------------------//
@@ -411,22 +416,21 @@ DeclareEntryPoint (Overlay)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) {
-      float4 blnd = Fgnd;
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-      float3 retMin = 2.0 * Bgnd.rgb * Fgnd.rgb;
-      float3 retMax = 1.0.xxx - 2.0 * (1.0.xxx - Fgnd.rgb) * (1.0.xxx - Bgnd.rgb);
+   float4 blnd = Fgnd;
 
-      blnd.r = (Bgnd.r <= 0.5) ? retMin.r : retMax.r;
-      blnd.g = (Bgnd.g <= 0.5) ? retMin.g : retMax.g;
-      blnd.b = (Bgnd.b <= 0.5) ? retMin.b : retMax.b;
+   float3 retMin = 2.0 * Bgnd.rgb * Fgnd.rgb;
+   float3 retMax = 1.0.xxx - 2.0 * (1.0.xxx - Fgnd.rgb) * (1.0.xxx - Bgnd.rgb);
 
-      blnd = lerp (Bgnd, blnd, amount.x);
-      blnd = lerp (blnd, Fgnd, amount.y);
-      Fgnd = lerp (Bgnd, blnd, Fgnd.a);
-   }
+   blnd.r = (Bgnd.r <= 0.5) ? retMin.r : retMax.r;
+   blnd.g = (Bgnd.g <= 0.5) ? retMin.g : retMax.g;
+   blnd.b = (Bgnd.b <= 0.5) ? retMin.b : retMax.b;
 
-   return Fgnd;
+   blnd = lerp (Bgnd, blnd, amount.x);
+   blnd = lerp (blnd, Fgnd, amount.y);
+
+   return lerp (Bgnd, blnd, Fgnd.a);
 }
 
 DeclareEntryPoint (SoftLight)
@@ -435,25 +439,24 @@ DeclareEntryPoint (SoftLight)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) {
-      float4 blnd = Fgnd;
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-      float3 retMax = (2.0 * Fgnd.rgb) - 1.0.xxx;
-      float3 retMin = Bgnd.rgb * (retMax * (1.0.xxx - Bgnd.rgb) + 1.0.xxx);
+   float4 blnd = Fgnd;
 
-      retMax *= sqrt (Bgnd.rgb) - Bgnd.rgb;
-      retMax += Bgnd.rgb;
+   float3 retMax = (2.0 * Fgnd.rgb) - 1.0.xxx;
+   float3 retMin = Bgnd.rgb * (retMax * (1.0.xxx - Bgnd.rgb) + 1.0.xxx);
 
-      blnd.r = (Fgnd.r <= 0.5) ? retMin.r : retMax.r;
-      blnd.g = (Fgnd.g <= 0.5) ? retMin.g : retMax.g;
-      blnd.b = (Fgnd.b <= 0.5) ? retMin.b : retMax.b;
+   retMax *= sqrt (Bgnd.rgb) - Bgnd.rgb;
+   retMax += Bgnd.rgb;
 
-      blnd = lerp (Bgnd, saturate (blnd), amount.x);
-      blnd = lerp (blnd, Fgnd, amount.y);
-      Fgnd = lerp (Bgnd, blnd, Fgnd.a);
-   }
+   blnd.r = (Fgnd.r <= 0.5) ? retMin.r : retMax.r;
+   blnd.g = (Fgnd.g <= 0.5) ? retMin.g : retMax.g;
+   blnd.b = (Fgnd.b <= 0.5) ? retMin.b : retMax.b;
 
-   return Fgnd;
+   blnd = lerp (Bgnd, saturate (blnd), amount.x);
+   blnd = lerp (blnd, Fgnd, amount.y);
+
+   return lerp (Bgnd, blnd, Fgnd.a);
 }
 
 DeclareEntryPoint (HardLight)
@@ -462,22 +465,21 @@ DeclareEntryPoint (HardLight)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) {
-      float4 blnd = Fgnd;
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-      float3 retMin = saturate (2.0 * Bgnd.rgb * Fgnd.rgb);
-      float3 retMax = saturate (1.0.xxx - 2.0 * (1.0.xxx - Bgnd.rgb) * (1.0.xxx - Fgnd.rgb));
+   float4 blnd = Fgnd;
 
-      blnd.r = (Fgnd.r < 0.5) ? retMin.r : retMax.r;
-      blnd.g = (Fgnd.g < 0.5) ? retMin.g : retMax.g;
-      blnd.b = (Fgnd.b < 0.5) ? retMin.b : retMax.b;
+   float3 retMin = saturate (2.0 * Bgnd.rgb * Fgnd.rgb);
+   float3 retMax = saturate (1.0.xxx - 2.0 * (1.0.xxx - Bgnd.rgb) * (1.0.xxx - Fgnd.rgb));
 
-      blnd = lerp (Bgnd, blnd, amount.x);
-      blnd = lerp (blnd, Fgnd, amount.y);
-      Fgnd = lerp (Bgnd, blnd, Fgnd.a);
-   }
+   blnd.r = (Fgnd.r < 0.5) ? retMin.r : retMax.r;
+   blnd.g = (Fgnd.g < 0.5) ? retMin.g : retMax.g;
+   blnd.b = (Fgnd.b < 0.5) ? retMin.b : retMax.b;
 
-   return Fgnd;
+   blnd = lerp (Bgnd, blnd, amount.x);
+   blnd = lerp (blnd, Fgnd, amount.y);
+
+   return lerp (Bgnd, blnd, Fgnd.a);
 }
 
 DeclareEntryPoint (VividLight)
@@ -486,32 +488,31 @@ DeclareEntryPoint (VividLight)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) {
-      float4 blnd = Fgnd;
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-      float3 retMax, retMin;
+   float4 blnd = Fgnd;
 
-      retMin.r = (Fgnd.r == 0.0) ? 0.0 : max (1.0 - ((1.0 - Bgnd.r) / (2.0 * Fgnd.r)), 0.0);
-      retMin.g = (Fgnd.g == 0.0) ? 0.0 : max (1.0 - ((1.0 - Bgnd.g) / (2.0 * Fgnd.g)), 0.0);
-      retMin.b = (Fgnd.b == 0.0) ? 0.0 : max (1.0 - ((1.0 - Bgnd.b) / (2.0 * Fgnd.b)), 0.0);
+   float3 retMax, retMin;
 
-      retMax.r = (Fgnd.r == 1.0) ? 1.0 : Bgnd.r / (2.0 * (1.0 - Fgnd.r));
-      retMax.g = (Fgnd.g == 1.0) ? 1.0 : Bgnd.g / (2.0 * (1.0 - Fgnd.g));
-      retMax.b = (Fgnd.b == 1.0) ? 1.0 : Bgnd.b / (2.0 * (1.0 - Fgnd.b));
+   retMin.r = (Fgnd.r == 0.0) ? 0.0 : max (1.0 - ((1.0 - Bgnd.r) / (2.0 * Fgnd.r)), 0.0);
+   retMin.g = (Fgnd.g == 0.0) ? 0.0 : max (1.0 - ((1.0 - Bgnd.g) / (2.0 * Fgnd.g)), 0.0);
+   retMin.b = (Fgnd.b == 0.0) ? 0.0 : max (1.0 - ((1.0 - Bgnd.b) / (2.0 * Fgnd.b)), 0.0);
 
-      retMin = min (retMin, (1.0).xxx);
-      retMax = min (retMax, (1.0).xxx);
+   retMax.r = (Fgnd.r == 1.0) ? 1.0 : Bgnd.r / (2.0 * (1.0 - Fgnd.r));
+   retMax.g = (Fgnd.g == 1.0) ? 1.0 : Bgnd.g / (2.0 * (1.0 - Fgnd.g));
+   retMax.b = (Fgnd.b == 1.0) ? 1.0 : Bgnd.b / (2.0 * (1.0 - Fgnd.b));
 
-      blnd.r = (Fgnd.r < 0.5) ? retMin.r : retMax.r;
-      blnd.g = (Fgnd.g < 0.5) ? retMin.g : retMax.g;
-      blnd.b = (Fgnd.b < 0.5) ? retMin.b : retMax.b;
+   retMin = min (retMin, (1.0).xxx);
+   retMax = min (retMax, (1.0).xxx);
 
-      blnd = lerp (Bgnd, blnd, amount.x);
-      blnd = lerp (blnd, Fgnd, amount.y);
-      Fgnd = lerp (Bgnd, blnd, Fgnd.a);
-   }
+   blnd.r = (Fgnd.r < 0.5) ? retMin.r : retMax.r;
+   blnd.g = (Fgnd.g < 0.5) ? retMin.g : retMax.g;
+   blnd.b = (Fgnd.b < 0.5) ? retMin.b : retMax.b;
 
-   return Fgnd;
+   blnd = lerp (Bgnd, blnd, amount.x);
+   blnd = lerp (blnd, Fgnd, amount.y);
+
+   return lerp (Bgnd, blnd, Fgnd.a);
 }
 
 DeclareEntryPoint (LinearLight)
@@ -520,21 +521,20 @@ DeclareEntryPoint (LinearLight)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) {
-      float4 retMin = max ((2.0 * Fgnd) + Bgnd - WHITE, _TransparentBlack);
-      float4 retMax = min ((2.0 * Fgnd) + Bgnd - WHITE, WHITE);
-      float4 blnd = Fgnd;
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-      blnd.r = (Fgnd.r < 0.5) ? retMin.r : retMax.r;
-      blnd.g = (Fgnd.g < 0.5) ? retMin.g : retMax.g;
-      blnd.b = (Fgnd.b < 0.5) ? retMin.b : retMax.b;
+   float4 retMin = max ((2.0 * Fgnd) + Bgnd - WHITE, _TransparentBlack);
+   float4 retMax = min ((2.0 * Fgnd) + Bgnd - WHITE, WHITE);
+   float4 blnd = Fgnd;
 
-      blnd = lerp (Bgnd, blnd, amount.x);
-      blnd = lerp (blnd, Fgnd, amount.y);
-      Fgnd = lerp (Bgnd, blnd, Fgnd.a);
-   }
+   blnd.r = (Fgnd.r < 0.5) ? retMin.r : retMax.r;
+   blnd.g = (Fgnd.g < 0.5) ? retMin.g : retMax.g;
+   blnd.b = (Fgnd.b < 0.5) ? retMin.b : retMax.b;
 
-   return Fgnd;
+   blnd = lerp (Bgnd, blnd, amount.x);
+   blnd = lerp (blnd, Fgnd, amount.y);
+
+   return lerp (Bgnd, blnd, Fgnd.a);
 }
 
 DeclareEntryPoint (PinLight)
@@ -543,22 +543,21 @@ DeclareEntryPoint (PinLight)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) {
-      float4 blnd = Fgnd;
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-      float3 retMax = 2.0 * Fgnd.rgb;
-      float3 retMin = retMax - 1.0.xxx;
+   float4 blnd = Fgnd;
 
-      blnd.r = (Bgnd.r > retMax.r) ? retMax.r : (Bgnd.r < retMin.r) ? retMin.r : Bgnd.r;
-      blnd.g = (Bgnd.g > retMax.g) ? retMax.g : (Bgnd.g < retMin.g) ? retMin.g : Bgnd.g;
-      blnd.b = (Bgnd.b > retMax.b) ? retMax.b : (Bgnd.b < retMin.b) ? retMin.b : Bgnd.b;
+   float3 retMax = 2.0 * Fgnd.rgb;
+   float3 retMin = retMax - 1.0.xxx;
 
-      blnd = lerp (Bgnd, blnd, amount.x);
-      blnd = lerp (blnd, Fgnd, amount.y);
-      Fgnd = lerp (Bgnd, blnd, Fgnd.a);
-   }
+   blnd.r = (Bgnd.r > retMax.r) ? retMax.r : (Bgnd.r < retMin.r) ? retMin.r : Bgnd.r;
+   blnd.g = (Bgnd.g > retMax.g) ? retMax.g : (Bgnd.g < retMin.g) ? retMin.g : Bgnd.g;
+   blnd.b = (Bgnd.b > retMax.b) ? retMax.b : (Bgnd.b < retMin.b) ? retMin.b : Bgnd.b;
 
-   return Fgnd;
+   blnd = lerp (Bgnd, blnd, amount.x);
+   blnd = lerp (blnd, Fgnd, amount.y);
+
+   return lerp (Bgnd, blnd, Fgnd.a);
 }
 
 DeclareEntryPoint (HardMix)
@@ -567,21 +566,20 @@ DeclareEntryPoint (HardMix)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) {
-      float4 blnd = Fgnd;
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-      float3 ref = 1.0.xxx - Bgnd.rgb;
+   float4 blnd = Fgnd;
 
-      blnd.r = (Fgnd.r < ref.r) ? 0.0 : 1.0;
-      blnd.g = (Fgnd.g < ref.g) ? 0.0 : 1.0;
-      blnd.b = (Fgnd.b < ref.b) ? 0.0 : 1.0;
+   float3 ref = 1.0.xxx - Bgnd.rgb;
 
-      blnd = lerp (Bgnd, blnd, amount.x);
-      blnd = lerp (blnd, Fgnd, amount.y);
-      Fgnd = lerp (Bgnd, blnd, Fgnd.a);
-   }
+   blnd.r = (Fgnd.r < ref.r) ? 0.0 : 1.0;
+   blnd.g = (Fgnd.g < ref.g) ? 0.0 : 1.0;
+   blnd.b = (Fgnd.b < ref.b) ? 0.0 : 1.0;
 
-   return Fgnd;
+   blnd = lerp (Bgnd, blnd, amount.x);
+   blnd = lerp (blnd, Fgnd, amount.y);
+
+   return lerp (Bgnd, blnd, Fgnd.a);
 }
 
 //--------------------------------------- GROUP 4 -----------------------------------------//
@@ -592,14 +590,13 @@ DeclareEntryPoint (Difference)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) {
-      float4 blnd = lerp (Bgnd, abs (Fgnd - Bgnd), amount.x);
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-      blnd = lerp (blnd, Fgnd, amount.y);
-      Fgnd = lerp (Bgnd, blnd, Fgnd.a);
-   }
+   float4 blnd = lerp (Bgnd, abs (Fgnd - Bgnd), amount.x);
 
-   return Fgnd;
+   blnd = lerp (blnd, Fgnd, amount.y);
+
+   return lerp (Bgnd, blnd, Fgnd.a);
 }
 
 DeclareEntryPoint (Exclusion)
@@ -608,14 +605,13 @@ DeclareEntryPoint (Exclusion)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) {
-      float4 blnd = lerp (Bgnd, saturate (Fgnd + Bgnd - (2.0 * Fgnd * Bgnd)), amount.x);
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-      blnd = lerp (blnd, Fgnd, amount.y);
-      Fgnd = lerp (Bgnd, blnd, Fgnd.a);
-   }
+   float4 blnd = lerp (Bgnd, saturate (Fgnd + Bgnd - (2.0 * Fgnd * Bgnd)), amount.x);
 
-   return Fgnd;
+   blnd = lerp (blnd, Fgnd, amount.y);
+
+   return lerp (Bgnd, blnd, Fgnd.a);
 }
 
 DeclareEntryPoint (Subtract)
@@ -624,14 +620,13 @@ DeclareEntryPoint (Subtract)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) {
-      float4 blnd = lerp (Bgnd, max (Bgnd - Fgnd, _TransparentBlack), amount.x);
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-      blnd = lerp (blnd, Fgnd, amount.y);
-      Fgnd = lerp (Bgnd, blnd, Fgnd.a);
-   }
+   float4 blnd = lerp (Bgnd, max (Bgnd - Fgnd, _TransparentBlack), amount.x);
 
-   return Fgnd;
+   blnd = lerp (blnd, Fgnd, amount.y);
+
+   return lerp (Bgnd, blnd, Fgnd.a);
 }
 
 DeclareEntryPoint (Divide)
@@ -640,19 +635,18 @@ DeclareEntryPoint (Divide)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) {
-      float4 blnd = Fgnd;
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-      blnd.r = (Fgnd.r == 0.0) ? 1.0 : min (Bgnd.r / Fgnd.r, 1.0);
-      blnd.g = (Fgnd.g == 0.0) ? 1.0 : min (Bgnd.g / Fgnd.g, 1.0);
-      blnd.b = (Fgnd.b == 0.0) ? 1.0 : min (Bgnd.b / Fgnd.b, 1.0);
+   float4 blnd = Fgnd;
 
-      blnd = lerp (Bgnd, blnd, amount.x);
-      blnd = lerp (blnd, Fgnd, amount.y);
-      Fgnd = lerp (Bgnd, blnd, Fgnd.a);
-   }
+   blnd.r = (Fgnd.r == 0.0) ? 1.0 : min (Bgnd.r / Fgnd.r, 1.0);
+   blnd.g = (Fgnd.g == 0.0) ? 1.0 : min (Bgnd.g / Fgnd.g, 1.0);
+   blnd.b = (Fgnd.b == 0.0) ? 1.0 : min (Bgnd.b / Fgnd.b, 1.0);
 
-   return Fgnd;
+   blnd = lerp (Bgnd, blnd, amount.x);
+   blnd = lerp (blnd, Fgnd, amount.y);
+
+   return lerp (Bgnd, blnd, Fgnd.a);
 }
 
 //--------------------------------------- GROUP 5 -----------------------------------------//
@@ -663,17 +657,16 @@ DeclareEntryPoint (Hue)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) {
-      float4 blnd = fn_rgb2hsv (Bgnd);
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-      blnd.xw = (fn_rgb2hsv (Fgnd)).xw;
+   float4 blnd = fn_rgb2hsv (Bgnd);
 
-      blnd = lerp (Bgnd, fn_hsv2rgb (blnd), amount.x);
-      blnd = lerp (blnd, Fgnd, amount.y);
-      Fgnd = lerp (Bgnd, blnd, Fgnd.a);
-   }
+   blnd.xw = (fn_rgb2hsv (Fgnd)).xw;
 
-   return Fgnd;
+   blnd = lerp (Bgnd, fn_hsv2rgb (blnd), amount.x);
+   blnd = lerp (blnd, Fgnd, amount.y);
+
+   return lerp (Bgnd, blnd, Fgnd.a);
 }
 
 DeclareEntryPoint (Saturation)
@@ -682,17 +675,16 @@ DeclareEntryPoint (Saturation)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) {
-      float4 blnd = fn_rgb2hsv (Bgnd);
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-      blnd.yw = fn_rgb2hsv (Fgnd).yw;
+   float4 blnd = fn_rgb2hsv (Bgnd);
 
-      blnd = lerp (Bgnd, fn_hsv2rgb (blnd), amount.x);
-      blnd = lerp (blnd, Fgnd, amount.y);
-      Fgnd = lerp (Bgnd, blnd, Fgnd.a);
-   }
+   blnd.yw = fn_rgb2hsv (Fgnd).yw;
 
-   return Fgnd;
+   blnd = lerp (Bgnd, fn_hsv2rgb (blnd), amount.x);
+   blnd = lerp (blnd, Fgnd, amount.y);
+
+   return lerp (Bgnd, blnd, Fgnd.a);
 }
 
 DeclareEntryPoint (Colour)
@@ -701,17 +693,16 @@ DeclareEntryPoint (Colour)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) {
-      float4 blnd = fn_rgb2hsv (Fgnd);
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-      blnd.x = (fn_rgb2hsv (Bgnd)).x;
+   float4 blnd = fn_rgb2hsv (Fgnd);
 
-      blnd = lerp (Bgnd, fn_hsv2rgb (blnd), amount.x);
-      blnd = lerp (blnd, Fgnd, amount.y);
-      Fgnd = lerp (Bgnd, blnd, Fgnd.a);
-   }
+   blnd.x = (fn_rgb2hsv (Bgnd)).x;
 
-   return Fgnd;
+   blnd = lerp (Bgnd, fn_hsv2rgb (blnd), amount.x);
+   blnd = lerp (blnd, Fgnd, amount.y);
+
+   return lerp (Bgnd, blnd, Fgnd.a);
 }
 
 DeclareEntryPoint (Luminosity)
@@ -720,15 +711,14 @@ DeclareEntryPoint (Luminosity)
 
    float2 amount = fn_init (Fg, uv1, Fgnd, Bg, uv2, Bgnd);
 
-   if (amount.x >= 0.0) {
-      float4 blnd = fn_rgb2hsv (Bgnd);
+   if (amount.x < 0.0) { return ShowAlpha (Fgnd, uv3); }
 
-      blnd.zw = (fn_rgb2hsv (Fgnd)).zw;
+   float4 blnd = fn_rgb2hsv (Bgnd);
 
-      blnd = lerp (Bgnd, fn_hsv2rgb (blnd), amount.x);
-      blnd = lerp (blnd, Fgnd, amount.y);
-      Fgnd = lerp (Bgnd, blnd, Fgnd.a);
-   }
+   blnd.zw = (fn_rgb2hsv (Fgnd)).zw;
 
-   return Fgnd;
+   blnd = lerp (Bgnd, fn_hsv2rgb (blnd), amount.x);
+   blnd = lerp (blnd, Fgnd, amount.y);
+
+   return lerp (Bgnd, blnd, Fgnd.a);
 }
