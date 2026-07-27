@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-17
+// @Released 2026-07-27
 // @Author jwrl
 // @Created 2016-05-10
 
@@ -37,6 +37,9 @@
 // Lightworks user effect WarpTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-27 jwrl.
+// Added checkerboard alpha display to show key.
 //
 // Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
@@ -78,8 +81,11 @@ DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings", kNoFlags, 0
 DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend settings", false);
 DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
-DeclareFloatParam (_OutputAspectRatio);
 DeclareFloatParam (_Progress);
+
+DeclareFloatParam (_OutputAspectRatio);
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -88,6 +94,8 @@ DeclareFloatParam (_Progress);
 #ifdef WINDOWS
 #define PROFILE ps_3_0
 #endif
+
+#define _TransparentBlack 0.0.xxxx
 
 #define PI      3.1415926536
 #define HALF_PI 1.5707963268
@@ -116,7 +124,7 @@ float4 fn_initFg (sampler F, float2 xy1, sampler B, float2 xy2)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
+   return Fgnd.a == 0.0 ? _TransparentBlack : Fgnd;
 }
 
 float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
@@ -126,6 +134,21 @@ float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
    if (!Blended) { Bgnd.a = 1.0; }
 
    return Bgnd;
+}
+
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -151,26 +174,25 @@ DeclareEntryPoint (Warp_0)
    float amount, warpFactor;
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         retval = (Bgnd - 0.5.xxxx) * lerp (0.4, 3.2, Distortion);
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
-         if (SwapDir) {
-            warpFactor = 1.0 - sin (Amount * HALF_PI);
-            amount = Amount;
+      retval = (Bgnd - 0.5.xxxx) * lerp (0.4, 3.2, Distortion);
 
-            xy = uv3 + float2 (retval.y - 0.5, (retval.z - retval.x) * 2.0) * warpFactor;
-         }
-         else {
-            warpFactor = 1.0 - cos (Amount * HALF_PI);
-            amount = 1.0 - Amount;
+      if (SwapDir) {
+         warpFactor = 1.0 - sin (Amount * HALF_PI);
+         amount = Amount;
 
-            xy = uv3 + float2 ((retval.y - retval.z) * 2.0, 0.5 - retval.x) * warpFactor;
-         }
-
-         Fgnd = tex2D (Fg_0, xy);
-         retval = lerp (Bgnd, Fgnd, Fgnd.a * amount);
+         xy = uv3 + float2 (retval.y - 0.5, (retval.z - retval.x) * 2.0) * warpFactor;
       }
+      else {
+         warpFactor = 1.0 - cos (Amount * HALF_PI);
+         amount = 1.0 - Amount;
+
+         xy = uv3 + float2 ((retval.y - retval.z) * 2.0, 0.5 - retval.x) * warpFactor;
+      }
+
+      Fgnd = tex2D (Fg_0, xy);
+      retval = lerp (Bgnd, Fgnd, Fgnd.a * amount);
    }
    else {
       warpFactor = sin (Amount * PI) * Distortion * 4.0;
@@ -207,26 +229,25 @@ DeclareEntryPoint (Warp_1)
    float rand = frac (sin (dot (pixSize, float2 (18.5475, 89.3723))) * 54853.3754);
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         pixSize += ((uv3 * rand) - 0.5).xx;
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
-         float amount;
+      pixSize += ((uv3 * rand) - 0.5).xx;
 
-         if (SwapDir) {
-            amount = Amount;
-            xy = saturate (pixSize + sqrt (1.0 - _Progress).xx);
-            xy.y = 1.0 - xy.y;
-         }
-         else {
-            amount = 1.0 - Amount;
-            xy = saturate (pixSize + sqrt (_Progress).xx);
-         }
+      float amount;
 
-         xy = lerp (xy, uv3, amount);
-         Fgnd = tex2D (Fg_1, xy);
-         retval = lerp (Bgnd, Fgnd, Fgnd.a * amount);
+      if (SwapDir) {
+         amount = Amount;
+         xy = saturate (pixSize + sqrt (1.0 - _Progress).xx);
+         xy.y = 1.0 - xy.y;
       }
+      else {
+         amount = 1.0 - Amount;
+         xy = saturate (pixSize + sqrt (_Progress).xx);
+      }
+
+      xy = lerp (xy, uv3, amount);
+      Fgnd = tex2D (Fg_1, xy);
+      retval = lerp (Bgnd, Fgnd, Fgnd.a * amount);
    }
    else {
       xy = saturate (pixSize + (sqrt (1.0 - _Progress) - 0.5).xx + (uv3 * rand));
