@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-17
+// @Released 2026-07-27
 // @Author jwrl
 // @Created 2018-06-12
 
@@ -25,16 +25,19 @@
       [*]Swap sources:  This can be necessary when using a folded delta key
          (extracted) transition.
 
- NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
- the revision process has meant the removal of masking.  In all other respects this
- behaves as the earlier versions did, and can be installed on any Lightworks version
- above 2022.
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  The
+ revision process included the removal of masking and the addition of checkerboard
+ patterning to show transparency.  In all other respects this behaves as the earlier
+ versions did, and can be installed on any Lightworks version above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect RotationTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-27 jwrl.
+// Added a checkerboard pattern to show transparency.
 //
 // Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
@@ -81,6 +84,9 @@ DeclareFloatParam (KeyGain,        "Fine tune",     "Blend settings", kNoFlags, 
 DeclareBoolParam  (ShowKey,        "Show foreground key",             "Blend settings", false);
 DeclareBoolParam  (SwapSource,     "Swap sources",  "Blend settings", false);
 
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
+
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
@@ -89,11 +95,11 @@ DeclareBoolParam  (SwapSource,     "Swap sources",  "Blend settings", false);
 #define PROFILE ps_3_0
 #endif
 
+#define _TransparentBlack 0.0.xxxx
+
 #define HALF_PI 1.5707963268
 #define PI      3.1415926536
 #define TWO_PI  6.2831853072
-
-float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
 // Functions
@@ -129,6 +135,21 @@ float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
    if (!Blended) { Bgnd.a = 1.0; }
 
    return Bgnd;
+}
+
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
 }
 
 bool fn_3Drotate (float2 tl, float2 tr, float2 bl, float2 br, inout float2 uv)
@@ -185,7 +206,7 @@ DeclareEntryPoint (RotationTrans_V)
    float amount = Amount;
 
    if (Blended) {
-      if (ShowKey) return Fgnd;
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
       amount /= 2.0;
       if (SwapDir) amount += 0.5;
@@ -252,7 +273,7 @@ DeclareEntryPoint (RotationTrans_H)
    float amount = Amount;
 
    if (Blended) {
-      if (ShowKey) return Fgnd;
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
       amount /= 2.0;
       if (SwapDir) amount += 0.5;
