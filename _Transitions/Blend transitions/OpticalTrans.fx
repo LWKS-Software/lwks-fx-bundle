@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-17
+// @Released 2026-07-27
 // @Author jwrl
 // @Created 2016-07-30
 
@@ -31,6 +31,9 @@
 // Lightworks user effect OpticalTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-27 jwrl.
+// Added checkerboard alpha display to show key.
 //
 // Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
@@ -72,6 +75,9 @@ DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings", kNoFlags, 0
 DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend settings", false);
 DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
+
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
@@ -80,9 +86,28 @@ DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 #define PROFILE ps_3_0
 #endif
 
+#define _TransparentBlack 0.0.xxxx
+
 #define PI 3.1415926536
 
-float4 _TransparentBlack = 0.0.xxxx;
+//-----------------------------------------------------------------------------------------//
+// Functions
+//-----------------------------------------------------------------------------------------//
+
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
+}
 
 //-----------------------------------------------------------------------------------------//
 // Shaders
@@ -127,14 +152,13 @@ DeclareEntryPoint (OpticalDissolve)
    float4 retval;
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         float amount = SwapDir ? 1.0 - Amount : Amount;
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
-         retval = lerp (_TransparentBlack, Bgnd, pow (amount, 2.0));
-         retval += lerp (Fgnd, _TransparentBlack, amount);
-         retval = lerp (Bgnd, retval, Fgnd.a);
-      }
+      float amount = SwapDir ? 1.0 - Amount : Amount;
+
+      retval = lerp (_TransparentBlack, Bgnd, pow (amount, 2.0));
+      retval += lerp (Fgnd, _TransparentBlack, amount);
+      retval = lerp (Bgnd, retval, Fgnd.a);
    }
    else {
       retval = lerp (_TransparentBlack, Bgnd, pow (Amount, 2.0));
