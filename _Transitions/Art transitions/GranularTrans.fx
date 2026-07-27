@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-17
+// @Released 2026-07-27
 // @Author jwrl
 // @Created 2016-02-08
 
@@ -40,6 +40,9 @@
 // Lightworks user effect GranularTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-27 jwrl.
+// Added checkerboard alpha display to show key.
 //
 // Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
@@ -92,6 +95,8 @@ DeclareBoolParam  (ShowKey,        "Show foreground key",                "Blend 
 DeclareBoolParam  (SwapSource,     "Swap sources",     "Blend settings", false);
 
 DeclareFloatParam (_OutputAspectRatio);
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -101,10 +106,10 @@ DeclareFloatParam (_OutputAspectRatio);
 #define PROFILE ps_3_0
 #endif
 
+#define _TransparentBlack 0.0.xxxx
+
 #define B_SCALE 0.000545
 #define SQRT_2  1.4142135624
-
-float4 _TransparentBlack = 0.0.xxxx;
 
 // Pascal's triangle magic numbers for blur
 
@@ -144,6 +149,21 @@ float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
    if (!Blended) { Bgnd.a = 1.0; }
 
    return Bgnd;
+}
+
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
 }
 
 float4 fn_noise (float2 uv)
@@ -206,19 +226,18 @@ float4 fn_main (sampler F, sampler B, sampler G, sampler S, float2 xy)
    float stars, level = saturate (((0.5 - grad.x) * 2) + noise);
 
    if (Blended) {
-      if (ShowKey) { retval = lerp (_TransparentBlack, Fgnd, Fgnd.a); }
-      else {
-         retval = lerp (Fgnd, Bgnd, level);
+      if (ShowKey) return ShowAlpha (Fgnd, xy);
 
-         if (Sparkles) {
-            if (level > 0.5) level = 0.5 - level;
+      retval = lerp (Fgnd, Bgnd, level);
 
-            stars = saturate ((pow (level, 3.0) * 4.0) + level);
-            retval = lerp (retval, starColour, stars);
-         }
+      if (Sparkles) {
+         if (level > 0.5) level = 0.5 - level;
 
-         retval = lerp (Bgnd, retval, Fgnd.a);
+         stars = saturate ((pow (level, 3.0) * 4.0) + level);
+         retval = lerp (retval, starColour, stars);
       }
+
+      retval = lerp (Bgnd, retval, Fgnd.a);
    }
    else {
       retval = lerp (Fgnd, Bgnd, level);
