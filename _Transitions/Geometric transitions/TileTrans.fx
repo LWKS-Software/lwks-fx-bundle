@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-17
+// @Released 2026-07-27
 // @Author khaver
 // @Author jwrl
 // @Created 2016-01-22
@@ -26,16 +26,19 @@
       [*]Swap sources:  This can be necessary when using a folded delta key
          (extracted) transition.
 
- NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
- the revision process has meant the removal of masking.  In all other respects this
- behaves as the earlier versions did, and can be installed on any Lightworks version
- above 2022.
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  The
+ revision process included the removal of masking and the addition of checkerboard
+ patterning to show transparency.  In all other respects this behaves as the earlier
+ versions did, and can be installed on any Lightworks version above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect TileTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-27 jwrl.
+// Added a checkerboard pattern to show transparency.
 //
 // Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
@@ -85,6 +88,9 @@ DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 DeclareFloatParam (_OutputAspectRatio);
 DeclareFloatParam (_LengthFrames);
 
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
+
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
@@ -92,6 +98,8 @@ DeclareFloatParam (_LengthFrames);
 #ifdef WINDOWS
 #define PROFILE ps_3_0
 #endif
+
+#define _TransparentBlack 0.0.xxxx
 
 #define BLACK float2 (0.0,1.0).xxxy
 
@@ -104,8 +112,6 @@ DeclareFloatParam (_LengthFrames);
 
 #define HALF_PI 1.5707963268
 #define PI      3.1415926536
-
-float4 _TransparentBlack = 0.0.xxxx;
 
 //-----------------------------------------------------------------------------------------//
 // Functions
@@ -143,6 +149,21 @@ float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
    return Bgnd;
 }
 
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
+}
+
 float2 fn_block_gen (float2 xy, float range)
 {
    float AspectRatio = clamp (Aspect, 0.01, 10.0);
@@ -158,7 +179,7 @@ float2 fn_block_gen (float2 xy, float range)
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 // technique Mosaics
@@ -186,7 +207,7 @@ DeclareEntryPoint (Mosaics)
    float2 xy;
 
    if (Blended) {
-      if (ShowKey) return Fgnd;
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
       if (SwapDir) {
          xy = (TileSize > 0.0) ? fn_block_gen (uv3, cos (Amount * HALF_PI)) : uv3;
@@ -258,7 +279,7 @@ DeclareEntryPoint (Blocks)
    float alpha, amount;
 
    if (Blended) {
-      if (ShowKey) return Fgnd;
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
       alpha = Fgnd.a;
       amount = SwapDir ? 1.0 - Amount : Amount;
@@ -316,12 +337,10 @@ DeclarePass (Tiles_B)
 
    if (Blended) {
       uv.x += SwapDir ? (1.0 - offset) * (1.0 - amount) : (offset - 1.0) * amount;
-      retval = ReadPixel (Fg_B, uv);
    }
-   else {
-      uv.x += (1.0 - offset) * (1.0 - amount);
-      retval = ReadPixel (Bg_B, uv);
-   }
+   else uv.x += (offset - 1.0) * amount;
+
+   retval = ReadPixel (Fg_B, uv);
 
    return retval;
 }
@@ -339,21 +358,20 @@ DeclareEntryPoint (BreakTiles)
    float offset = floor (uv.x * dsplc);
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         offset = SwapDir ? (1.0 - (ceil (frac (offset / 2.0)) * 2.0)) * (1.0 - amount)
-                          : ((ceil (frac (offset / 2.0)) * 2.0) - 1.0) * amount;
-         uv.y += offset / _OutputAspectRatio;
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
-         retval = ReadPixel (Tiles_B, uv);
-         retval = lerp (Bgnd, retval, retval.a);
-      }
+      offset = SwapDir ? (1.0 - (ceil (frac (offset / 2.0)) * 2.0)) * (1.0 - amount)
+                       : ((ceil (frac (offset / 2.0)) * 2.0) - 1.0) * amount;
+      uv.y += offset / _OutputAspectRatio;
+
+      retval = ReadPixel (Tiles_B, uv);
+      retval = lerp (Bgnd, retval, retval.a);
    }
    else {
-      offset = (1.0 - (ceil (frac (offset / 2.0)) * 2.0)) * (1.0 - amount);
+      offset  = ((ceil (frac (offset / 2.0)) * 2.0) - 1.0) * amount;
       uv.y += offset / _OutputAspectRatio;
       retval = ReadPixel (Tiles_B, uv);
-      retval = lerp (Fgnd, retval, retval.a);
+      retval = lerp (Bgnd, retval, retval.a);
    }
 
    return retval;
@@ -383,10 +401,12 @@ DeclarePass (Tiles_J)
 
    if (Blended) {
       uv.x += SwapDir ? (1.0 - offset) * (1.0 - amount) : (offset - 1.0) * amount;
+      retval = ReadPixel (Fg_J, uv);
    }
-   else uv.x += (offset - 1.0) * amount;
-
-   retval = ReadPixel (Fg_J, uv);
+   else {
+      uv.x += (1.0 - offset) * (1.0 - amount);
+      retval = ReadPixel (Bg_J, uv);
+   }
 
    return retval;
 }
@@ -404,21 +424,20 @@ DeclareEntryPoint (JoinTiles)
    float offset = floor (uv.x * dsplc);
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         offset = SwapDir ? (1.0 - (ceil (frac (offset / 2.0)) * 2.0)) * (1.0 - amount)
-                          : ((ceil (frac (offset / 2.0)) * 2.0) - 1.0) * amount;
-         uv.y += offset / _OutputAspectRatio;
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
-         retval = ReadPixel (Tiles_J, uv);
-         retval = lerp (Bgnd, retval, retval.a);
-      }
-   }
-   else {
-      offset  = ((ceil (frac (offset / 2.0)) * 2.0) - 1.0) * amount;
+      offset = SwapDir ? (1.0 - (ceil (frac (offset / 2.0)) * 2.0)) * (1.0 - amount)
+                       : ((ceil (frac (offset / 2.0)) * 2.0) - 1.0) * amount;
       uv.y += offset / _OutputAspectRatio;
+
       retval = ReadPixel (Tiles_J, uv);
       retval = lerp (Bgnd, retval, retval.a);
+   }
+   else {
+      offset = (1.0 - (ceil (frac (offset / 2.0)) * 2.0)) * (1.0 - amount);
+      uv.y += offset / _OutputAspectRatio;
+      retval = ReadPixel (Tiles_J, uv);
+      retval = lerp (Fgnd, retval, retval.a);
    }
 
    return retval;
