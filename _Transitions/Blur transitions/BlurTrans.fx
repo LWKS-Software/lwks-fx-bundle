@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-17
+// @Released 2026-07-27
 // @Author jwrl
 // @Created 2015-10-12
 
@@ -33,6 +33,9 @@
 // Lightworks user effect BlurTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-27 jwrl.
+// Added checkerboard alpha display to show key.
 //
 // Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
@@ -74,6 +77,9 @@ DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
 DeclareFloatParam (_OutputAspectRatio);
 
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
+
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
@@ -82,12 +88,29 @@ DeclareFloatParam (_OutputAspectRatio);
 #define PROFILE ps_3_0
 #endif
 
+#define _TransparentBlack 0.0.xxxx
+
 #define PI      3.1415926536
 #define HALF_PI 1.5707963268
 
 //-----------------------------------------------------------------------------------------//
 // Functions
 //-----------------------------------------------------------------------------------------//
+
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
+}
 
 float4 fn_transition (sampler vid, float2 uv, float2 blur)
 {
@@ -136,7 +159,7 @@ DeclarePass (Fgd)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
+   return Fgnd.a == 0.0 ? _TransparentBlack : Fgnd;
 }
 
 DeclarePass (Bgd)
@@ -181,14 +204,13 @@ DeclareEntryPoint (BlurTrans)
    float2 blur;
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         blur  = SwapDir ? float2 (0.0, 1.0 - Amount) : float2 (0.0, Amount);
-         retval = fn_transition (BlurX, uv3, blur);
-         retval.a *= SwapDir ? sin (saturate (Amount * 2.0) * HALF_PI)
-                             : cos (saturate (Amount - 0.5) * PI);
-         retval = lerp (Bgnd, retval, retval.a);
-      }
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
+
+      blur  = SwapDir ? float2 (0.0, 1.0 - Amount) : float2 (0.0, Amount);
+      retval = fn_transition (BlurX, uv3, blur);
+      retval.a *= SwapDir ? sin (saturate (Amount * 2.0) * HALF_PI)
+                          : cos (saturate (Amount - 0.5) * PI);
+      retval = lerp (Bgnd, retval, retval.a);
    }
    else {
       blur   = float2 (0.0, sin (saturate (Amount) * PI));
