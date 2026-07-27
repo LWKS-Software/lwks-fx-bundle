@@ -44,7 +44,7 @@
 // Version history:
 //
 // Updated 2026-07-27 jwrl.
-// Added checkerboard alppha display to show key.
+// Added checkerboard alpha display to show key.
 //
 // Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
