@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-17
+// @Released 2026-07-27
 // @Author jwrl
 // @Created 2016-12-10
 
@@ -30,6 +30,9 @@
 // Lightworks user effect ErodeTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-27 jwrl.
+// Added checkerboard alppha display to show key.
 //
 // Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
@@ -68,6 +71,9 @@ DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings", kNoFlags, 0
 DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend settings", false);
 DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
+
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
@@ -76,7 +82,28 @@ DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 #define PROFILE ps_3_0
 #endif
 
+#define _TransparentBlack 0.0.xxxx
+
 #define PI 3.1415926536
+
+//-----------------------------------------------------------------------------------------//
+// Functions
+//-----------------------------------------------------------------------------------------//
+
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
+}
 
 //-----------------------------------------------------------------------------------------//
 // Shaders
@@ -102,7 +129,7 @@ DeclarePass (Fgd)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
+   return Fgnd.a == 0.0 ? _TransparentBlack : Fgnd;
 }
 
 DeclarePass (Bgd)
@@ -123,19 +150,18 @@ DeclareEntryPoint (Erosion)
    float a_1, a_2;
 
    if (Blended) {
-      if (ShowKey) { retval = lerp (kTransparentBlack, Fgnd, Fgnd.a); }
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
+
+      a_1 = Amount > 0.5 ? 1.0 - (sin (Amount * PI) / 2.0) : sin (Amount * PI) / 2.0;
+
+      if (SwapDir) { a_2 = pow (Amount, 0.25); }
       else {
-         a_1 = Amount > 0.5 ? 1.0 - (sin (Amount * PI) / 2.0) : sin (Amount * PI) / 2.0;
-
-         if (SwapDir) { a_2 = pow (Amount, 0.25); }
-         else {
-            a_1 = 1.0 - a_1;
-            a_2 = pow (1.0 - Amount, 0.25);
-         }
-
-         retval = max (Bgnd.r, max (Bgnd.g, Bgnd.b)) < a_1 ? Fgnd : Bgnd;
-         retval = lerp (Bgnd, retval, Fgnd.a * a_2);
+         a_1 = 1.0 - a_1;
+         a_2 = pow (1.0 - Amount, 0.25);
       }
+
+      retval = max (Bgnd.r, max (Bgnd.g, Bgnd.b)) < a_1 ? Fgnd : Bgnd;
+      retval = lerp (Bgnd, retval, Fgnd.a * a_2);
    }
    else {
       a_1 = Amount * 1.5;
@@ -147,8 +173,8 @@ DeclareEntryPoint (Erosion)
 
       retval = max (m_2.r, max (m_2.g, m_2.b)) >= a_2 ? m_2 : Bgnd;
 
-      Fgnd = IsOutOfBounds (uv1) ? kTransparentBlack : retval;
-      Bgnd = IsOutOfBounds (uv2) ? kTransparentBlack : retval;
+      Fgnd = IsOutOfBounds (uv1) ? _TransparentBlack : retval;
+      Bgnd = IsOutOfBounds (uv2) ? _TransparentBlack : retval;
 
       retval = lerp (Fgnd, Bgnd, Amount);
    }
