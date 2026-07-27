@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-17
+// @Released 2026-07-27
 // @Author schrauber
 // @Author jwrl
 // @Created 2017-11-13
@@ -50,6 +50,9 @@
 //
 // Version history:
 //
+// Updated 2026-07-27 jwrl.
+// Added checkerboard alpha display to show key.
+//
 // Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
 //
@@ -99,6 +102,9 @@ DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 DeclareFloatParam (_OutputAspectRatio);
 DeclareFloatParam (_Length);
 
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
+
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
@@ -107,6 +113,7 @@ DeclareFloatParam (_Length);
 #define PROFILE ps_3_0
 #endif
 
+#define _TransparentBlack 0.0.xxxx
 #define BLACK float2(0.0, 1.0).xxxy
 
 #define CENTRE     0.5
@@ -123,6 +130,21 @@ DeclareFloatParam (_Length);
 //-----------------------------------------------------------------------------------------//
 // Functions
 //-----------------------------------------------------------------------------------------//
+
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
+}
 
 float4 fn_rotation (sampler Source, float2 uv)
 { 
@@ -222,7 +244,7 @@ DeclarePass (Fgd)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
+   return Fgnd.a == 0.0 ? _TransparentBlack : Fgnd;
 }
 
 DeclarePass (Bgd)
@@ -235,10 +257,10 @@ DeclarePass (Bgd)
 }
 
 DeclarePass (FgTwist)
-{ return Blended ? kTransparentBlack : fn_rotation (Fgd, uv3); }
+{ return Blended ? _TransparentBlack : fn_rotation (Fgd, uv3); }
 
 DeclarePass (BgTwist)
-{ return Blended ? kTransparentBlack : fn_rotation (Bgd, uv3); }
+{ return Blended ? _TransparentBlack : fn_rotation (Bgd, uv3); }
 
 DeclareEntryPoint (SwirlTrans)
 {
@@ -249,25 +271,24 @@ DeclareEntryPoint (SwirlTrans)
    float amount;
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         amount = SwapDir ? Amount : 1.0 - Amount;
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
-         float2 centre = float2 (CentreX, 1.0 - CentreY);
-         float2 xy, xy1 = uv3 - centre;
+      amount = SwapDir ? Amount : 1.0 - Amount;
 
-         float3 spin = float3 (Amplitude, Start, Rate) * (1.0 - amount);
+      float2 centre = float2 (CentreX, 1.0 - CentreY);
+      float2 xy, xy1 = uv3 - centre;
 
-         float angle = (length (xy1) * spin.x * TWO_PI) + radians (spin.y);
-         float scale0, scale90;
+      float3 spin = float3 (Amplitude, Start, Rate) * (1.0 - amount);
 
-         amount = sin (amount * HALF_PI);
-         sincos (angle + (spin.z * _Length * PI), scale90, scale0);
-         xy = (xy1 * scale0) - (float2 (xy1.y, -xy1.x) * scale90) + centre;
+      float angle = (length (xy1) * spin.x * TWO_PI) + radians (spin.y);
+      float scale0, scale90;
 
-         retval = ReadPixel (Fgd, xy);
-         retval = lerp (Bgnd, retval, retval.a * amount);
-      }
+      amount = sin (amount * HALF_PI);
+      sincos (angle + (spin.z * _Length * PI), scale90, scale0);
+      xy = (xy1 * scale0) - (float2 (xy1.y, -xy1.x) * scale90) + centre;
+
+      retval = ReadPixel (Fgd, xy);
+      retval = lerp (Bgnd, retval, retval.a * amount);
    }
    else {
       float Cdist;
