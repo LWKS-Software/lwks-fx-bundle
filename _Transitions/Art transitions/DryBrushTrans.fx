@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-09
+// @Released 2026-07-27
 // @Author jwrl
 // @Created 2018-05-06
 
@@ -34,6 +34,9 @@
 // Lightworks user effect DryBrushTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-27 jwrl.
+// Added checkerboard alpha display to show key.
 //
 // Updated 2026-07-09 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
@@ -76,6 +79,9 @@ DeclareFloatParam (KeyGain,        "Fine tune",     "Blend settings", kNoFlags, 
 DeclareBoolParam  (ShowKey,        "Show foreground key",             "Blend settings", false);
 DeclareBoolParam  (SwapSource,     "Swap sources",  "Blend settings", false);
 
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
+
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
@@ -84,6 +90,8 @@ DeclareBoolParam  (SwapSource,     "Swap sources",  "Blend settings", false);
 #define PROFILE ps_3_0
 #endif
 
+#define _TransparentBlack 0.0.xxxx
+
 //-----------------------------------------------------------------------------------------//
 // Functions
 //-----------------------------------------------------------------------------------------//
@@ -91,6 +99,21 @@ DeclareBoolParam  (SwapSource,     "Swap sources",  "Blend settings", false);
 float2 fn_rnd (float2 uv)
 {
    return frac (sin (dot (uv - 0.5.xx, float2 (12.9898, 78.233))) * 43758.5453);
+}
+
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -117,7 +140,7 @@ DeclarePass (Fgd)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   if (Fgnd.a == 0.0) Fgnd = kTransparentBlack;
+   if (Fgnd.a == 0.0) Fgnd = _TransparentBlack;
 
    return Fgnd;
 }
@@ -145,18 +168,16 @@ DeclareEntryPoint (DryBrushTrans)
    sincos (angle, xy1.x, xy1.y);
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         amount = SwapDir ? Amount : 1.0 - Amount;
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
-         xy2 = fn_rnd (uv3) * stroke * (1.0 - amount);
-         xy3.x = uv3.x + (xy2.x * xy1.x) + (xy2.y * xy1.y);
-         xy3.y = uv3.y + (xy2.y * xy1.x) - (xy2.x * xy1.y);
+      amount = SwapDir ? Amount : 1.0 - Amount;
 
-         Fgnd = tex2D (Fgd, xy3);
-         retval = lerp (Bgnd, Fgnd, amount);
-         retval.a = Fgnd.a;
-      }
+      xy2   = fn_rnd (uv3) * stroke * (1.0 - amount);
+      xy3.x = uv3.x + (xy2.x * xy1.x) + (xy2.y * xy1.y);
+      xy3.y = uv3.y + (xy2.y * xy1.x) - (xy2.x * xy1.y);
+
+      Fgnd   = tex2D (Fgd, xy3);
+      retval = lerp (Bgnd, Fgnd, amount * Fgnd.a);
    }
    else {
       amount = Amount;
