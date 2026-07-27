@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-17
+// @Released 2026-07-27
 // @Author jwrl
 // @Created 2016-05-07
 
@@ -41,6 +41,9 @@
 // Lightworks user effect ZoomTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-27 jwrl.
+// Added checkerboard alpha display to show key.
 //
 // Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
@@ -85,6 +88,9 @@ DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings", kNoFlags, 0
 DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend settings", false);
 DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
+
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
@@ -92,6 +98,8 @@ DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 #ifdef WINDOWS
 #define PROFILE ps_3_0
 #endif
+
+#define _TransparentBlack 0.0.xxxx
 
 #define HALF_PI   1.5707963268
 
@@ -101,6 +109,21 @@ DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 //-----------------------------------------------------------------------------------------//
 // Functions
 //-----------------------------------------------------------------------------------------//
+
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
+}
 
 float4 fn_zoom (sampler S, float2 uv)
 {
@@ -124,7 +147,7 @@ float4 fn_zoom (sampler S, float2 uv)
       float2 zoomCentre = float2 (Xcentre, 1.0 - Ycentre);
       float2 xy1, xy2 = uv - zoomCentre;
 
-      retval = kTransparentBlack;
+      retval = _TransparentBlack;
 
       for (int i = 0; i < SAMPLE; i++) {
          xy1 = (xy2 * scale) + zoomCentre;
@@ -162,7 +185,7 @@ DeclarePass (Fgd)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
+   return Fgnd.a == 0.0 ? _TransparentBlack : Fgnd;
 }
 
 DeclarePass (Bgd)
@@ -184,15 +207,14 @@ DeclareEntryPoint (ZoomTrans)
    float4 retval;
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         Fgnd = fn_zoom (Super, uv3);
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
-         float amount = SwapDir ? Amount : 1.0 - Amount;
+      Fgnd = fn_zoom (Super, uv3);
 
-         retval = lerp (Bgnd, Fgnd, Fgnd.a);
-         retval = lerp (Bgnd, retval, retval.a * amount);
-      }
+      float amount = SwapDir ? Amount : 1.0 - Amount;
+
+      retval = lerp (Bgnd, Fgnd, Fgnd.a);
+      retval = lerp (Bgnd, retval, retval.a * amount);
    }
    else {
       if (zoomAmount > 0.0) {
