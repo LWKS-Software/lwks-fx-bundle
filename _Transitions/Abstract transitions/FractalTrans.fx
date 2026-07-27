@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-17
+// @Released 2026-07-27
 // @Author Robert Schütze
 // @Author jwrl
 // @Created 2016-05-21
@@ -42,6 +42,9 @@
 // Schütze (trirop) 07.12.2015.
 //
 // Version history:
+//
+// Updated 2026-07-27 jwrl.
+// Added checkerboard alppha display to show key.
 //
 // Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
@@ -87,10 +90,37 @@ DeclareBoolParam  (ShowKey,        "Show foreground key",              "Blend se
 DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings",   false);
 
 DeclareFloatParam (_OutputAspectRatio);
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
+
+//-----------------------------------------------------------------------------------------//
+// Definitions and declarations
+//-----------------------------------------------------------------------------------------//
+
+#ifdef WINDOWS
+#define PROFILE ps_3_0
+#endif
+
+#define _TransparentBlack 0.0.xxxx
 
 //-----------------------------------------------------------------------------------------//
 // Functions
 //-----------------------------------------------------------------------------------------//
+
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
+}
 
 float4 fn_technique (float4 Fgnd, float4 Bgnd, float4 retval, float amount)
 {
@@ -115,7 +145,7 @@ float4 fn_technique (float4 Fgnd, float4 Bgnd, float4 retval, float amount)
 }
 
 //-----------------------------------------------------------------------------------------//
-// Code
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 DeclarePass (Fgd)
@@ -138,7 +168,7 @@ DeclarePass (Fgd)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
+   return Fgnd.a == 0.0 ? _TransparentBlack : Fgnd;
 }
 
 DeclarePass (Bgd)
@@ -169,13 +199,12 @@ DeclareEntryPoint (FractalTrans)
    float4 retval = tex2D (Fractal, uv3);
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }     // Fgnd is already alpha masked in the Fgd pass.
-      else {
-         float amount = SwapDir ? 1.0 - Amount : Amount;
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
-         retval = fn_technique (Fgnd, Bgnd, retval, amount);
-         retval = lerp (Bgnd, retval, Fgnd.a);
-      }
+      float amount = SwapDir ? 1.0 - Amount : Amount;
+
+      retval = fn_technique (Fgnd, Bgnd, retval, amount);
+      retval = lerp (Bgnd, retval, Fgnd.a);
    }
    else retval = fn_technique (Fgnd, Bgnd, retval, Amount);
 
