@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-17
+// @Released 2026-07-28
 // @Author jwrl
 // @Created 2022-07-30
 
@@ -42,9 +42,10 @@
  blend settings.  Secondly, there is a split function which governs where the blended
  effect will separate.
 
- NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
- the revision process has meant the removal of masking.  In all other respects this
- behaves as the earlier versions did, and can be installed on any Lightworks version
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  The
+ revision process included the removal of masking and the addition of checkerboard
+ patterning to show transparency.  In all other respects this behaves as the earlier
+ versions did, and can be installed on any Lightworks version
  above 2022.
 */
 
@@ -52,6 +53,9 @@
 // Lightworks user effect BounceTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-28 jwrl.
+// Added checkerboard alpha display to show key.
 //
 // Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
@@ -103,6 +107,9 @@ DeclareFloatParam (KeyGain,        "Fine tune",        "Blend settings",     kNo
 DeclareBoolParam  (ShowKey,        "Show foreground key",                    "Blend settings", false);
 DeclareBoolParam  (SwapSource,     "Swap sources",     "Blend settings",     false);
 
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
+
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
@@ -113,6 +120,27 @@ DeclareBoolParam  (SwapSource,     "Swap sources",     "Blend settings",     fal
 
 #define PI      3.141592654
 #define HALF_PI 1.570796327
+
+#define _TransparentBlack 0.0.xxxx
+
+//-----------------------------------------------------------------------------------------//
+// Functions
+//-----------------------------------------------------------------------------------------//
+
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
+}
 
 //-----------------------------------------------------------------------------------------//
 // Shaders
@@ -138,7 +166,7 @@ DeclarePass (Fgd)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
+   return Fgnd.a == 0.0 ? _TransparentBlack : Fgnd;
 }
 
 DeclarePass (Bgd)
@@ -162,59 +190,58 @@ DeclareEntryPoint (Bounce)
    float2 xy = uv3 - cL;
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
+
+      if (ZeroMode) { scale = ZeroScale; }
+      else if (MidMode) { scale = MidScale; }
       else {
-         if (ZeroMode) { scale = ZeroScale; }
-         else if (MidMode) { scale = MidScale; }
-         else {
-            amt_2 = SwapDir ? Amount : 1.0 - Amount;
-            amt_1 = smoothstep (0.0, Mid, amt_2) + smoothstep (Mid, 1.0, amt_2);
+         amt_2 = SwapDir ? Amount : 1.0 - Amount;
+         amt_1 = smoothstep (0.0, Mid, amt_2) + smoothstep (Mid, 1.0, amt_2);
 
-            // The above ranges the progress of the transition from 0.0 to 2.0, with 1.0
-            // at the preset midpoint.  We now apply some simple trig curves if needed.
+         // The above ranges the progress of the transition from 0.0 to 2.0, with 1.0
+         // at the preset midpoint.  We now apply some simple trig curves if needed.
 
-            if (Curve == 1) {
-               amt_2 = (cos (amt_1 * PI) + 3.0) * 0.5;      // Swings between 2.0 > 1.0 > 2.0
-               amt_1 = amt_1 > 1.0 ? amt_2 : 2.0 - amt_2;   // Swings between 0.0 > 1.0 > 2.0
-            }
-            else if (Curve == 2) {
-               amt_2 = sin (amt_1 * HALF_PI);               // Swings between 0.0 > 1.0 > 0.0
-               amt_1 = amt_1 < 1.0 ? amt_2 : 2.0 - amt_2;   // Swings between 0.0 > 1.0 > 2.0
-            }
-
-            // We now set up amt_1 to ramp from zero to 100% at the preset midpoint of the
-            // transition and amt_2 to ramp from zero to 100% after that.
-
-            amt_2 = max (amt_1 - 1.0, 0.0);
-            amt_1 = min (amt_1, 1.0);
-
-            // The next block of code sets s_1 to ZeroScale if we're transitioning in or 100%
-            // if transitioning out.  The variable s_2 is set to 100% if we're transitioning
-            // in or ZeroScale if transitioning out.
-
-            if (Ttype == 2) {
-               s_1 = 1.0;
-               s_2 = ZeroScale;
-            }
-            else {
-               s_1 = ZeroScale;
-               s_2 = 1.0;
-            }
-
-            // Finally the transition ramps the scale from the start to the midpoint scale
-            // value then ramps it from the midpoint value to the end scale.
-
-            scale = lerp (lerp (s_1, MidScale, amt_1), s_2, amt_2);
+         if (Curve == 1) {
+            amt_2 = (cos (amt_1 * PI) + 3.0) * 0.5;      // Swings between 2.0 > 1.0 > 2.0
+            amt_1 = amt_1 > 1.0 ? amt_2 : 2.0 - amt_2;   // Swings between 0.0 > 1.0 > 2.0
+         }
+         else if (Curve == 2) {
+            amt_2 = sin (amt_1 * HALF_PI);               // Swings between 0.0 > 1.0 > 0.0
+            amt_1 = amt_1 < 1.0 ? amt_2 : 2.0 - amt_2;   // Swings between 0.0 > 1.0 > 2.0
          }
 
-         // We now perform a simple scaling of the preset offset screen coordinates, recover
-         // our foreground and background components, combine them and quit.
+         // We now set up amt_1 to ramp from zero to 100% at the preset midpoint of the
+         // transition and amt_2 to ramp from zero to 100% after that.
 
-         xy /= scale;
-         xy += cL;
-         retval = tex2D (Fgd, xy);
-         retval = lerp (Bgnd, retval, retval.a);
+         amt_2 = max (amt_1 - 1.0, 0.0);
+         amt_1 = min (amt_1, 1.0);
+
+         // The next block of code sets s_1 to ZeroScale if we're transitioning in or 100%
+         // if transitioning out.  The variable s_2 is set to 100% if we're transitioning
+         // in or ZeroScale if transitioning out.
+
+         if (Ttype == 2) {
+            s_1 = 1.0;
+            s_2 = ZeroScale;
+         }
+         else {
+            s_1 = ZeroScale;
+            s_2 = 1.0;
+         }
+
+         // Finally the transition ramps the scale from the start to the midpoint scale
+         // value then ramps it from the midpoint value to the end scale.
+
+         scale = lerp (lerp (s_1, MidScale, amt_1), s_2, amt_2);
       }
+
+      // We now perform a simple scaling of the preset offset screen coordinates, recover
+      // our foreground and background components, combine them and quit.
+
+      xy /= scale;
+      xy += cL;
+      retval = tex2D (Fgd, xy);
+      retval = lerp (Bgnd, retval, retval.a);
    }
    else {
       if (MidMode) { scale = MidScale; }
