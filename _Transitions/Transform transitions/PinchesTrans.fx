@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-17
+// @Released 2026-07-28
 // @Author jwrl
 // @Created 2017-09-08
 
@@ -34,9 +34,10 @@
  It can also be used to pinch an outgoing blended foreground to clear the background
  video.  It can also reverse the process to bring in the foreground.
 
- NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
- the revision process has meant the removal of masking.  In all other respects this
- behaves as the earlier versions did, and can be installed on any Lightworks version
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  The
+ revision process included the removal of masking and the addition of checkerboard
+ patterning to show transparency.  In all other respects this behaves as the earlier
+ versions did, and can be installed on any Lightworks version
  above 2022.
 */
 
@@ -44,6 +45,9 @@
 // Lightworks user effect PinchTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-28 jwrl.
+// Added checkerboard alpha display to show key.
 //
 // Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
@@ -89,6 +93,9 @@ DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings", kNoFlags, 0
 DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend settings", false);
 DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
+
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
@@ -96,6 +103,8 @@ DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 #ifdef WINDOWS
 #define PROFILE ps_3_0
 #endif
+
+#define _TransparentBlack 0.0.xxxx
 
 #define MID_PT     (0.5).xx
 #define HALF_PI    1.5707963268
@@ -125,7 +134,7 @@ float4 fn_initFg (sampler F, float2 xy1, sampler B, float2 xy2)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
+   return Fgnd.a == 0.0 ? _TransparentBlack : Fgnd;
 }
 
 float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
@@ -135,6 +144,21 @@ float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
    if (!Blended) { Bgnd.a = 1.0; }
 
    return Bgnd;
+}
+
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -160,28 +184,27 @@ DeclareEntryPoint (Pinch_L)
    float amount;
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         amount = Amount * 0.5;
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
-         if (SwapDir) {
-            amount += 0.5;
+      amount = Amount * 0.5;
 
-            centre = lerp (float2 (centreX, 1.0 - centreY), MID_PT, amount);
-            xy = (uv3 - centre) * (1.0 + pow ((1.0 - sin (amount * HALF_PI)), 4.0) * 128.0);
-            scale = pow (abs (xy * 2.0), -cos ((amount + 0.01) * HALF_PI));
-         }
-         else {
-            centre = lerp (MID_PT, float2 (centreX, 1.0 - centreY), amount);
-            xy = (uv3 - centre) * (1.0 + pow ((1.0 - cos (amount * HALF_PI)), 4.0) * 128.0);
-            scale = pow (abs (xy * 2.0), -sin (amount * HALF_PI));
-         }
+      if (SwapDir) {
+         amount += 0.5;
 
-         xy = (xy * scale) + MID_PT;
-
-         retval = ReadPixel (Fg_L, xy);
-         retval = lerp (Bgnd, retval, retval.a);
+         centre = lerp (float2 (centreX, 1.0 - centreY), MID_PT, amount);
+         xy = (uv3 - centre) * (1.0 + pow ((1.0 - sin (amount * HALF_PI)), 4.0) * 128.0);
+         scale = pow (abs (xy * 2.0), -cos ((amount + 0.01) * HALF_PI));
       }
+      else {
+         centre = lerp (MID_PT, float2 (centreX, 1.0 - centreY), amount);
+         xy = (uv3 - centre) * (1.0 + pow ((1.0 - cos (amount * HALF_PI)), 4.0) * 128.0);
+         scale = pow (abs (xy * 2.0), -sin (amount * HALF_PI));
+      }
+
+      xy = (xy * scale) + MID_PT;
+
+      retval = ReadPixel (Fg_L, xy);
+      retval = lerp (Bgnd, retval, retval.a);
    }
    else {
       if (ChangeDir) {
@@ -230,24 +253,23 @@ DeclareEntryPoint (PinchTrans_R)
    float progress, rfrnc, scale;
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         if (SwapDir) {
-            progress = (1.0 - Amount) / 2.14;
-            rfrnc = (distance (uv3, MID_PT) * 32.0) + 1.0;
-            scale = lerp (1.0, pow (rfrnc, -1.0) * 24.0, progress);
-         }
-         else {
-            progress = Amount / 2.14;
-            rfrnc = (distance (uv3, MID_PT) * 32.0) + 1.0;
-            scale = lerp (1.0, pow (rfrnc, -1.0) * 24.0, progress);
-         }
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
-         xy = ((uv3 - MID_PT) * scale * scale) + MID_PT;
-
-         retval = ReadPixel (Fg_R, xy);
-         retval = lerp (Bgnd, retval, retval.a);
+      if (SwapDir) {
+         progress = (1.0 - Amount) / 2.14;
+         rfrnc = (distance (uv3, MID_PT) * 32.0) + 1.0;
+         scale = lerp (1.0, pow (rfrnc, -1.0) * 24.0, progress);
       }
+      else {
+         progress = Amount / 2.14;
+         rfrnc = (distance (uv3, MID_PT) * 32.0) + 1.0;
+         scale = lerp (1.0, pow (rfrnc, -1.0) * 24.0, progress);
+      }
+
+      xy = ((uv3 - MID_PT) * scale * scale) + MID_PT;
+
+      retval = ReadPixel (Fg_R, xy);
+      retval = lerp (Bgnd, retval, retval.a);
    }
    else {
       progress = ChangeDir ? Amount / 2.14 : (1.0 - Amount) / 2.14;
@@ -305,17 +327,16 @@ DeclareEntryPoint (xPinch_Fx_I)
    float progress, scale;
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         if (SwapDir) { progress = 1.0 - cos (sin ((1.0 - Amount) * QUARTER_PI)); }
-         else progress = 1.0 - cos (sin (Amount * QUARTER_PI));
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
-         scale = 1.0 + (progress * (32.0 + progress * 32.0));
-         xy = ((uv3 - MID_PT) * scale) + MID_PT;
+      if (SwapDir) { progress = 1.0 - cos (sin ((1.0 - Amount) * QUARTER_PI)); }
+      else progress = 1.0 - cos (sin (Amount * QUARTER_PI));
 
-         retval = ReadPixel (Pinch, xy);
-         retval = lerp (Bgnd, retval, retval.a);
-      }
+      scale = 1.0 + (progress * (32.0 + progress * 32.0));
+      xy = ((uv3 - MID_PT) * scale) + MID_PT;
+
+      retval = ReadPixel (Pinch, xy);
+      retval = lerp (Bgnd, retval, retval.a);
    }
    else {
       if (ChangeDir) { progress = 1.0 - cos (max (0.0, Amount - 0.25) * HALF_PI); }
