@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-17
+// @Released 2026-07-28
 // @Author jwrl
 // @Created 2017-08-25
 
@@ -31,9 +31,10 @@
  transition it only expands the halves from the edges.  This means that for blended
  effects the expand and squeeze settings behave identically.
 
- NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
- the revision process has meant the removal of masking.  In all other respects this
- behaves as the earlier versions did, and can be installed on any Lightworks version
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  The
+ revision process included the removal of masking and the addition of checkerboard
+ patterning to show transparency.  In all other respects this behaves as the earlier
+ versions did, and can be installed on any Lightworks version
  above 2022.
 */
 
@@ -41,6 +42,9 @@
 // Lightworks user effect BarndoorSqueezeTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-28 jwrl.
+// Added checkerboard alpha display to show key.
 //
 // Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
@@ -82,6 +86,9 @@ DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings", kNoFlags, 0
 DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend settings", false);
 DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
+
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
@@ -89,6 +96,8 @@ DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 #ifdef WINDOWS
 #define PROFILE ps_3_0
 #endif
+
+#define _TransparentBlack 0.0.xxxx
 
 //-----------------------------------------------------------------------------------------//
 // Functions
@@ -114,7 +123,7 @@ float4 fn_initFg (sampler F, float2 xy1, sampler B, float2 xy2)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
+   return Fgnd.a == 0.0 ? _TransparentBlack : Fgnd;
 }
 
 float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
@@ -124,6 +133,21 @@ float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
    if (!Blended) { Bgnd.a = 1.0; }
 
    return Bgnd;
+}
+
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -149,21 +173,20 @@ DeclareEntryPoint (BarndoorExpand_Eh)
    float negAmt, posAmt;
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         float Amt = SwapDir ? Amount : 1.0 - Amount;
-         float amount = Amt - 1.0;
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
-         negAmt = Amt * Split;
-         posAmt = 1.0 - (Amt * (1.0 - Split));
+      float Amt = SwapDir ? Amount : 1.0 - Amount;
+      float amount = Amt - 1.0;
 
-         xy1 = float2 ((uv3.x + amount) / Amt, uv3.y);
-         xy2 = float2 (uv3.x / Amt, uv3.y);
+      negAmt = Amt * Split;
+      posAmt = 1.0 - (Amt * (1.0 - Split));
 
-         retval = (uv3.x > posAmt) ? tex2D (Fg_Eh, xy1)
-                : (uv3.x < negAmt) ? tex2D (Fg_Eh, xy2) : kTransparentBlack;
-         retval = lerp (Bgnd, retval, retval.a);
-      }
+      xy1 = float2 ((uv3.x + amount) / Amt, uv3.y);
+      xy2 = float2 (uv3.x / Amt, uv3.y);
+
+      retval = (uv3.x > posAmt) ? tex2D (Fg_Eh, xy1)
+             : (uv3.x < negAmt) ? tex2D (Fg_Eh, xy2) : _TransparentBlack;
+      retval = lerp (Bgnd, retval, retval.a);
    }
    else {
       negAmt = Amount / 2.0;
@@ -200,21 +223,20 @@ DeclareEntryPoint (BarndoorExpand_Ev)
    float negAmt, posAmt;
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         float Amt = SwapDir ? Amount : 1.0 - Amount;
-         float amount = Amt - 1.0;
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
-         negAmt = Amt * (1.0 - Split);
-         posAmt = 1.0 - (Amt * Split);
+      float Amt = SwapDir ? Amount : 1.0 - Amount;
+      float amount = Amt - 1.0;
 
-         xy1 = float2 (uv3.x, (uv3.y + amount) / Amt);
-         xy2 = float2 (uv3.x, uv3.y / Amt);
+      negAmt = Amt * (1.0 - Split);
+      posAmt = 1.0 - (Amt * Split);
 
-         retval = (uv3.y > posAmt) ? tex2D (Fg_Ev, xy1)
-                : (uv3.y < negAmt) ? tex2D (Fg_Ev, xy2) : kTransparentBlack;
-         retval = lerp (Bgnd, retval, retval.a);
-      }
+      xy1 = float2 (uv3.x, (uv3.y + amount) / Amt);
+      xy2 = float2 (uv3.x, uv3.y / Amt);
+
+      retval = (uv3.y > posAmt) ? tex2D (Fg_Ev, xy1)
+             : (uv3.y < negAmt) ? tex2D (Fg_Ev, xy2) : _TransparentBlack;
+      retval = lerp (Bgnd, retval, retval.a);
    }
    else {
       negAmt = Amount / 2.0;
@@ -251,21 +273,20 @@ DeclareEntryPoint (BarndoorSqueeze_Sh)
    float negAmt, posAmt;
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         float Amt = SwapDir ? Amount : 1.0 - Amount;
-         float amount = Amt - 1.0;
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
-         negAmt = Amt * Split;
-         posAmt = 1.0 - (Amt * (1.0 - Split));
+      float Amt = SwapDir ? Amount : 1.0 - Amount;
+      float amount = Amt - 1.0;
 
-         xy1 = float2 ((uv3.x + amount) / Amt, uv3.y);
-         xy2 = float2 (uv3.x / Amt, uv3.y);
+      negAmt = Amt * Split;
+      posAmt = 1.0 - (Amt * (1.0 - Split));
 
-         retval = (uv3.x > posAmt) ? tex2D (Fg_Sh, xy1)
-                : (uv3.x < negAmt) ? tex2D (Fg_Sh, xy2) : kTransparentBlack;
-         retval = lerp (Bgnd, retval, retval.a);
-      }
+      xy1 = float2 ((uv3.x + amount) / Amt, uv3.y);
+      xy2 = float2 (uv3.x / Amt, uv3.y);
+
+      retval = (uv3.x > posAmt) ? tex2D (Fg_Sh, xy1)
+             : (uv3.x < negAmt) ? tex2D (Fg_Sh, xy2) : _TransparentBlack;
+      retval = lerp (Bgnd, retval, retval.a);
    }
    else {
       negAmt = 1.0 - Amount;
@@ -304,21 +325,20 @@ DeclareEntryPoint (BarndoorSqueeze_Sv)
    float negAmt, posAmt;
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         float Amt = SwapDir ? Amount : 1.0 - Amount;
-         float amount = Amt - 1.0;
+      if (ShowKey) return ShowAlpha (Fgnd, uv3);
 
-         negAmt = Amt * (1.0 - Split);
-         posAmt = 1.0 - (Amt * Split);
+      float Amt = SwapDir ? Amount : 1.0 - Amount;
+      float amount = Amt - 1.0;
 
-         xy1 = float2 (uv3.x, (uv3.y + amount) / Amt);
-         xy2 = float2 (uv3.x, uv3.y / Amt);
+      negAmt = Amt * (1.0 - Split);
+      posAmt = 1.0 - (Amt * Split);
 
-         retval = (uv3.y > posAmt) ? tex2D (Fg_Sv, xy1)
-                : (uv3.y < negAmt) ? tex2D (Fg_Sv, xy2) : kTransparentBlack;
-         retval = lerp (Bgnd, retval, retval.a);
-      }
+      xy1 = float2 (uv3.x, (uv3.y + amount) / Amt);
+      xy2 = float2 (uv3.x, uv3.y / Amt);
+
+      retval = (uv3.y > posAmt) ? tex2D (Fg_Sv, xy1)
+             : (uv3.y < negAmt) ? tex2D (Fg_Sv, xy2) : _TransparentBlack;
+      retval = lerp (Bgnd, retval, retval.a);
    }
    else {
       negAmt = 1.0 - Amount;
