@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-17
+// @Released 2026-07-28
 // @Author jwrl
 // @Created 2018-06-13
 
@@ -18,9 +18,10 @@
       [*]Swap sources:  This can be necessary when using a folded delta key
          (extracted) transition.
 
- NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
- the revision process has meant the removal of masking.  In all other respects this
- behaves as the earlier versions did, and can be installed on any Lightworks version
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  The
+ revision process included the removal of masking and the addition of checkerboard
+ patterning to show transparency.  In all other respects this behaves as the earlier
+ versions did, and can be installed on any Lightworks version
  above 2022.
 */
 
@@ -28,6 +29,9 @@
 // Lightworks user effect SqueezeTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-28 jwrl.
+// Added checkerboard alpha display to show key.
 //
 // Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
@@ -67,6 +71,9 @@ DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings", kNoFlags, 0
 DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend settings", false);
 DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
+
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
@@ -74,6 +81,8 @@ DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 #ifdef WINDOWS
 #define PROFILE ps_3_0
 #endif
+
+#define _TransparentBlack 0.0.xxxx
 
 //-----------------------------------------------------------------------------------------//
 // Functions
@@ -97,7 +106,24 @@ float4 fn_initFg (sampler F, float2 xy1, sampler B, float2 xy2)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
+   return Fgnd.a == 0.0 ? _TransparentBlack : Fgnd;
+}
+
+float4 ShowAlpha (sampler F, float2 xy)
+{
+   float4 vid = tex2D (F, xy);
+
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -116,7 +142,7 @@ DeclareEntryPoint (SqueezeRight)
 {
    float4 Fgnd, Bgnd;
 
-   if (ShowKey) return tex2D (Fg_R, uv3);
+   if (ShowKey) return ShowAlpha (Fg_R, uv3);
 
    float2 xy;
 
@@ -146,7 +172,7 @@ DeclareEntryPoint (SqueezeDown)
 {
    float4 Fgnd, Bgnd;
 
-   if (ShowKey) return tex2D (Fg_R, uv3);
+   if (ShowKey) return ShowAlpha (Fg_D, uv3);
 
    float2 xy;
 
@@ -175,7 +201,7 @@ DeclareEntryPoint (SqueezeLeft)
 {
    float4 Fgnd, Bgnd;
 
-   if (ShowKey) return tex2D (Fg_R, uv3);
+   if (ShowKey) return ShowAlpha (Fg_L, uv3);
 
    float2 xy;
 
@@ -204,7 +230,7 @@ DeclareEntryPoint (SqueezeUp)
 {
    float4 Fgnd, Bgnd;
 
-   if (ShowKey) return tex2D (Fg_R, uv3);
+   if (ShowKey) return ShowAlpha (Fg_U, uv3);
 
    float2 xy;
 
