@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-17
+// @Released 2026-07-28
 // @Author jwrl
 // @Created 2017-10-30
 
@@ -27,10 +27,10 @@
       [*]Swap sources:  This can be necessary when using a folded delta key
          (extracted) transition.
 
- NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
- the revision process has meant the removal of masking.  In all other respects this
- behaves as the earlier versions did, and can be installed on any Lightworks version
- above 2022.
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  The
+ revision process included the removal of masking and the addition of checkerboard
+ patterning to show transparency.  In all other respects this behaves as the earlier
+ versions did, and can be installed on any Lightworks version above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -38,11 +38,14 @@
 //
 // Version history:
 //
+// Updated 2026-07-28 jwrl.
+// Added a checkerboard pattern to show transparency.
+//
 // Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
 //
 // Updated 2024-05-24 jwrl.
-// Replaced kTransparentBlack with 0.0.xxxx to fix Linux lerp()/mix() bug.
+// Replaced _TransparentBlack with 0.0.xxxx to fix Linux lerp()/mix() bug.
 //
 // Updated 2023-08-02 jwrl.
 // Reworded source selection for 2023.2 settings.
@@ -85,6 +88,9 @@ DeclareFloatParam (KeyGain,        "Fine tune",     "Blend settings", kNoFlags, 
 DeclareBoolParam  (ShowKey,        "Show foreground key",             "Blend settings", false);
 DeclareBoolParam  (SwapSource,     "Swap sources",  "Blend settings", false);
 
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
+
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
@@ -93,10 +99,31 @@ DeclareBoolParam  (SwapSource,     "Swap sources",  "Blend settings", false);
 #define PROFILE ps_3_0
 #endif
 
+#define _TransparentBlack 0.0.xxxx
+
 #define RIPPLES  125.0
 #define SOFTNESS 0.45
 #define OFFSET   0.05
 #define SCALE    0.02
+
+//-----------------------------------------------------------------------------------------//
+// Functions
+//-----------------------------------------------------------------------------------------//
+
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
+}
 
 //-----------------------------------------------------------------------------------------//
 // Shaders
@@ -122,7 +149,7 @@ DeclarePass (Fgd)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
+   return Fgnd.a == 0.0 ? _TransparentBlack : Fgnd;
 }
 
 DeclarePass (Bgd)
@@ -138,7 +165,7 @@ DeclareEntryPoint (SineTrans)
 {
    float4 Fgnd = tex2D (Fgd, uv3);
 
-   if (Blended && ShowKey) return Fgnd;
+   if (Blended && ShowKey) { return ShowAlpha (Fgnd, uv3); }
 
    float4 Bgnd = tex2D (Bgd, uv3);
    float4 retval;
