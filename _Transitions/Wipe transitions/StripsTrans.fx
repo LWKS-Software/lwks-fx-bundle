@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-16
+// @Released 2026-07-29
 // @Author jwrl
 // @Created 2018-06-13
 
@@ -24,9 +24,10 @@
       [*]Swap sources:  This can be necessary when using a folded delta key
          (extracted) transition.
 
- NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
- the revision process has meant the removal of masking.  In all other respects this
- behaves as the earlier versions did, and can be installed on any Lightworks version
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  The
+ revision process included the removal of masking and the addition of checkerboard
+ patterning to show transparency.  In all other respects this behaves as the earlier
+ versions did, and can be installed on any Lightworks version
  above 2022.
 */
 
@@ -34,6 +35,9 @@
 // Lightworks user effect StripsTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-29 jwrl.
+// Added checkerboard alpha display to show key.
 //
 // Updated 2026-07-16 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
@@ -62,8 +66,6 @@ DeclareLightworksEffect ("Strips transition", "Mix", "Wipe transitions", "Splits
 
 DeclareInputs (Fg, Bg);
 
-DeclareMask;
-
 //-----------------------------------------------------------------------------------------//
 // Parameters
 //-----------------------------------------------------------------------------------------//
@@ -83,6 +85,9 @@ DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
 DeclareFloatParam (_Progress);
 
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
+
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
@@ -91,13 +96,34 @@ DeclareFloatParam (_Progress);
 #define PROFILE ps_3_0
 #endif
 
+#define _TransparentBlack 0.0.xxxx
+
 #define HEIGHT   20.0
 
 #define PI       3.1415926536
 #define HALF_PI  1.5707963268
 
 //-----------------------------------------------------------------------------------------//
-// Shoders
+// Functions
+//-----------------------------------------------------------------------------------------//
+
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
+}
+
+//-----------------------------------------------------------------------------------------//
+// Shaders
 //-----------------------------------------------------------------------------------------//
 
 DeclarePass (Fgd)
@@ -128,7 +154,7 @@ DeclareEntryPoint (StripsTrans)
 {
    float4 Fgnd = tex2D (Fgd, uv3);
 
-   if (ShowKey) { return lerp (0.0.xxxx, Fgnd, Fgnd.a); }
+   if (ShowKey) { return ShowAlpha (Fgnd, uv3); }
 
    float4 Bgnd = tex2D (Bgd, uv3);
    float4 retval;
