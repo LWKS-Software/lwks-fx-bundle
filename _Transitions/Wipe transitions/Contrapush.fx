@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-16
+// @Released 2026-07-29
 // @Author jwrl
 // @Created 2024-04-03
 
@@ -37,9 +37,10 @@
  has been provided even though it seems a little pointless given the nature of this
  effect and the fact that transitions with masking code don't use it.
 
- NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
- the revision process has meant the removal of masking.  In all other respects this
- behaves as the earlier versions did, and can be installed on any Lightworks version
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  The
+ revision process included the removal of masking and the addition of checkerboard
+ patterning to show transparency.  In all other respects this behaves as the earlier
+ versions did, and can be installed on any Lightworks version
  above 2022.
 */
 
@@ -47,6 +48,9 @@
 // Lightworks user effect Contrapush.fx
 //
 // Version history:
+//
+// Updated 2026-07-29 jwrl.
+// Added checkerboard alpha display to show key.
 //
 // Updated 2026-07-16 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
@@ -83,6 +87,9 @@ DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings", kNoFlags, 0
 DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend settings", false);
 DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
+
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
@@ -90,6 +97,8 @@ DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 #ifdef WINDOWS
 #define PROFILE ps_3_0
 #endif
+
+#define _TransparentBlack 0.0.xxxx
 
 #define TWO_PI 6.283185
 
@@ -114,19 +123,19 @@ float4 keygen (sampler F, float2 xy1, sampler B, float2 xy2)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
+   return Fgnd.a == 0.0 ? _TransparentBlack : Fgnd;
 }
 
 float4 initFg (sampler F, float2 xy1, sampler B, float2 xy2)
 {
-   if (Blended) return SwapDir ? kTransparentBlack : keygen (F, xy1, B, xy2);
+   if (Blended) return SwapDir ? _TransparentBlack : keygen (F, xy1, B, xy2);
 
    return ReadPixel (F, xy1);
 }
 
 float4 initBg (sampler F, float2 xy1, sampler B, float2 xy2)
 {
-   if (Blended) return SwapDir ? keygen (F, xy1, B, xy2) : kTransparentBlack;
+   if (Blended) return SwapDir ? keygen (F, xy1, B, xy2) : _TransparentBlack;
 
    return ReadPixel (B, xy2);
 }
@@ -196,6 +205,23 @@ bool Hlimits (float2 xy, out float A, out float B)
    return (xy.x < Wfix) && (xy.y < Hfix);
 }
 
+float4 ShowAlpha (sampler F, float2 xy)
+{
+   float4 vid = tex2D (F, xy);
+
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
+}
+
 //-----------------------------------------------------------------------------------------//
 // Shaders
 //-----------------------------------------------------------------------------------------//
@@ -227,18 +253,17 @@ DeclareEntryPoint (ContraPush_0)
    float2 xy4 = float2 (xy3.x + 1.0, uv3.y);
 
    if (inside) { retval = xy1.x > x ? tex2D (Bc0, xy2) : tex2D (Fc0, xy1); }
-   else retval = kTransparentBlack;
+   else retval = _TransparentBlack;
 
    if (Blended) {
-      float4 partial = kTransparentBlack;
+      float4 partial = _TransparentBlack;
 
       if (SwapSource) Bgd = ReadPixel (Fg, uv1);
 
-      if (ShowKey) { retval = SwapDir ? tex2D (Bc0, uv3) : tex2D (Fc0, uv3); }
-      else {
-         partial = SwapDir ? tex2D (Bb0, xy4) : tex2D (Fb0, xy3);
-         partial = lerp (Bgd, partial, partial.a);
-      }
+      if (ShowKey) { return SwapDir ? ShowAlpha (Bc0, uv3) : ShowAlpha (Fc0, uv3); }
+
+      partial = SwapDir ? tex2D (Bb0, xy4) : tex2D (Fb0, xy3);
+      partial = lerp (Bgd, partial, partial.a);
 
       retval = lerp (partial, retval, retval.a);
    }
@@ -275,16 +300,15 @@ DeclareEntryPoint (ContraPush_1)
    float2 xy4 = float2 (xy3.x + 1.0, uv3.y);
 
    if (inside) { retval = xy1.x > x ? tex2D (Fc1, xy2) : tex2D (Bc1, xy1); }
-   else retval = kTransparentBlack;
+   else retval = _TransparentBlack;
 
    if (Blended) {
-      float4 partial = kTransparentBlack;
+      float4 partial = _TransparentBlack;
 
-      if (ShowKey) { retval = SwapDir ? tex2D (Bc1, uv3) : tex2D (Fc1, uv3); }
-      else {
-         partial = SwapDir ? tex2D (Bb1, xy3) : tex2D (Fb1, xy4);
-         partial = lerp (Bgd, partial, partial.a);
-      }
+      if (ShowKey) { return SwapDir ? ShowAlpha (Bc1, uv3) : ShowAlpha (Fc1, uv3); }
+
+      partial = SwapDir ? tex2D (Bb1, xy3) : tex2D (Fb1, xy4);
+      partial = lerp (Bgd, partial, partial.a);
 
       retval = lerp (partial, retval, retval.a);
    }
@@ -321,18 +345,17 @@ DeclareEntryPoint (Contrapush_2)
    float2 xy4 = float2 (uv3.x, xy3.y + 1.0);
 
    if (inside) { retval = xy1.y > y ? tex2D (Bc2, xy2) : tex2D (Fc2, xy1); }
-   else retval = kTransparentBlack;
+   else retval = _TransparentBlack;
 
    if (Blended) {
-      float4 partial = kTransparentBlack;
+      float4 partial = _TransparentBlack;
 
       if (SwapSource) Bgd = ReadPixel (Fg, uv1);
 
-      if (ShowKey) { retval = SwapDir ? tex2D (Bc2, uv3) : tex2D (Fc2, uv3); }
-      else {
-         partial = SwapDir ? tex2D (Bb2, xy4) : tex2D (Fb2, xy3);
-         partial = lerp (Bgd, partial, partial.a);
-      }
+      if (ShowKey) { return SwapDir ? ShowAlpha (Bc2, uv3) : ShowAlpha (Fc2, uv3); }
+
+      partial = SwapDir ? tex2D (Bb2, xy4) : tex2D (Fb2, xy3);
+      partial = lerp (Bgd, partial, partial.a);
 
       retval = lerp (partial, retval, retval.a);
    }
@@ -369,18 +392,17 @@ DeclareEntryPoint (Contrapush_3)
    float2 xy4 = float2 (uv3.x, xy3.y + 1.0);
 
    if (inside) { retval = xy1.y > y ? tex2D (Fc3, xy2) : tex2D (Bc3, xy1); }
-   else retval = kTransparentBlack;
+   else retval = _TransparentBlack;
 
    if (Blended) {
-      float4 partial = kTransparentBlack;
+      float4 partial = _TransparentBlack;
 
       if (SwapSource) Bgd = ReadPixel (Fg, uv1);
 
-      if (ShowKey) { retval = SwapDir ? tex2D (Bc2, uv3) : tex2D (Fc2, uv3); }
-      else {
-         partial = SwapDir ? tex2D (Bb3, xy3) : tex2D (Fb3, xy4);
-         partial = lerp (Bgd, partial, partial.a);
-      }
+      if (ShowKey) { return SwapDir ? ShowAlpha (Bc2, uv3) : ShowAlpha (Fc2, uv3); }
+
+      partial = SwapDir ? tex2D (Bb3, xy3) : tex2D (Fb3, xy4);
+      partial = lerp (Bgd, partial, partial.a);
 
       retval = lerp (partial, retval, retval.a);
    }
