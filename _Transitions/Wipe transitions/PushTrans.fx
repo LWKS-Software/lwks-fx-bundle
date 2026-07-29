@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-16
+// @Released 2026-07-29
 // @Author jwrl
 // @Created 2018-06-12
 
@@ -19,9 +19,10 @@
       [*]Swap sources:  This can be necessary when using a folded delta key
          (extracted) transition.
 
- NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
- the revision process has meant the removal of masking.  In all other respects this
- behaves as the earlier versions did, and can be installed on any Lightworks version
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  The
+ revision process included the removal of masking and the addition of checkerboard
+ patterning to show transparency.  In all other respects this behaves as the earlier
+ versions did, and can be installed on any Lightworks version
  above 2022.
 */
 
@@ -29,6 +30,9 @@
 // Lightworks user effect PushTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-29 jwrl.
+// Added checkerboard alpha display to show key.
 //
 // Updated 2026-07-16 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
@@ -67,6 +71,9 @@ DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings", kNoFlags, 0
 DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend settings", false);
 DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
+
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
@@ -74,6 +81,8 @@ DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 #ifdef WINDOWS
 #define PROFILE ps_3_0
 #endif
+
+#define _TransparentBlack 0.0.xxxx
 
 #define HALF_PI 1.5707963268
 
@@ -99,6 +108,23 @@ float4 fn_initFg (sampler F, float2 xy1, sampler B, float2 xy2)
    return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
 }
 
+float4 ShowAlpha (sampler F, float2 xy)
+{
+   float4 vid = tex2D (F, xy);
+
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
+}
+
 //-----------------------------------------------------------------------------------------//
 // Shaders
 //-----------------------------------------------------------------------------------------//
@@ -113,19 +139,13 @@ DeclarePass (Bg_R)
 
 DeclareEntryPoint (Push_right)
 {
-   float4 Fgnd, Bgnd;
+   if (ShowKey) { return ShowAlpha (Fg_R, uv3); }
 
-   if (ShowKey) {
-      Bgnd = kTransparentBlack;
-      Fgnd = ReadPixel (Fg_R, uv3);
-   }
-   else {
-      float2 xy = SwapDir ? float2 (uv3.x - sin (HALF_PI * Amount) + 1.0, uv3.y)
-                          : float2 (uv3.x + cos (HALF_PI * Amount) - 1.0, uv3.y);
+   float2 xy = SwapDir ? float2 (uv3.x - sin (HALF_PI * Amount) + 1.0, uv3.y)
+                       : float2 (uv3.x + cos (HALF_PI * Amount) - 1.0, uv3.y);
 
-      Bgnd = tex2D (Bg_R, uv3);
-      Fgnd = ReadPixel (Fg_R, xy);
-   }
+   float4 Bgnd = tex2D (Bg_R, uv3);
+   float4 Fgnd = ReadPixel (Fg_R, xy);
 
    return lerp (Bgnd, Fgnd, Fgnd.a);
 }
@@ -142,19 +162,13 @@ DeclarePass (Bg_D)
 
 DeclareEntryPoint (Push_down)
 {
-   float4 Fgnd, Bgnd;
+   if (ShowKey) { return ShowAlpha (Fg_D, uv3); }
 
-   if (ShowKey) {
-      Bgnd = kTransparentBlack;
-      Fgnd = ReadPixel (Fg_D, uv3);
-   }
-   else {
-      float2 xy = SwapDir ? float2 (uv3.x, uv3.y + cos (HALF_PI * Amount))
-                          : float2 (uv3.x, uv3.y - sin (HALF_PI * Amount));
+   float2 xy = SwapDir ? float2 (uv3.x, uv3.y + cos (HALF_PI * Amount))
+                       : float2 (uv3.x, uv3.y - sin (HALF_PI * Amount));
 
-      Bgnd = tex2D (Bg_D, uv3);
-      Fgnd = ReadPixel (Fg_D, xy);
-   }
+   float4 Bgnd = tex2D (Bg_D, uv3);
+   float4 Fgnd = ReadPixel (Fg_D, xy);
 
    return lerp (Bgnd, Fgnd, Fgnd.a);
 }
@@ -171,19 +185,13 @@ DeclarePass (Bg_L)
 
 DeclareEntryPoint (Push_left)
 {
-   float4 Fgnd, Bgnd;
+   if (ShowKey) { return ShowAlpha (Fg_L, uv3); }
 
-   if (ShowKey) {
-      Bgnd = kTransparentBlack;
-      Fgnd = ReadPixel (Fg_L, uv3);
-   }
-   else {
-      float2 xy = SwapDir ? float2 (uv3.x + sin (HALF_PI * Amount) - 1.0, uv3.y)
-                          : float2 (uv3.x - cos (HALF_PI * Amount) + 1.0, uv3.y);
+   float2 xy = SwapDir ? float2 (uv3.x + sin (HALF_PI * Amount) - 1.0, uv3.y)
+                       : float2 (uv3.x - cos (HALF_PI * Amount) + 1.0, uv3.y);
 
-      Bgnd = tex2D (Bg_L, uv3);
-      Fgnd = ReadPixel (Fg_L, xy);
-   }
+   float4 Bgnd = tex2D (Bg_L, uv3);
+   float4 Fgnd = ReadPixel (Fg_L, xy);
 
    return lerp (Bgnd, Fgnd, Fgnd.a);
 }
@@ -200,19 +208,13 @@ DeclarePass (Bg_U)
 
 DeclareEntryPoint (Push_up)
 {
-   float4 Fgnd, Bgnd;
+   if (ShowKey) { return ShowAlpha (Fg_U, uv3); }
 
-   if (ShowKey) {
-      Bgnd = kTransparentBlack;
-      Fgnd = ReadPixel (Fg_U, uv3);
-   }
-   else {
-      float2 xy = SwapDir ? float2 (uv3.x, uv3.y - cos (HALF_PI * Amount))
-                          : float2 (uv3.x, uv3.y + sin (HALF_PI * Amount));
+   float2 xy = SwapDir ? float2 (uv3.x, uv3.y - cos (HALF_PI * Amount))
+                       : float2 (uv3.x, uv3.y + sin (HALF_PI * Amount));
 
-      Bgnd = tex2D (Bg_U, uv3);
-      Fgnd = ReadPixel (Fg_U, xy);
-   }
+   float4 Bgnd = tex2D (Bg_U, uv3);
+   float4 Fgnd = ReadPixel (Fg_U, xy);
 
    return lerp (Bgnd, Fgnd, Fgnd.a);
 }
