@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-16
+// @Released 2026-07-29
 // @Author jwrl
 // @Created 2024-05-15
 
@@ -50,16 +50,20 @@
  setting is inactive when using blend mode.  Instead the usual "Transition into blend"
  setting is used.
 
- NOTE:  This effect has been revised for Lightworks version 2026 and higher   In all
- respects this behaves as the earlier versions did, and can be installed on Lightworks
- versions 2023.1 and above.  If the transition duration is shorter in frames than the
- number of wipes chosen the results will be unpredictable.
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  The
+ revision process included the removal of masking and the addition of checkerboard
+ patterning to show transparency.  In all other respects this behaves as the earlier
+ versions did, and can be installed on any Lightworks version
+ above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect MultiWipe.fx
 //
 // Version history:
+//
+// Updated 2026-07-29 jwrl.
+// Added checkerboard alpha display to show key.
 //
 // Updated 2026-07-24 jwrl.
 // Fixed delta key bug.
@@ -104,6 +108,9 @@ DeclareBoolParam  (SwapDir,        "Transition into blend",              "Blend 
 DeclareFloatParam (KeyGain,        "Fine tune",        "Blend settings", kNoFlags, 0.25, 0.0, 1.0);
 DeclareBoolParam  (ShowKey,        "Show foreground key",                "Blend settings", false);
 DeclareBoolParam  (SwapSource,     "Swap sources",     "Blend settings", false);
+
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
 
 DeclareFloatParam (_OutputAspectRatio);
 
@@ -205,6 +212,23 @@ float4 initKey (sampler Ff, sampler Bb, float2 xy)
 // to recover the video.  It uses those to wipe and scale the foreground pointed to by
 // sampler Ff over the background video in Bgd.
 
+float4 ShowAlpha (sampler F, float2 xy)
+{
+   float4 vid = tex2D (F, xy);
+
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
+}
+
 float4 doWipe (float4 Bgd, sampler Ff, float2 xy1, int idx, float amt)
 {
    amt = saturate (amt);   // Ensure that amt is within legal bounds.
@@ -296,12 +320,9 @@ DeclareEntryPoint (One_wipe)
    // whether we want to just show the key or not, and selecting SwapDir or TransDirection.
 
    if (Blended) {
-      if (ShowKey) {
-         float4 Fgnd = tex2D (Fg0, uv3);
+      if (ShowKey) { return ShowAlpha (Fg0, uv3); }
 
-         return lerp (_TransparentBlack, Fgnd, Fgnd.a);
-      }
-      else progress = SwapDir ? amount : 1.0 - amount;
+      progress = SwapDir ? amount : 1.0 - amount;
    }
    else progress = TransDirection ? 1.0 - amount : amount;
 
@@ -342,12 +363,9 @@ DeclareEntryPoint (Two_wipes)
    float offset = clamp (1.0 - Overlap, 0.25, 1.0);
 
    if (Blended) {
-      if (ShowKey) {
-         float4 Fgnd = tex2D (Fg1, uv3);
+      if (ShowKey) { return ShowAlpha (Fg1, uv3); }
 
-         return lerp (_TransparentBlack, Fgnd, Fgnd.a);
-      }
-      else progress = SwapDir ? amount : 1.0 - amount;
+      progress = SwapDir ? amount : 1.0 - amount;
    }
    else progress = TransDirection ? 1.0 - amount : amount;
 
@@ -391,12 +409,9 @@ DeclareEntryPoint (Three_wipes)
    float offset = clamp (1.0 - Overlap, 0.25, 1.0);
 
    if (Blended) {
-      if (ShowKey) {
-         float4 Fgnd = tex2D (Fg2, uv3);
+      if (ShowKey) { return ShowAlpha (Fg2, uv3); }
 
-         return lerp (_TransparentBlack, Fgnd, Fgnd.a);
-      }
-      else progress = SwapDir ? amount : 1.0 - amount;
+      progress = SwapDir ? amount : 1.0 - amount;
    }
    else progress = TransDirection ? 1.0 - amount : amount;
 
@@ -444,12 +459,9 @@ DeclareEntryPoint (Four_wipes)
    float offset = clamp (1.0 - Overlap, 0.25, 1.0);
 
    if (Blended) {
-      if (ShowKey) {
-         float4 Fgnd = tex2D (Fg3, uv3);
+      if (ShowKey) { return ShowAlpha (Fg3, uv3); }
 
-         return lerp (_TransparentBlack, Fgnd, Fgnd.a);
-      }
-      else progress = SwapDir ? amount : 1.0 - amount;
+      progress = SwapDir ? amount : 1.0 - amount;
    }
    else progress = TransDirection ? 1.0 - amount : amount;
 
@@ -501,12 +513,9 @@ DeclareEntryPoint (Five_wipes)
    float offset = clamp (1.0 - Overlap, 0.25, 1.0);
 
    if (Blended) {
-      if (ShowKey) {
-         float4 Fgnd = tex2D (Fg4, uv3);
+      if (ShowKey) { return ShowAlpha (Fg4, uv3); }
 
-         return lerp (_TransparentBlack, Fgnd, Fgnd.a);
-      }
-      else progress = SwapDir ? amount : 1.0 - amount;
+      progress = SwapDir ? amount : 1.0 - amount;
    }
    else progress = TransDirection ? 1.0 - amount : amount;
 
