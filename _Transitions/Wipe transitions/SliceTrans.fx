@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-16
+// @Released 2026-07-29
 // @Author jwrl
 // @Created 2023-03-04
 
@@ -26,9 +26,10 @@
       [*]Swap sources:  This can be necessary when using a folded delta key
          (extracted) transition.
 
- NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
- the revision process has meant the removal of masking.  In all other respects this
- behaves as the earlier versions did, and can be installed on any Lightworks version
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  The
+ revision process included the removal of masking and the addition of checkerboard
+ patterning to show transparency.  In all other respects this behaves as the earlier
+ versions did, and can be installed on any Lightworks version
  above 2022.
 */
 
@@ -36,6 +37,9 @@
 // Lightworks user effect SliceTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-29 jwrl.
+// Added checkerboard alpha display to show key.
 //
 // Updated 2026-07-16 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
@@ -78,6 +82,9 @@ DeclareFloatParam (KeyGain,        "Fine tune",       "Blend settings", kNoFlags
 DeclareBoolParam  (ShowKey,        "Show foreground key",               "Blend settings", false);
 DeclareBoolParam  (SwapSource,     "Swap sources",    "Blend settings", false);
 
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
+
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
@@ -85,6 +92,8 @@ DeclareBoolParam  (SwapSource,     "Swap sources",    "Blend settings", false);
 #ifdef WINDOWS
 #define PROFILE ps_3_0
 #endif
+
+#define _TransparentBlack 0.0.xxxx
 
 //-----------------------------------------------------------------------------------------//
 // Functions
@@ -110,7 +119,7 @@ float4 fn_initFg (sampler F, float2 xy1, sampler B, float2 xy2)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
+   return Fgnd.a == 0.0 ? _TransparentBlack : Fgnd;
 }
 
 float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
@@ -120,6 +129,21 @@ float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
    if (!Blended) { Bgnd.a = 1.0; }
 
    return Bgnd;
+}
+
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -148,30 +172,25 @@ DeclareEntryPoint (SliceRight)
    if (Blended) {
       float4 maskBg;
 
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = kTransparentBlack;
+      if (ShowKey) { return ShowAlpha (Fgnd, uv3); }
+
+      if (SwapDir) {
+         amount_1 = pow (1.0 - Amount, 3.0);
+         amount_2 = (1.0 - pow (Amount, 3.0)) / (strips * 2.0);
+
+         xy.x -= (Mode == 1) ? (ceil (xy.y * strips) * amount_2) + amount_1
+                             : (ceil ((1.0 - xy.y) * strips) * amount_2) + amount_1;
       }
       else {
-         if (SwapDir) {
-            amount_1 = pow (1.0 - Amount, 3.0);
-            amount_2 = (1.0 - pow (Amount, 3.0)) / (strips * 2.0);
+         amount_1 = pow (Amount, 3.0);
+         amount_2 = (1.0 - pow (1.0 - Amount, 3.0)) / (strips * 2.0);
 
-            xy.x -= (Mode == 1) ? (ceil (xy.y * strips) * amount_2) + amount_1
+         xy.x += (Mode == 1) ? (ceil (xy.y * strips) * amount_2) + amount_1
                                 : (ceil ((1.0 - xy.y) * strips) * amount_2) + amount_1;
-         }
-         else {
-            amount_1 = pow (Amount, 3.0);
-            amount_2 = (1.0 - pow (1.0 - Amount, 3.0)) / (strips * 2.0);
-
-            xy.x += (Mode == 1) ? (ceil (xy.y * strips) * amount_2) + amount_1
-                                : (ceil ((1.0 - xy.y) * strips) * amount_2) + amount_1;
-         }
-
-         retval = ReadPixel (Fg_R, xy);
-         maskBg = Bgnd;
       }
 
+      retval = ReadPixel (Fg_R, xy);
+      maskBg = Bgnd;
       retval = lerp (maskBg, retval, retval.a);
    }
    else {
@@ -213,30 +232,25 @@ DeclareEntryPoint (SliceLeft)
    if (Blended) {
       float4 maskBg;
 
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = kTransparentBlack;
+      if (ShowKey) { return ShowAlpha (Fgnd, uv3); }
+
+      if (SwapDir) {
+         amount_1 = pow (1.0 - Amount, 3.0);
+         amount_2 = (1.0 - pow (Amount, 3.0)) / (strips * 2.0);
+
+         xy.x += (Mode == 1) ? (ceil (xy.y * strips) * amount_2) + amount_1
+                             : (ceil ((1.0 - xy.y) * strips) * amount_2) + amount_1;
       }
       else {
-         if (SwapDir) {
-            amount_1 = pow (1.0 - Amount, 3.0);
-            amount_2 = (1.0 - pow (Amount, 3.0)) / (strips * 2.0);
+         amount_1 = pow (Amount, 3.0);
+         amount_2 = (1.0 - pow (1.0 - Amount, 3.0)) / (strips * 2.0);
 
-            xy.x += (Mode == 1) ? (ceil (xy.y * strips) * amount_2) + amount_1
-                                : (ceil ((1.0 - xy.y) * strips) * amount_2) + amount_1;
-         }
-         else {
-            amount_1 = pow (Amount, 3.0);
-            amount_2 = (1.0 - pow (1.0 - Amount, 3.0)) / (strips * 2.0);
-
-            xy.x -= (Mode == 1) ? (ceil (xy.y * strips) * amount_2) + amount_1
-                                : (ceil ((1.0 - xy.y) * strips) * amount_2) + amount_1;
-         }
-
-         retval = ReadPixel (Fg_L, xy);
-         maskBg = Bgnd;
+         xy.x -= (Mode == 1) ? (ceil (xy.y * strips) * amount_2) + amount_1
+                             : (ceil ((1.0 - xy.y) * strips) * amount_2) + amount_1;
       }
 
+      retval = ReadPixel (Fg_L, xy);
+      maskBg = Bgnd;
       retval = lerp (maskBg, retval, retval.a);
    }
    else {
@@ -278,30 +292,25 @@ DeclareEntryPoint (SliceTop)
    if (Blended) {
       float4 maskBg;
 
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = kTransparentBlack;
+      if (ShowKey) { return ShowAlpha (Fgnd, uv3); }
+
+      if (SwapDir) {
+         amount_1 = pow (1.0 - Amount, 3.0);
+         amount_2 = (1.0 - pow (Amount, 3.0)) / (strips * 2.0);
+
+         xy.y += (Mode == 1) ? (ceil (xy.x * strips) * amount_2) + amount_1
+                             : (ceil ((1.0 - xy.x) * strips) * amount_2) + amount_1;
       }
       else {
-         if (SwapDir) {
-            amount_1 = pow (1.0 - Amount, 3.0);
-            amount_2 = (1.0 - pow (Amount, 3.0)) / (strips * 2.0);
+         amount_1 = pow (Amount, 3.0);
+         amount_2 = (1.0 - pow (1.0 - Amount, 3.0)) / (strips * 2.0);
 
-            xy.y += (Mode == 1) ? (ceil (xy.x * strips) * amount_2) + amount_1
-                                : (ceil ((1.0 - xy.x) * strips) * amount_2) + amount_1;
-         }
-         else {
-            amount_1 = pow (Amount, 3.0);
-            amount_2 = (1.0 - pow (1.0 - Amount, 3.0)) / (strips * 2.0);
-
-            xy.y -= (Mode == 1) ? (ceil (xy.x * strips) * amount_2) + amount_1
-                                : (ceil ((1.0 - xy.x) * strips) * amount_2) + amount_1;
-         }
-
-         retval = ReadPixel (Fg_T, xy);
-         maskBg = Bgnd;
+         xy.y -= (Mode == 1) ? (ceil (xy.x * strips) * amount_2) + amount_1
+                             : (ceil ((1.0 - xy.x) * strips) * amount_2) + amount_1;
       }
 
+      retval = ReadPixel (Fg_T, xy);
+      maskBg = Bgnd;
       retval = lerp (maskBg, retval, retval.a);
    }
    else {
@@ -343,30 +352,25 @@ DeclareEntryPoint (SliceBottom)
    if (Blended) {
       float4 maskBg;
 
-      if (ShowKey) {
-         retval = Fgnd;
-         maskBg = kTransparentBlack;
+      if (ShowKey) { return ShowAlpha (Fgnd, uv3); }
+
+      if (SwapDir) {
+         amount_1 = pow (1.0 - Amount, 3.0);
+         amount_2 = (1.0 - pow (Amount, 3.0)) / (strips * 2.0);
+
+         xy.y -= (Mode == 1) ? (ceil (xy.x * strips) * amount_2) + amount_1
+                             : (ceil ((1.0 - xy.x) * strips) * amount_2) + amount_1;
       }
       else {
-         if (SwapDir) {
-            amount_1 = pow (1.0 - Amount, 3.0);
-            amount_2 = (1.0 - pow (Amount, 3.0)) / (strips * 2.0);
+         amount_1 = pow (Amount, 3.0);
+         amount_2 = (1.0 - pow (1.0 - Amount, 3.0)) / (strips * 2.0);
 
-            xy.y -= (Mode == 1) ? (ceil (xy.x * strips) * amount_2) + amount_1
-                                : (ceil ((1.0 - xy.x) * strips) * amount_2) + amount_1;
-         }
-         else {
-            amount_1 = pow (Amount, 3.0);
-            amount_2 = (1.0 - pow (1.0 - Amount, 3.0)) / (strips * 2.0);
-
-            xy.y += (Mode == 1) ? (ceil (xy.x * strips) * amount_2) + amount_1
-                                : (ceil ((1.0 - xy.x) * strips) * amount_2) + amount_1;
-         }
-
-         retval = ReadPixel (Fg_B, xy);
-         maskBg = Bgnd;
+         xy.y += (Mode == 1) ? (ceil (xy.x * strips) * amount_2) + amount_1
+                             : (ceil ((1.0 - xy.x) * strips) * amount_2) + amount_1;
       }
 
+      retval = ReadPixel (Fg_B, xy);
+      maskBg = Bgnd;
       retval = lerp (maskBg, retval, retval.a);
    }
    else {
