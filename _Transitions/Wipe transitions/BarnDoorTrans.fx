@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-16
+// @Released 2026-07-29
 // @Author jwrl
 // @Created 2017-08-24
 
@@ -23,9 +23,10 @@
       [*]Swap sources:  This can be necessary when using a folded delta key
          (extracted) transition.
 
- NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
- the revision process has meant the removal of masking.  In all other respects this
- behaves as the earlier versions did, and can be installed on any Lightworks version
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  The
+ revision process included the removal of masking and the addition of checkerboard
+ patterning to show transparency.  In all other respects this behaves as the earlier
+ versions did, and can be installed on any Lightworks version
  above 2022.
 */
 
@@ -33,6 +34,9 @@
 // Lightworks user effect BarnDoorTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-29 jwrl.
+// Added checkerboard alpha display to show key.
 //
 // Updated 2026-07-16 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
@@ -72,6 +76,9 @@ DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings", kNoFlags, 0
 DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend settings", false);
 DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
+
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
@@ -82,6 +89,8 @@ DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
 #define OPEN false
 #define SHUT true
+
+#define _TransparentBlack 0.0.xxxx
 
 //-----------------------------------------------------------------------------------------//
 // Functions
@@ -107,7 +116,7 @@ float4 fn_initFg (sampler F, float2 xy1, sampler B, float2 xy2)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
+   return Fgnd.a == 0.0 ? _TransparentBlack : Fgnd;
 }
 
 float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
@@ -130,7 +139,7 @@ float4 fn_split_H (sampler V, float2 uv, bool mode)
    float2 xy2 = float2 (uv.x - negAmt + 0.5, uv.y);
 
    return uv.x > posAmt ? ReadPixel (V, xy1) : (uv.x < negAmt)
-                        ? ReadPixel (V, xy2) : kTransparentBlack;
+                        ? ReadPixel (V, xy2) : _TransparentBlack;
 }
 
 float4 fn_split_V (sampler V, float2 uv, bool mode)
@@ -144,7 +153,22 @@ float4 fn_split_V (sampler V, float2 uv, bool mode)
    float2 xy2 = float2 (uv.x, uv.y - negAmt + 0.5);
 
    return uv.y > posAmt ? ReadPixel (V, xy1) : (uv.y < negAmt)
-                        ? ReadPixel (V, xy2) : kTransparentBlack;
+                        ? ReadPixel (V, xy2) : _TransparentBlack;
+}
+
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -166,14 +190,10 @@ DeclareEntryPoint (BarnDoor_OH)
    float4 Buffer, retval;
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         Buffer = kTransparentBlack;
-      }
-      else {
-         retval = fn_split_H (Fg_OH, uv3, SwapDir);
-         Buffer = Bgnd;
-      }
+      if (ShowKey) { return ShowAlpha (Fgnd, uv3); }
+
+      retval = fn_split_H (Fg_OH, uv3, SwapDir);
+      Buffer = Bgnd;
    }
    else {
       retval = fn_split_H (Fg_OH, uv3, OPEN);
@@ -200,14 +220,10 @@ DeclareEntryPoint (BarnDoor_SH)
    float4 Buffer, retval;
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         Buffer = kTransparentBlack;
-      }
-      else {
-         retval = fn_split_H (Fg_SH, uv3, SwapDir);
-         Buffer = Bgnd;
-      }
+      if (ShowKey) { return ShowAlpha (Fgnd, uv3); }
+
+      retval = fn_split_H (Fg_SH, uv3, SwapDir);
+      Buffer = Bgnd;
    }
    else {
       retval = fn_split_H (Bg_SH, uv3, SHUT);
@@ -234,14 +250,10 @@ DeclareEntryPoint (BarnDoor_OV)
    float4 Buffer, retval;
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         Buffer = kTransparentBlack;
-      }
-      else {
-         retval = fn_split_V (Fg_OV, uv3, SwapDir);
-         Buffer = Bgnd;
-      }
+      if (ShowKey) { return ShowAlpha (Fgnd, uv3); }
+
+      retval = fn_split_V (Fg_OV, uv3, SwapDir);
+      Buffer = Bgnd;
    }
    else {
       retval = fn_split_V (Fg_OV, uv3, OPEN);
@@ -268,14 +280,10 @@ DeclareEntryPoint (BarnDoor_SV)
    float4 Buffer, retval;
 
    if (Blended) {
-      if (ShowKey) {
-         retval = Fgnd;
-         Buffer = kTransparentBlack;
-      }
-      else {
-         retval = fn_split_V (Fg_SV, uv3, SwapDir);
-         Buffer = Bgnd;
-      }
+      if (ShowKey) { return ShowAlpha (Fgnd, uv3); }
+
+      retval = fn_split_V (Fg_SV, uv3, SwapDir);
+      Buffer = Bgnd;
    }
    else {
       retval = fn_split_V (Bg_SV, uv3, SHUT);
