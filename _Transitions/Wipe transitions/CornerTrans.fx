@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-16
+// @Released 2026-07-29
 // @Author jwrl
 // @Created 2017-08-25
 
@@ -21,9 +21,10 @@
       [*]Swap sources:  This can be necessary when using a folded delta key
          (extracted) transition.
 
- NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
- the revision process has meant the removal of masking.  In all other respects this
- behaves as the earlier versions did, and can be installed on any Lightworks version
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  The
+ revision process included the removal of masking and the addition of checkerboard
+ patterning to show transparency.  In all other respects this behaves as the earlier
+ versions did, and can be installed on any Lightworks version
  above 2022.
 */
 
@@ -31,6 +32,9 @@
 // Lightworks user effect CornerTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-29 jwrl.
+// Added checkerboard alpha display to show key.
 //
 // Updated 2026-07-16 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
@@ -70,6 +74,9 @@ DeclareFloatParam (KeyGain,        "Fine tune",    "Blend settings", kNoFlags, 0
 DeclareBoolParam  (ShowKey,        "Show foreground key",            "Blend settings", false);
 DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
+
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
@@ -77,6 +84,8 @@ DeclareBoolParam  (SwapSource,     "Swap sources", "Blend settings", false);
 #ifdef WINDOWS
 #define PROFILE ps_3_0
 #endif
+
+#define _TransparentBlack 0.0.xxxx
 
 #define OPEN false
 #define SHUT true
@@ -105,7 +114,7 @@ float4 fn_initFg (sampler F, float2 xy1, sampler B, float2 xy2)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
+   return Fgnd.a == 0.0 ? _TransparentBlack : Fgnd;
 }
 
 float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
@@ -115,6 +124,21 @@ float4 fn_initBg (sampler F, float2 xy1, sampler B, float2 xy2)
    if (!Blended) { Bgnd.a = 1.0; }
 
    return Bgnd;
+}
+
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
 }
 
 float4 fn_trans (sampler V, float2 uv, bool mode)
@@ -132,7 +156,7 @@ float4 fn_trans (sampler V, float2 uv, bool mode)
    return (uv.x > posAmt) && (uv.y > posAmt) ? tex2D (V, xy1) :
           (uv.x < negAmt) && (uv.y > posAmt) ? tex2D (V, xy2) :
           (uv.x > posAmt) && (uv.y < negAmt) ? tex2D (V, xy3) :
-          (uv.x < negAmt) && (uv.y < negAmt) ? tex2D (V, xy4) : kTransparentBlack;
+          (uv.x < negAmt) && (uv.y < negAmt) ? tex2D (V, xy4) : _TransparentBlack;
 }
 
 //-----------------------------------------------------------------------------------------//
@@ -154,14 +178,14 @@ DeclareEntryPoint (Open)
    float4 maskBg, retval;
 
    if (Blended) {
-      if (ShowKey) { Bgnd = kTransparentBlack; }
-      else { Fgnd = fn_trans (Fg_0, uv3, SwapDir); }
+      if (ShowKey) { return ShowAlpha (Fgnd, uv3); }
 
+      Fgnd   = fn_trans (Fg_0, uv3, SwapDir);
       maskBg = Bgnd;
    }
    else {
       maskBg = Fgnd;
-      Fgnd = fn_trans (Fg_0, uv3, OPEN);
+      Fgnd   = fn_trans (Fg_0, uv3, OPEN);
    }
 
    return lerp (Bgnd, Fgnd, Fgnd.a);
@@ -184,13 +208,13 @@ DeclareEntryPoint (Shut)
    float4 retval;
 
    if (Blended) {
-      if (ShowKey) { Bgnd = kTransparentBlack; }
-      else { Fgnd = fn_trans (Fg_1, uv3, SwapDir); }
+      if (ShowKey) { return ShowAlpha (Fgnd, uv3); }
 
+      Fgnd   = fn_trans (Fg_1, uv3, SwapDir);
       retval = lerp (Bgnd, Fgnd, Fgnd.a);
    }
    else {
-      Bgnd = fn_trans (Bg_1, uv3, SHUT);
+      Bgnd   = fn_trans (Bg_1, uv3, SHUT);
       retval = lerp (Fgnd, Bgnd, Bgnd.a);
    }
 
