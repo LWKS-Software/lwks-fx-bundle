@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-17
+// @Released 2026-07-30
 // @Author jwrl
 // @Created 2018-11-10
 
@@ -33,16 +33,19 @@
  much weaker than the other.  Their comparative strengths depend on the predominant
  direction of the wave effect.
 
- NOTE:  This effect has been revised for Lightworks version 2026 and higher.  Part of
- the revision process has meant the removal of masking.  In all other respects this
- behaves as the earlier versions did, and can be installed on any Lightworks version
- above 2022.
+ NOTE:  This effect has been revised for Lightworks version 2026 and higher.  The
+ revision process included the removal of masking and the addition of checkerboard
+ patterning to show transparency.  In all other respects this behaves as the earlier
+ versions did, and can be installed on any Lightworks version above 2022.
 */
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect DreamTrans.fx
 //
 // Version history:
+//
+// Updated 2026-07-30 jwrl.
+// Added a checkerboard pattern to show transparency.
 //
 // Updated 2026-07-17 jwrl.
 // Revised for compatability with LW versions 2026 and higher.
@@ -89,6 +92,9 @@ DeclareBoolParam  (SwapSource,     "Swap sources",  "Blend settings", false);
 
 DeclareFloatParam (_Progress);
 
+DeclareFloatParam (_OutputWidth);
+DeclareFloatParam (_OutputHeight);
+
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
 //-----------------------------------------------------------------------------------------//
@@ -96,6 +102,8 @@ DeclareFloatParam (_Progress);
 #ifdef WINDOWS
 #define PROFILE ps_3_0
 #endif
+
+#define _TransparentBlack 0.0.xxxx
 
 #define SAMPLE  30
 #define SAMPLES 60
@@ -109,6 +117,22 @@ DeclareFloatParam (_Progress);
 // Functions
 //-----------------------------------------------------------------------------------------//
 
+float4 ShowAlpha (float4 vid, float2 xy)
+{
+
+   // The checkerboard routine scales the xy cooordinates by a fraction of width and
+   // height then rounds the result to make alternate zeros and ones.  That gives the
+   // checkerboard pattern used to show transparency.
+
+   float x = round (frac (xy.x * _OutputWidth  / 64.0));
+   float y = round (frac (xy.y * _OutputHeight / 64.0));
+   float z = 0.2 - min (abs (x - y), 0.05);
+
+   // The result is the blended vid / checkerboard composite.
+
+   return lerp (float4 (z, z, z, 0.0), vid, vid.a);
+}
+
 // This function is necessary because we can't set addressing modes
 
 float4 MirrorPixel (sampler S, float2 xy)
@@ -120,7 +144,7 @@ float4 MirrorPixel (sampler S, float2 xy)
 
 float2 fn_wave (float2 uv, float2 waves, float levels)
 {
-   float waveRate = _Progress * Speed * 25.0;
+   float waveRate = Blended ? _Progress * Speed * 100.0 : _Progress * Speed * 25.0;
 
    float2 xy = (uv - CENTRE) * waves;
    float2 strength  = float2 (StrengthX, StrengthY) * levels / 10.0;
@@ -132,7 +156,7 @@ float2 fn_wave (float2 uv, float2 waves, float levels)
 
 float4 fn_dissolve (sampler S, float2 uv)
 {
-   float waves = float (Frequency * 200.0);
+   float waves = Blended ? float (Frequency * 400.0) : float (Frequency * 200.0);
 
    float2 xy = fn_wave (uv, waves.xx, cos (Amount * HALF_PI));
 
@@ -142,7 +166,7 @@ float4 fn_dissolve (sampler S, float2 uv)
 float4 fn_blur (sampler B, float2 uv)
 {
    float4 Inp = tex2D (B, uv);
-   float4 retval = kTransparentBlack;
+   float4 retval = _TransparentBlack;
 
    float blur = (StrengthY > StrengthX) ? WaveType == 0 ? BlurAmt : (BlurAmt / 2.0)
                                         : WaveType == 0 ? (BlurAmt / 2.0) : BlurAmt;
@@ -181,7 +205,7 @@ float4 fn_blur_sub (sampler S, float2 xy, float2 offs)
 
 float2 fn_XYwave (float2 xy1, float2 xy2, float amt)
 {
-   float waveRate = _Progress * Speed / 2.0;
+   float waveRate = Blended ? _Progress * Speed * 2.0 : _Progress * Speed / 2.0;
 
    float2 xy = (xy1 * xy2) + waveRate.xx;
    float2 strength = float2 (StrengthX, StrengthY) * amt;
@@ -214,7 +238,7 @@ DeclarePass (Fgd)
    // If alpha is zero we need any video to be blanked.  We do NOT need it to be
    // multiplied, so this is the simplest way to fix things.
 
-   return Fgnd.a == 0.0 ? kTransparentBlack : Fgnd;
+   return Fgnd.a == 0.0 ? _TransparentBlack : Fgnd;
 }
 
 DeclarePass (Bgd)
@@ -235,7 +259,7 @@ DeclarePass (BlurX)
    if (Blended) {
       if (SwapDir) { retval = fn_dissolve (Fgd, uv3); }
       else {
-         waves = float (Frequency * 200.0).xx;
+         waves = Blended ? float (Frequency * 400.0).xx : float (Frequency * 200.0).xx;
          xy = fn_wave (uv3, waves, sin (Amount * HALF_PI));
          retval = MirrorPixel (Fgd, xy) * (1.0 - Amount);
       }
@@ -245,7 +269,7 @@ DeclarePass (BlurX)
 
       float mixAmount = saturate ((Amount * 2.0) - 0.5);
 
-      waves = Frequency.xx * 20.0;
+      waves = Blended ? Frequency.xx * 40.0 : Frequency.xx * 20.0;
       xy = fn_XYwave (uv3, waves, wAmount);
 
       float4 fgProc = MirrorPixel (Fgd, xy);
@@ -268,7 +292,7 @@ DeclarePass (BlurY)
       else {
          float4 Inp = tex2D (BlurX, uv3);
 
-         retval = kTransparentBlack;
+         retval = _TransparentBlack;
          blur = (StrengthY > StrengthX) ? WaveType ? BlurAmt : (BlurAmt / 2)
                                         : WaveType ? (BlurAmt / 2) : BlurAmt;
          if (blur <= 0.0) { retval = Inp; }
@@ -311,22 +335,23 @@ DeclareEntryPoint (Dream_Dx)
    float2 offset = float2 (0.0, blur) * OFFSET;
 
    if (Blended) {
-      if (ShowKey) { retval = Fgnd; }
-      else {
-         float2 blurriness = 0.0.xx;
+      if (ShowKey) { return ShowAlpha (Fgnd, uv3); }
 
-         for (int i = 0; i < SAMPLE; i++) {
-            retval += tex2D (BlurY, uv3 + blurriness);
-            retval += tex2D (BlurY, uv3 - blurriness);
-            blurriness += offset;
-         }
+      float2 blurriness = 0.0.xx;
 
-         retval /= SAMPLES;
+      retval = _TransparentBlack;
 
-         retval = SwapDir ? lerp (tex2D (BlurY, uv3), retval, 1.0 - Amount)
-                          : lerp (tex2D (BlurY, uv3), retval, Amount);
-         retval = lerp (Bgnd, retval, retval.a);
+      for (int i = 0; i < SAMPLE; i++) {
+         retval += tex2D (BlurY, uv3 + blurriness);
+         retval += tex2D (BlurY, uv3 - blurriness);
+         blurriness += offset;
       }
+
+      retval /= SAMPLES;
+
+      retval = SwapDir ? lerp (tex2D (BlurY, uv3), retval, 1.0 - Amount)
+                       : lerp (tex2D (BlurY, uv3), retval, Amount);
+      retval = lerp (Bgnd, retval, retval.a);
    }
    else retval = (blur > 0.0) ? fn_blur_sub (BlurY, uv3, offset) : tex2D (BlurY, uv3);
 
