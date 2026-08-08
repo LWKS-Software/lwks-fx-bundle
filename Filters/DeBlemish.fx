@@ -4,48 +4,48 @@
 // @Created 2019-01-30
 
 /**
- This is a skin blemish removal tool similar in concept to "Skin smooth". It uses a different
- technique to that effect to mask skin tones, which may make it easier to set up. The default
- skin colour has been tested to work quite well with European and Asian flesh tones but will
- need adjustment with darker skins or poorly lit ones. The blur technique used is a radial
- blur, which also differs from the skin smooth effect. Even if the mask produced is hard edged
- it will be blurred along with video ensuring a smooth blend.
+ This is a skin blemish removal tool similar in concept to "Skin smooth".  It uses a
+ different technique than that effect to mask skin tones, which should make it easier
+ to set up.  The default skin colour has been tested to work quite well with European
+ and Asian flesh tones but may need adjustment with darker skins or poorly lit ones.
+ The blur technique used is a radial one, which differs from the skin smooth effect.
+ Even if the flesh tone mask obtained is hard edged it will be blurred along with the
+ video, ensuring a smooth blend is achieved.
 
-   [*] Blur strength:  Sets the blurriness strength to apply to the skin tone.
-   [*] Blur mix:  Adjusts the amount of blurred skin tone to mix back over the
+   [*] Blur strength: Sets the blurriness strength to apply to the skin tone.
+   [*] Blur mix: Adjusts the amount of blurred skin tone to mix back over the
        original.
    [*] Skin tone masking
-      [*] Show mask:  Shows the area that the skin mask covers.
-      [*] Skin colour:  Selects the skin colour to detect.
-      [*] Mask clip:  Adjusts skin colour detection range. Spreads or reduces
+      [*] Show mask: Shows the area that the skin mask covers.
+      [*] Skin colour: Selects the skin colour to detect.
+      [*] Mask clip: Adjusts skin colour detection range. Spreads or reduces
           the mask area.
-      [*] Separation:  Refines the mask detection.
-      [*] Linearity:  Softens the mask edges.
-      [*] White clip:  Flattens the mask peaks.
-      [*] Black crush:  Erodes the mask boundaries.
+      [*] Separation: Refines the mask detection.
+      [*] Linearity: Softens the mask edges.
+      [*] White clip: Flattens the mask peaks.
+      [*] Black crush: Erodes the mask boundaries.
 
- To use it, start with everything on default settings and select the flesh tone you
- need using the "Skin colour" eyedropper on your image. Enable "Show mask" and adjust
- "Mask clip" to get the cleanest result, then "Separation" to get the best separation.
- You should now have a reasonably clean mask, so the fine tune steps will probably be
- optional and you will be able to skip the next paragraph.
+ To use it, start with every setting on their defaults and select the flesh tone you
+ need using the "Skin colour" eyedropper on your image.  Enable "Show mask" and trim
+ "Mask clip" to get the cleanest result that you can.  The "Separation" control will
+ also help to get a reasonably clean mask.
 
- To fine tune the mask further adjust "Linearity" to further improve the mask contrast.
- Once you've done that fine tune the strength with "White clip" to get the flesh tones
- as white as you can, then adjust "Black crush". You may need to adjust these three
- controls several times for best results, since they interact to a degree. Finally if
- necessary you can crop the mask with a simple hard edged crop to clean up any areas
- you don't want to blur.
+ At this point more fine tuning may be unnecessary.  If that's so you can skip to the
+ next paragraph.  If you do need further fine tuning start by adjusting "Linearity"
+ to improve the flesh tone mask contrast.  Next fine tune the mask strength with
+ "White clip" to make the flesh tone mask as bright as you can, then adjust "Black
+ crush".  These three controls interact, so you may need to adjust them several times
+ several times to get best results.  You can also crop rhe flesh tone mask with the
+ Lightworks masks built in to this effect.
 
- Once you have the mask looking pretty much as you need it turn off "Show mask", and
- confirm that "Blur mix" is set to 100%. This ensures that you see the blurred skin
- tones clearly while you're doing the next adjustment. Adjust "Blur strength" for best
- smoothing. Once you're happy with that if you wish you can ease "Blur mix" back gently
- to mix back some of the original image to improve the image sharpness. While these two
- adjustments don't actually interact, subjectively they can appear to so be prepared to
- trim one then the other a few times for best results.
+ Once the flesh tone mask is as you want it turn off "Show mask" and confirm that
+ "Blur mix" is set to 100%.  That way you will be able to clearly see the blurred
+ flesh tones as you apply the final settings.  Adjust "Blur strength" for the best
+ smoothing.  Once you're happy with it ease the "Blur mix" back to mix in some of the
+ original image.  This will improve the apparent sharpness of the end result.
 
- NOTE:  This effect is only suitable for use with Lightworks version 2023 and higher.
+ Those last two adjustments don't really interact, but they can certainly appear to
+ in some cases.  Be prepared to trim one then the other a few times for best results.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -54,13 +54,13 @@
 // Version history:
 //
 // Updated 2026-08-08 jwrl.
-// Corrupted upload replaced.
+// Changed masking to use RGB, not A.
 //
 // Updated 2026-06-22 jwrl.
 // Changed "Mask separation" to "Separation".
 // Changed "Mask linearity" to "Linearity".
 // Expanded the header text.
-// Changed masking to full RGBA.
+// Changed masking to use RGBA.
 //
 // Updated 2025-11-15 jwrl.
 // Changed "Mask settings" to "Skin tone masking".
@@ -88,18 +88,18 @@ DeclareMask;
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParam (Size,        "Blur strength", kNoGroup,            kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (Amount,      "Blur mix",      kNoGroup,            kNoFlags, 1.0, 0.0, 1.0);
+DeclareFloatParam  (Size,       "Blur strength", kNoGroup,            kNoFlags, 0.5, 0.0, 1.0);
+DeclareFloatParam  (Amount,     "Blur mix",      kNoGroup,            kNoFlags, 1.0, 0.0, 1.0);
 
-DeclareBoolParam  (ShowMask,    "Show mask",     "Skin tone masking", false);
+DeclareBoolParam   (ShowMask,   "Show mask",     "Skin tone masking", false);
 DeclareColourParam (MaskColour, "Skin colour",   "Skin tone masking", kNoFlags, 0.945, 0.7765, 0.663);
-DeclareFloatParam (MaskClip,    "Mask clip",     "Skin tone masking", kNoFlags, 0.0, -1.0, 1.0);
-DeclareFloatParam (MaskSep,     "Separation",    "Skin tone masking", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (MaskGamma,   "Linearity",     "Skin tone masking", kNoFlags, 0.5, 0.0, 1.0);
-DeclareFloatParam (MaskWhite,   "White clip",    "Skin tone masking", kNoFlags, 1.0, 0.0, 1.0);
-DeclareFloatParam (MaskBlack,   "Black crush",   "Skin tone masking", kNoFlags, 0.0, 0.0, 1.0);
+DeclareFloatParam  (MaskClip,   "Mask clip",     "Skin tone masking", kNoFlags, 0.0, -1.0, 1.0);
+DeclareFloatParam  (MaskSep,    "Separation",    "Skin tone masking", kNoFlags, 0.5,  0.0, 1.0);
+DeclareFloatParam  (MaskGamma,  "Linearity",     "Skin tone masking", kNoFlags, 0.5,  0.0, 1.0);
+DeclareFloatParam  (MaskWhite,  "White clip",    "Skin tone masking", kNoFlags, 1.0,  0.0, 1.0);
+DeclareFloatParam  (MaskBlack,  "Black crush",   "Skin tone masking", kNoFlags, 0.0,  0.0, 1.0);
 
-DeclareFloatParam (_OutputAspectRatio);
+DeclareFloatParam  (_OutputAspectRatio);
 
 //-----------------------------------------------------------------------------------------//
 // Definitions and declarations
@@ -195,7 +195,8 @@ DeclarePass (Input)
 DeclareEntryPoint (DeBlemish)
 {
    float4 source = ReadPixel (Inp, uv1);        // First get the input to process
-   float4 retval = tex2D (Input, uv2);          // Get the masked input
+   float4 MaskTex = ReadPixel (Mask, uv1);      // Also get the mask data
+   float4 retval  = tex2D (Input, uv2);         // Get the colour masked input
 
    if (ShowMask) return retval.aaaa;            // Show it if we need to
 
@@ -233,7 +234,13 @@ DeclareEntryPoint (DeBlemish)
       Fgnd.rgb = lerp (Fgnd.rgb, retval.rgb, retval.a * Amount);
    }
 
-   Fgnd = lerp (0.0.xxxx, Fgnd, source.a);
+   Fgnd = lerp (0.0.xxxx, Fgnd, source.a);      // If alpha is zero make Fgnd black
 
-   return lerp (source, Fgnd, tex2D (Mask, uv1));
+   // In 2026 it was found that using the alpha channel of the Lightworks mask was
+   // unreliable.  Discarding that and using the best of RGB gave better results.
+   // THIS AN EMPIRICAL FIX ONLY!!!!
+
+   float MaskAlpha = max (MaskTex.r, max (MaskTex.g, MaskTex.b));
+
+   return lerp (source, Fgnd, MaskAlpha);
 }
