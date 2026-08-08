@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-22
+// @Released 2026-08-08
 // @Author jwrl
 // @Created 2019-01-30
 
@@ -10,7 +10,6 @@
  need adjustment with darker skins or poorly lit ones. The blur technique used is a radial
  blur, which also differs from the skin smooth effect. Even if the mask produced is hard edged
  it will be blurred along with video ensuring a smooth blend.
-
 
    [*] Blur strength:  Sets the blurriness strength to apply to the skin tone.
    [*] Blur mix:  Adjusts the amount of blurred skin tone to mix back over the
@@ -54,6 +53,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-08 jwrl.
+// Corrupted upload replaced.
+//
 // Updated 2026-06-22 jwrl.
 // Changed "Mask separation" to "Separation".
 // Changed "Mask linearity" to "Linearity".
@@ -61,7 +63,7 @@
 // Changed masking to full RGBA.
 //
 // Updated 2025-11-15 jwrl.
-// Changed the group "Mask settings" to "Skin tone masking".
+// Changed "Mask settings" to "Skin tone masking".
 //
 // Updated 2024-05-24 jwrl.
 // Replaced kTransparentBlack with 0.0.xxxx for Linux fix.
