@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-15
+// @Released 2026-08-22
 // @Author jwrl
 // @Created 2019-01-10
 
@@ -22,6 +22,9 @@
 // Lightworks user effect DirectionalSharpen.fx
 //
 // Version history:
+//
+// Updated 2026-08-22 jwrl.
+// Removed "_utils.fx" inclusion
 //
 // Updated 2026-06-15 jwrl.
 // Changed masking from R to RGBA.
