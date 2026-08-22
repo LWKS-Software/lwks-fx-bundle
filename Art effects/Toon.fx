@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-11
+// @Released 2026-06-23
 // @Author khaver
 // @Created 2011-04-18
 
@@ -22,6 +22,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed "_utils.fx" inclusion.
+//
 // Updated 2026-06-11 jwrl.
 // Added command descriptions to header text.
 // Changed "Master" group to "Master strength".
@@ -37,8 +40,6 @@
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Toon", "Stylize", "Art Effects", "The image is posterized then outlines derived from the edges are added to produce a cartoon-like result", kNoFlags);
 
