@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-10
+// @Released 2026-08-23
 // @Author khaver
 // @Created 2011-07-08
 
@@ -37,6 +37,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed "_utils.fx" inclusion.
+//
 // Updated 2026-06-10 jwrl.
 // Added expanded command descriptions to header text.
 // Changed masking to full RGBA.
@@ -46,8 +49,6 @@
 //
 // Conversion 2022-12-28 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Edge", "Stylize", "Art Effects", "Detects edges to give a similar result to the well known art program effect", "ScaleAware|HasMinOutputSize");
 
