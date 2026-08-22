@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-10
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2016-05-11
 
@@ -33,6 +33,9 @@ NOTE:  This effect is only suitable for use with Lightworks version 2023 and hig
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed "_utils.fx" inclusion.
+//
 // Updated 2026-06-10 jwrl.
 // Added command descriptions to header text.
 // Changed masking to full RGBA.
@@ -43,8 +46,6 @@ NOTE:  This effect is only suitable for use with Lightworks version 2023 and hig
 //
 // Conversion 2022-12-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("70s Psychedelia", "Stylize", "Art Effects", "An extreme highly adjustable posterization effect", CanSize);
 
