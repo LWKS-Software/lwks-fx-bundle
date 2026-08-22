@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-10
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2017-02-25
 
@@ -31,6 +31,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed "_utils.fx" inclusion.
+//
 // Updated 2026-06-10 jwrl.
 // Added command descriptions to header text.
 // Added an extra source setting, "Full video" which uses the maximum of R, G or B.
@@ -42,8 +45,6 @@
 //
 // Conversion 2022-12-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("The dark side", "Stylize", "Art Effects", "Creates a shadow enhancing soft dark blur.", CanSize);
 
