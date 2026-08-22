@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-09
+// @Released 2026-08-23
 // @Author idealsceneprod (Val Gameiro)
 // @Created 2014-12-24
 
@@ -38,6 +38,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed "_utils.fx" inclusion.
+//
 // Updated 2026-06-09 jwrl.
 // Changed masking to full RGBA.
 // Renamed the threshold settings to use numerals to fit 2026.1 effect formats.
@@ -52,8 +55,6 @@
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Four tone", "Colour", "Art Effects", "Extends the existing Lightworks Two Tone and Tri-Tone effects to provide four tonal values", kNoFlags);
 
