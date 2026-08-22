@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-11
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2018-11-28
 
@@ -35,6 +35,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed "_utils.fx" inclusion.
+//
 // Updated 2026-06-11 jwrl.
 // Added command descriptions to header text.
 // Changed masking to full RGBA.
@@ -44,8 +47,6 @@
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Poster paint", "Colour", "Art Effects", "A fully adjustable posterize effect", CanSize);
 
