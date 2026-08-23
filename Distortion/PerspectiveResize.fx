@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-27
+// @Released 2026-08-23
 // @Author jwrl
 // @Author windsturm
 // @OriginalAuthor Evan Wallace
@@ -63,7 +63,7 @@
 */
 
 //-----------------------------------------------------------------------------------------//
-// Lightworks user effect.fx
+// Lightworks user effect PerspectiveResize.fx
 //
 // Based on Perspective copyright (C) 2011 by Evan Wallace
 // Forked by windsturm 2012-08-14.
@@ -88,7 +88,10 @@
 //
 //-----------------------------------------------------------------------------------------//
 //
-// This effect version history:
+// This effect version's history:
+//
+// Updated 2026-08-23 jwrl.
+// Reformatted header.
 //
 // Updated 2026-06-27 jwrl.
 // Changed "Top ..." parameters to "High ...".
