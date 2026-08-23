@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-12
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2018-09-01
 
@@ -23,6 +23,9 @@ NOTE:  This effect is only suitable for use with Lightworks version 2023 and hig
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-12 jwrl.
 // Added settings to header.
 // Masking now uses RGBA instead of R.
@@ -32,8 +35,6 @@ NOTE:  This effect is only suitable for use with Lightworks version 2023 and hig
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Plasma matte", "Mattes", "Backgrounds", "Generates soft plasma clouds", kNoFlags);
 
