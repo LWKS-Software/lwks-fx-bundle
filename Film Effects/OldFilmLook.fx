@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-08-08
+// @Released 2026-08-23
 // @Author khaver
 // @Author saabi
 // @Created 2018-03-31
@@ -54,8 +54,8 @@
 //
 // Version history:
 //
-// Updated 2026-08-08 jwrl.
-// Removed "_utils.fx" inclusion.
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
 //
 // Updated 2026-06-24 jwrl.
 // Added settings description to header text.
