@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-12
+// @Released 2026-08-23
 // @Author baopao
 // @Author jwrl
 // @Created 2016-05-12
@@ -42,6 +42,9 @@ This effect is based on the Lissajou code at http://glslsandbox.com/e#9996.0.  T
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-12 jwrl.
 // Added settings to header.
 // Changed "Glow Intensity" to "Glow".
@@ -53,8 +56,6 @@ This effect is based on the Lissajou code at http://glslsandbox.com/e#9996.0.  T
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Sinusoidal lights", "Mattes", "Backgrounds", "A pattern generator that creates coloured stars in Lissajou curves over a coloured background", kNoFlags);
 
