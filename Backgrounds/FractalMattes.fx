@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-12
+// @Released 2026-08-23
 // @Author jwrl
 // @Author trirop
 // @Created 2016-05-08
@@ -42,6 +42,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed "_utils.fx" inclusion.
+//
 // Updated 2026-06-12 jwrl.
 // Added settings to header.
 // Masking now uses RGBA instead of R.
@@ -52,8 +55,6 @@
 //
 // Conversion 2023-02-15 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Fractal mattes", "Mattes", "Backgrounds", "Produces fractal patterns for background generation", kNoFlags);
 
