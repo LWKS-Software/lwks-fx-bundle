@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-18
+// @Released 2026-08-23
 // @Author windsturm
 // @Created 2012-06-16
 
@@ -25,6 +25,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-18 jwrl.
 // Reordered the settings and groups so that they're more logical.
 // All channels of Mask are now used.
@@ -35,8 +38,6 @@
 //
 // Conversion 2023-01-24 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Colour halftone", "Stylize", "Print Effects", "Emulates the dot pattern of a colour half-tone print image", kNoFlags);
 
