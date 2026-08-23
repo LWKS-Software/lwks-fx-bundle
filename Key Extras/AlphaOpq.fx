@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-21
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2019-05-12
 
@@ -28,6 +28,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-21 jwrl.
 // Implemented OpacityMode as SetTechnique.
 // Header now contains settings description.
@@ -47,8 +50,6 @@
 //
 // Conversion 2023-01-26 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Alpha opaque", "Key", "Key Extras", "Makes a transparent image or title completely opaque", CanSize);
 
