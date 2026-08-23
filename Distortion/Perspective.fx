@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-27
+// @Released 2026-08-23
 // @Author windsturm
 // @OriginalAuthor Evan Wallace
 // @Created 2012-08-14
@@ -38,40 +38,45 @@
 
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect Perspective.fx
+//
 //-----------------------------------------------------------------------------------------//
-/**
-  * Perspective.
-  * @description  Warps one quadrangle to another with a perspective transform. This can be used to
-  *               make a 2D image look 3D or to recover a 2D image captured in a 3D environment.
-  * 
-  * @forked Windsturm
-  * @version 1.0.0
-
-forked from evanw/glfx.js https://github.com/evanw/glfx.js
-
-Copyright (C) 2011 by Evan Wallace
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-*/
+//
+// Perspective.
+// @description  Warps one quadrangle to another with a perspective transform. This can
+//               be used to make a 2D image look 3D or to recover a 2D image captured in
+//               a 3D environment.
+//
+// @forked Windsturm
+// @version 1.0.0
+//
+// forked from evanw/glfx.js https://github.com/evanw/glfx.js
+//
+// Copyright (C) 2011 by Evan Wallace
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
 //-----------------------------------------------------------------------------------------//
 //
 // Version history:
+//
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
 //
 // Updated 2026-06-27 jwrl.
 // Changed "Top ..." parameters to "High ...".
@@ -87,8 +92,6 @@ THE SOFTWARE.
 //
 // Conversion 2023-01-24 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Perspective", "DVE", "Distortion", "Warps one rectangle to another using a perspective transform", CanSize);
 
