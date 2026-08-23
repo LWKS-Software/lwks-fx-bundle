@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-17
+// @Released 2026-08-23
 // @Author baopao
 // @Created 2015-09-23
 
@@ -30,6 +30,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-17 jwrl.
 // Added settings description to header text.
 // Replaced kTransparentBlack with _TransparentBlack definition.
@@ -42,8 +45,6 @@
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("RGB-CMY correction", "Colour", "Colour Tools", "A colorgrade tool based on individual red, green, blue, cyan, magenta and yellow parameters", CanSize);
 
