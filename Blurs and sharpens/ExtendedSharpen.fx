@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-15
+// @Released 2026-08-23
 // @Author Jerker
 // @Author khaver
 // @Author jwrl
@@ -50,6 +50,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-15 jwrl.
 // Changed masking from R to RGBA.
 // Changed "Sharpen radius" to "Sharpen zone"
@@ -64,8 +67,6 @@
 // For the same reason changed unsharp radius to sharpen radius.
 // Renamed the effect because the changes were significant enough to warrant it.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Extended sharpen", "Stylize", "Blurs and sharpens", "If the Lightworks sharpen effects don't have enough range, try this.", kNoFlags);
 
