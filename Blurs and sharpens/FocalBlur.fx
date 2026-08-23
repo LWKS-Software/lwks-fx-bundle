@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-25
+// @Released 2026-08-23
 // @Author khaver
 // @Created 2015-12-08
 
@@ -37,6 +37,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-25 jwrl.
 // Added distance description to header text.
 //
@@ -51,8 +54,6 @@
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Focal blur", "Stylize", "Blurs and sharpens", "This effect uses a depth map to create a faux depth of field", kNoFlags);
 
