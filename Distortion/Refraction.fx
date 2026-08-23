@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-27
+// @Released 2026-08-23
 // @Author windsturm
 // @OriginalAuthor Ian McEwan
 // @Created 2012-10-25
@@ -36,26 +36,27 @@
 //
 // https://github.com/ashima/webgl-noise
 //-----------------------------------------------------------------------------------------//
-
- /**
-  * FxRefraction.
-  * Refraction effect.
-  * 
-  * @param <noisePhase>  noise animation parameter
-  * @param <noiseSize> noise size
-  * @param <strength> refraction rate
-  * @param <noiseX> Noise X coordinate
-  * @param <noiseY> noise Y coordinate
-  * @param <AR> aspect ratio 1:x
-  * @param <exportImage> switch the export image
-  * @param <useExternalImage> external noise image
-  * @forked Windsturm
-  * @version 1.0.0
-  */
-
+//
+// FxRefraction.
+// Refraction effect.
+//
+// @param <noisePhase>  noise animation parameter
+// @param <noiseSize> noise size
+// @param <strength> refraction rate
+// @param <noiseX> Noise X coordinate
+// @param <noiseY> noise Y coordinate
+// @param <AR> aspect ratio 1:x
+// @param <exportImage> switch the export image
+// @param <useExternalImage> external noise image
+// @forked Windsturm
+// @version 1.0.0
+//
 //-----------------------------------------------------------------------------------------//
 //
 // Version history:
+//
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
 //
 // Updated 2026-06-27 jwrl.
 // Changed "AspectRatio 1:x" to "Aspect 1:x".
@@ -67,8 +68,6 @@
 //
 // Conversion 2023-01-24 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Refraction", "Stylize", "Distortion", "Simulates the distortion effect of an image seen through textured glass", CanSize);
 
