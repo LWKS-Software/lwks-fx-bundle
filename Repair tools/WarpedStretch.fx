@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-19
+// @Released 2026-08-23
 // @Author khaver
 // @Created 2013-12-04
 
@@ -32,6 +32,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-19 jwrl.
 // Added "Inner lines" and "Outer lines" groups.
 // Added settings description to header text.
@@ -41,8 +44,6 @@
 //
 // Conversion 2023-01-10 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Warped Stretch", "Stylize", "Repair tools", "This effect is intended for use as a means of helping handle mixed aspect ratio media", kNoFlags);
 
