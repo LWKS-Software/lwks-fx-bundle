@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-27
+// @Released 2026-08-23
 // @Author schrauber
 // @Created 2016-03-25
 
@@ -29,6 +29,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-27 jwrl.
 // Masking now uses RGBA, not R or A.
 // Changed "Wave dynamics" to "Dynamics".
@@ -39,8 +42,6 @@
 //
 // Conversion 2023-01-08 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Ripples (manual expansion)", "DVE", "Distortion", "Radiating ripples are produced under full user control", kNoFlags);
 
