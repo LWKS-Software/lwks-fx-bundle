@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-15
+// @Released 2023-08-23
 // @Author jwrl
 // @Created 2020-05-16
 
@@ -32,6 +32,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-15 jwrl.
 // Changed X and Y "Top right" to "High right".
 // Changed X and Y "Bottom left" to "Low left"
@@ -43,8 +46,6 @@
 //
 // Conversion 2023-02-17 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Rounded crop", "DVE", "Border and Crop", "A bordered, drop shadowed crop with rounded corners", kNoFlags);
 
