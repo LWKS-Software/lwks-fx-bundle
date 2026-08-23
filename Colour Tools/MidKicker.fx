@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-17
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2020-11-09
 
@@ -31,9 +31,12 @@
 */
 
 //-----------------------------------------------------------------------------------------//
-// Lightworks user effect MidtoneKicker.fx
+// Lightworks user effect MidKicker.fx
 //
 // Version history:
+//
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
 //
 // Updated 2026-06-17 jwrl.
 // Changed "midtones" parameter labels to "mids".
@@ -44,8 +47,6 @@
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Midtone kicker", "Colour", "Colour Tools", "Adjusts mid-range RGB levels to enhance or reduce them", CanSize);
 
