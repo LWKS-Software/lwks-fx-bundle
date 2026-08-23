@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-19
+// @Released 2026-08-23
 // @Author nouanda
 // @Created 2014-10-20
 
@@ -40,6 +40,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-19 jwrl.
 // Used full Lightworks mask channels instead of R.
 // Changed "Source Position" to "Source".
@@ -60,8 +63,6 @@
 //
 // Conversion 2023-01-10 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Clone Stamp", "Stylize", "Repair tools", "A means of cloning sections of the image into other sections similar to art software", kNoFlags);
 
