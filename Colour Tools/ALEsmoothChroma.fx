@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-17
+// @Released 2026-08-23
 // @Author baopao
 // @Created 2013-06-03
 
@@ -18,6 +18,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-17 jwrl.
 // Replaced kTransparentBlack with _TransparentBlack definition.
 //
@@ -26,8 +29,6 @@
 //
 // Conversion 2023-02-17 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("ALE smooth chroma", "Colour", "Colour Tools", "This smooths the colour component of video media leaving the luminance unaffected", CanSize);
 
