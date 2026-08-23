@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-19
+// @Released 2026-08-23
 // @Author brdloush
 // @Created 2012-06-10
 
@@ -62,6 +62,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-19 jwrl.
 // Changed "Cubic Distortion" to "Cubic distort".
 // Added settings description to header.
@@ -74,8 +77,6 @@
 //
 // Conversion 2023-01-10 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Cubic lens distortion", "Stylize", "Repair tools", "Can be used for reducing fish-eye distortion with wide angle lenses", kNoFlags);
 
