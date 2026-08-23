@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-17
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2016-04-06
 
@@ -22,6 +22,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-17 jwrl.
 // Added settings description to header text.
 // Replaced kTransparentBlack with _TransparentBlack definition.
@@ -31,8 +34,6 @@
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Peak desaturate", "Colour", "Colour Tools", "Quickly and easily desaturate whites and blacks contaminated during other grading operations", CanSize);
 
