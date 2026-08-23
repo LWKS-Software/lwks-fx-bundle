@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-15
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2017-06-01
 
@@ -51,6 +51,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-15 jwrl.
 // Changed masking from R to RGBA.
 // Added settings description to header text and increased the explanations.
@@ -63,8 +66,6 @@
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Soft blurs", "Stylize", "Blurs and sharpens", "A selection of soft blurs", kNoFlags);
 
