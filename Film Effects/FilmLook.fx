@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-24
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2018-04-19
 
@@ -40,6 +40,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-24 jwrl.
 // Now uses all mask channels instead of just one.
 //
@@ -48,8 +51,6 @@
 //
 // Conversion 2023-01-24 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Filmic look", "Colour", "Film Effects", "Simulates a filmic curve with exposure adjustment, halation and vibrance.", kNoFlags);
 
