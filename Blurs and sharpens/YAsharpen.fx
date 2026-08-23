@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-15
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2021-12-09
 
@@ -23,6 +23,11 @@
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect YAsharpen.fx
 //
+// Version history:
+//
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-15 jwrl.
 // Changed masking from R to RGBA.
 // Changed "Sample offset" to "Sample shift"
@@ -33,8 +38,6 @@
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Yet another sharpen", "Stylize", "Blurs and sharpens", "A sharpen utility that can give extremely clean results", kNoFlags);
 
