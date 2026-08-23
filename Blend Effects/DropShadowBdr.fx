@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-13
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2018-10-21
 
@@ -49,6 +49,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-13 jwrl.
 // Changed masking from R to RGBA.
 // Changed "Border centre" settings to "Centre".
@@ -62,8 +65,6 @@
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Drop shadow and border", "Mix", "Blend Effects", "Drop shadow and border generator for text graphics", CanSize);
 
