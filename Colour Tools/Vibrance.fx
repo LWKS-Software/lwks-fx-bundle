@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-17
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2020-01-04
 
@@ -20,6 +20,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-17 jwrl.
 // Changed masking to full RGBA.
 // Replaced kTransparentBlack with _TransparentBlack definition.
@@ -34,8 +37,6 @@
 //
 // Conversion 2023-05-08 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Vibrance", "Colour", "Colour Tools", "Makes your video POP!!!", CanSize);
 
