@@ -16,7 +16,7 @@
 // Version history:
 //
 // Updated 2026-08-22
-// Removed "_utils.fx" inclusion
+// Removed redundant "_utils.fx" inclusion.
 //
 // Updated 2026-06-15 jwrl.
 // Changed masking from R to RGBA.
