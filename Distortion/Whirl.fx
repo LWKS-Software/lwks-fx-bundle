@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-27
+// @Released 2026-08-23
 // @Author schrauber
 // @Created 2017-11-06
 
@@ -23,6 +23,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-27 jwrl.
 // Changed "Whirl" to "Inner whirl".
 // Changed "Whirl, outside" to "Outer whirl".
@@ -34,8 +37,6 @@
 //
 // Conversion 2023-01-24 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Whirl", "DVE", "Distortion", "Simulates what happens when water empties out of a sink", kNoFlags);
 
