@@ -1,8 +1,7 @@
 // @Maintainer jwrl
-// @Released 2026-06-27
+// @Released 2026-08-23
 // @Author schrauber
 // @Created 2016-03-25
-
 
 /**
  This is one of two related effects, "Ripples (manual expansion)" and this version "Ripples
@@ -34,6 +33,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-27 jwrl.
 // Masking now uses RGBA, not R or A.
 // Added settings description to header text.
@@ -43,8 +45,6 @@
 //
 // Conversion 2023-02-17 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Ripples (automatic expansion)", "DVE", "Distortion", "Radiating ripples are produced under semi-automatic control", kNoFlags);
 
