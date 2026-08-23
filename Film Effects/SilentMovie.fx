@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-08-08
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2025-03-18
 
@@ -45,8 +45,8 @@
 //
 // Version history:
 //
-// Updated 2026-08-08 jwrl.
-// Removed "_utils.fx" inclusion.
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
 //
 // Updated 2026-06-24 jwrl.
 // Now uses all mask channels instead of just one.
