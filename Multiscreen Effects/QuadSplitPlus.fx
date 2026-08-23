@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-18
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2020-06-22
 
@@ -50,6 +50,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-18 jwrl.
 // Changed "Symmetrical crop X" to "Crop width".
 // Changed "Symmetrical crop Y" to "Crop height".
@@ -60,8 +63,6 @@
 //
 // Conversion 2023-01-10 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Quad split plus", "DVE", "Multiscreen Effects", "Produces four split screen images with borders over an optional daisy-chained background", kNoFlags);
 
