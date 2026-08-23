@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-21
+// @Released 2026-08-23
 // @Author hugly
 // @Author schrauber
 // @Created 2019-08-09
@@ -28,6 +28,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-21 jwrl.
 // Header now contains settings description.
 // Mask now uses all four channels, not just R.
@@ -37,8 +40,6 @@
 //
 // Conversion 2023-02-03 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Easy overlay", "Key", "Key Extras", "For overlays where luminance represents transparency", CanSize);
 
