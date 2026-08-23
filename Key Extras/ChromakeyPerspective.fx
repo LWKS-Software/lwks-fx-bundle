@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-21
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2024-04-12
 
@@ -92,6 +92,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-21 jwrl.
 // Header now contains settings description.
 // Mask now uses all four channels, not just R.
@@ -104,8 +107,6 @@
 // Modified 2024-04-13 jwrl.
 // Corrected a bug caused by bad values returned by _OutputWidth and _OutputHeight.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Chromakey with perspective", "Key", "Key Extras", "A chromakey effect with simplified perspective simulation", CanSize);
 
