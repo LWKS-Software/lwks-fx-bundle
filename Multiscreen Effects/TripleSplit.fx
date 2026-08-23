@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-18
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2024-02-26
 
@@ -51,11 +51,12 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-18 jwrl.
 // Added settings to the header text.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Triple split", "DVE", "Multiscreen Effects", "A range of three way splits over an adjustable background", CanSize);
 
