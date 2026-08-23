@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-15
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2016-05-09
 
@@ -17,6 +17,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-15 jwrl.
 // Changed masking from R to RGBA.
 //
@@ -25,8 +28,6 @@
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Ghostly blur", "Stylize", "Blurs and sharpens", "The sort of effect that you get when looking through a fogged window", kNoFlags);
 
