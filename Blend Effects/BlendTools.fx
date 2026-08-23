@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-13
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2018-07-02
 
@@ -45,6 +45,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-13 jwrl.
 // Changed "Transparency" to "Key cleanup".
 // Removed "Alpha" prefix from the settings in the "Alpha fine tuning" group.
@@ -56,8 +59,6 @@
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Blend tools", "Mix", "Blend Effects", "Provides a wide range of blend and key adjustments including generation of alpha from black", CanSize);
 
