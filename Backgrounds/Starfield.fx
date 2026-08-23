@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-12
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2025-02-12
 
@@ -20,13 +20,16 @@
 //-----------------------------------------------------------------------------------------//
 // Lightworks user effect Starfield.fx
 //
+// Version history
+//
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-12 jwrl.
 // Masking now uses RGBA instead of R.
 //
 // Created 2025-02-12 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Starfield", "Mattes", "Backgrounds", "Cascading stars", kNoFlags);
 
