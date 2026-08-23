@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-12
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2024-01-02
 
@@ -37,14 +37,15 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed "_utils.fx" inclusion.
+//
 // Updated 2026-06-12 jwrl.
 // Added settings to header.
 // Masking now uses RGBA instead of R.
 //
 // Created 2024-01-02 jwrl based on code at https://glslsandbox.com/e#109156.0.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Colour swirls", "Mattes", "Backgrounds", "Generates swirling colour patterns", kNoFlags);
 
