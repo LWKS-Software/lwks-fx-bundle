@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-19
+// @Released 2026-08-23
 // @Author khaver
 // @Created 2013-02-14
 
@@ -36,6 +36,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-19 jwrl.
 // Added settings description to header text.
 //
@@ -44,8 +47,6 @@
 //
 // Conversion 2023-01-10 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Pixel Fixer", "Stylize", "Repair tools", "Pixel Fixer repairs dead pixels based on adjacent pixel content", kNoFlags);
 
