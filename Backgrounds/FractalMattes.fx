@@ -43,7 +43,7 @@
 // Version history:
 //
 // Updated 2026-08-23 jwrl.
-// Removed "_utils.fx" inclusion.
+// Removed redundant "_utils.fx" inclusion.
 //
 // Updated 2026-06-12 jwrl.
 // Added settings to header.
