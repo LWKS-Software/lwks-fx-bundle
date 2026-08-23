@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-08-23
 // @Author schrauber
 // @Created 2020-06-07
 
@@ -34,13 +34,14 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-01-25 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Quad split screen with zoom", "DVE", "Multiscreen Effects", "An advanced dynamic 4 input effect with zoom", kNoFlags);
 
