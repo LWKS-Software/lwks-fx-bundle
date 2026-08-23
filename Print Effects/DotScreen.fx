@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-18
+// @Released 2026-08-23
 // @Author windsturm
 // @Created 2012-06-16
 // @OriginalAuthor "Evan Wallace"
@@ -53,6 +53,9 @@ THE SOFTWARE.
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-18 jwrl.
 // Changed "Center Position" to "Centre point".
 // All channels of Mask are now used.
@@ -63,8 +66,6 @@ THE SOFTWARE.
 //
 // Conversion 2023-01-24 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Dot screen", "Stylize", "Print Effects", "This effect is a version of the dot pattern of a black and white half-tone print image", kNoFlags);
 
