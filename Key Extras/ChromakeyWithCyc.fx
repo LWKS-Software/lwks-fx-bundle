@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-21
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2023-09-05
 
@@ -39,6 +39,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-21 jwrl.
 // Header now contains settings description.
 // Mask now uses all four channels, not just R.
@@ -52,8 +55,6 @@
 // Updated 2024-04-07 jwrl.
 // Corrected key bleed through bug that was carried over from the Lightworks Chromakey.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Chromakey with cyclorama", "Key", "Key Extras", "A chromakey effect with a simple DVE and cyclorama background generation.", kNoFlags);
 
