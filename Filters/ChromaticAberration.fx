@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-22
+// @Released 2026-08-23
 // @Author josely
 // @Created 2012-06-29
 
@@ -22,6 +22,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-26 jwrl.
 // Changed masking to full RGBA.
 // Expanded the header.
@@ -34,8 +37,6 @@
 //
 // Conversion 2023-01-24 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Chromatic aberration", "Stylize", "Filters", "Generates or removes chromatic aberration", CanSize);
 
