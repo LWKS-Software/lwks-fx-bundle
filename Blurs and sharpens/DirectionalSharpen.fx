@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-08-22
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2019-01-10
 
@@ -24,7 +24,7 @@
 // Version history:
 //
 // Updated 2026-08-22 jwrl.
-// Removed "_utils.fx" inclusion
+// Removed redundant "_utils.fx" inclusion.
 //
 // Updated 2026-06-15 jwrl.
 // Changed masking from R to RGBA.
