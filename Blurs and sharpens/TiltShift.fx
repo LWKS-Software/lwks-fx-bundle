@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-15
+// @Released 2026-08-23
 // @Author Evan Wallace (evanw/glfx.js https://github.com/evanw/glfx.js)
 // @Created 2012-07-30
 
@@ -50,6 +50,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-15 jwrl.
 // Changed masking from R to RGBA.
 // Changed "Gradient Radius" to "Gradient size".
@@ -63,8 +66,6 @@
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Tilt shift", "Stylize", "Blurs and sharpens", "Simulates the shallow depth of field normally encountered in close-up photography", kNoFlags);
 
