@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-14
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2016-05-10
 
@@ -43,6 +43,9 @@ Source selection: Selects between crawl, roll, title or image key, transparent v
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-14 jwrl.
 // Changed masking from R to RGBA.
 // Added settings description to header.
@@ -55,8 +58,6 @@ Source selection: Selects between crawl, roll, title or image key, transparent v
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Glittery edges", "Mix", "Blend Effects", "Sparkly edges, best over darker backgrounds", CanSize);
 
