@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-27
+// @Released 2026-08-23
 // @Author windsturm
 // @Author jwrl
 // @OriginalAuthor Evan Wallace
@@ -64,7 +64,10 @@
 //
 //-----------------------------------------------------------------------------------------//
 //
-// This modified version history:
+// This modified version's history:
+//
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
 //
 // Updated 2026-06-27 jwrl.
 // Changed "Top ..." parameters to "High ...".
@@ -83,8 +86,6 @@
 //
 // Created 2023-07-15 by jwrl from windsturm's original effect.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Fast perspective", "DVE", "Distortion", "Uses a 3D transform to give a blended perspective to a 2D shape", CanSize);
 
