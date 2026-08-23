@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-13
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2020-07-19
 
@@ -26,6 +26,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Udated 2026-06-13 jwrl.
 // Added settings description to header.
 //
@@ -34,8 +37,6 @@
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Crawl and roll fix", "Mix", "Blend Effects", "Directionally blurs a roll or crawl to smooth its motion", CanSize);
 
