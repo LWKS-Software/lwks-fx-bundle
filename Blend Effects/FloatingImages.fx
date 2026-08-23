@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-13
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2016-11-11
 
@@ -37,6 +37,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-13 jwrl.
 // Changed masking from R to RGBA.
 // Added settings description to header.
@@ -49,8 +52,6 @@
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Floating images", "Mix", "Blend Effects", "Generates up to four overlayed images from a foreground graphic", CanSize);
 
