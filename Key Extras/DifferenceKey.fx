@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-21
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2024-01-24
 
@@ -24,14 +24,15 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-21 jwrl.
 // Header now contains settings description.
 // Mask now uses all four channels, not just R.
 //
 // Created 2024-01-24 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Difference key", "Key", "Key Extras", "A deltakeyer which keys foregrounds over backgrounds using a reference image", CanSize);
 
