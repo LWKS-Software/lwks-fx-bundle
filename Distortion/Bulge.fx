@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-27
+// @Released 2026-08-23
 // @Author schrauber
 // @Created 2016-03-16
 
@@ -35,7 +35,9 @@
 //
 // Version history:
 //
-// Updated 2026-06-27 jwrl.
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Changed "Environment of bulge" to "Bulge surrounds".  Selection labels have changed
 // from the originals to "Input video|Distorted input|Transparent black|Opaque black".
 // Changed "Aspect ratio" to "Proportions".  Its range is now shown as -100% to +100%.
@@ -47,8 +49,6 @@
 //
 // Conversion 2023-01-24 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Bulge", "DVE", "Distortion", "This effect allows a variable area of the frame to have a concave or convex bulge applied", kNoFlags);
 
