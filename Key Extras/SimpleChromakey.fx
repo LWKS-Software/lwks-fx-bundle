@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-21
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2016-09-01
 
@@ -27,6 +27,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-21 jwrl.
 // Header now contains settings description.
 // Mask now uses all four channels, not just R.
@@ -40,8 +43,6 @@
 //
 // Conversion 2023-01-26 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Simple chromakey", "Key", "Key Extras", "An extremely simple chromakeyer with feathering and spill reduction", CanSize);
 
