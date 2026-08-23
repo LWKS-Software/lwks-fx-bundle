@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-08-23
 // @Author Nicholas Carroll
 // @Created 2016-05-02
 
@@ -35,7 +35,10 @@
 // 1.1  jwrl        2-MAY-16  Reworked to remove array indexing which didn't work
 // 1.2  N. Carroll  4-MAY-16  Put the matte in the alpha channel.
 //
-// Version history:
+// This version's history:
+//
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
 //
 // Updated 2026-06-21 jwrl.
 // Header now contains settings description.
@@ -46,8 +49,6 @@
 //
 // Conversion 2023-01-26 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("INK", "Key", "Key Extras", "INK is a quick, simple and effective proportionate colour difference keyer", CanSize);
 
