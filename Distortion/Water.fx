@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-27
+// @Released 2026-08-23
 // @Author khaver
 // @Created 2011-04-21
 
@@ -22,6 +22,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-27 jwrl.
 // Added settings description to header block.
 // Masking now uses RGBA, not R or A.
@@ -34,8 +37,6 @@
 //
 // Conversion 2023-01-08 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Water", "Stylize", "Distortion", "This makes waves as well as refraction, and provides X and Y adjustment of the parameters", kNoFlags);
 
