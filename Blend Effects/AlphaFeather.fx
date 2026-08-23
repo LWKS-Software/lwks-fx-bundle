@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-13
+// @Released 2026-08-23
 // @Author khaver
 // @Created 2012-12-10
 
@@ -27,6 +27,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-13 jwrl.
 // Added settings to header section.
 // Changed masking from R to RGBA.
@@ -36,8 +39,6 @@
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Alpha Feather", "Mix", "Blend Effects", "Helps bed an externally generated graphic with transparency into a background", CanSize);
 
