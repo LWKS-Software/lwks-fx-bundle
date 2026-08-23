@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-22
+// @Released 2026-08-23
 // @Author khaver
 // @Created 2012-10-03
 
@@ -26,6 +26,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-22 jwrl.
 // Updated header to include settings details.
 // Changed masking to full RGBA.
@@ -35,8 +38,6 @@
 //
 // Conversion 2023-01-24 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Glint", "Stylize", "Filters", "Creates rotatable star filter-like highlights, with 4, 6 or 8 points selectable", kNoFlags);
 
