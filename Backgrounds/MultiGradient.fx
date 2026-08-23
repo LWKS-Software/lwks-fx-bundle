@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-12
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2016-07-31
 
@@ -28,6 +28,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-12 jwrl.
 // Added settings to header.
 // Changed "Gradient centre" to "Centre".
@@ -38,8 +41,6 @@
 //
 // Conversion 2023-01-23 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Multicolour gradient", "Mattes", "Backgrounds", "Creates a colour field with a wide range of possible gradients", kNoFlags);
 
