@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-15
+// @Released 2026-08-23
 // @Author jwrl
 // @Created 2019-11-06
 
@@ -49,6 +49,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-23 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-15 jwrl.
 // Changed masking from R to RGBA.
 // Changed X and Y "Top left" to "High left".
@@ -67,8 +70,6 @@
 //
 // Conversion 2023-02-17 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Bevel edged crop", "DVE", "Border and Crop", "This provides a simple crop with a bevelled border and a hard-edged drop shadow", CanSize);
 
