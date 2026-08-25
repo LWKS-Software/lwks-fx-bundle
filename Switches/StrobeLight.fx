@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-22
+// @Released 2026-08-25
 // @Author jwrl
 // @Created 2018-03-31
 
@@ -28,6 +28,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-22 jwrl.
 // Changed "Flash frame rate" to "Frame rate".
 // Added settings description to header text.
@@ -37,8 +40,6 @@
 //
 // Conversion 2023-01-10 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Strobe light", "User", "Switches", "The strobe effect for LW 2022.2 and later", CanSize);
 
