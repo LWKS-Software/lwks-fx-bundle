@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-06
+// @Released 2026-08-25
 // @Author jwrl
 // @Created 2018-09-04
 
@@ -25,6 +25,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-07-06 jwrl.
 // Changed "Hue cycling" to "Hue cycles".
 // Changed "Key softness" to "Soften key".
@@ -36,8 +39,6 @@
 //
 // Conversion 2023-01-25 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Rainbow connection", "Stylize", "Special Effects", "Changes colours through rainbow patterns according to levels", kNoFlags);
 
