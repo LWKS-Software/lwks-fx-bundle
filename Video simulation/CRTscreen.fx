@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-23
+// @Released 2026-08-25
 // @Author jwrl
 // @Created 2017-02-22
 
@@ -35,6 +35,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-23 jwrl.
 // Added settings description to header text.
 //
@@ -46,8 +49,6 @@
 //
 // Conversion 2023-01-12 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("CRT TV screen", "Stylize", "Video simulation", "Simulates a close-up look at an analogue colour TV screen.", kNoFlags);
 
