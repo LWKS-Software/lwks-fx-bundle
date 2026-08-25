@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-08-25
 // @Author khaver
 // @Created 2011-12-05
 
@@ -15,13 +15,14 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-05-05 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("SMPTE color bars", "User", "Technical", "Provides SMPTE-standard colour bars as an alternative to the Lightworks-supplied EBU version", kNoFlags);
 
