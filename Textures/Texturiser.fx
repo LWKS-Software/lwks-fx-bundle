@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-03
+// @Released 2026-08-25
 // @Author jwrl
 // @Created 2016-04-22
 
@@ -41,6 +41,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-07-03 jwrl.
 // Restructured header text, includes settings.
 //
@@ -49,8 +52,6 @@
 //
 // Conversion 2023-01-12 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Texturiser", "Stylize", "Textures", "Generates bump mapped textures on an image using external texture artwork", CanSize);
 
