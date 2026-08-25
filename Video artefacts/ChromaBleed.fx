@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-01
+// @Released 2026-08-25
 // @Author jwrl
 // @Created 2018-09-06
 
@@ -20,6 +20,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-07-01 jwrl.
 // Added settings description to header block.
 //
@@ -31,8 +34,6 @@
 //
 // Conversion 2023-01-12 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Chroma bleed", "Stylize", "Video artefacts", "Gives the horizontal smeared colour look of early helical scan recorders", kNoFlags);
 
