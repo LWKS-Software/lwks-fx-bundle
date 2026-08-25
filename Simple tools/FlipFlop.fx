@@ -18,6 +18,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-26 jwrl.
 // Now uses all mask channels instead of just one.
 //
@@ -26,8 +29,6 @@
 //
 // Conversion 2023-01-25 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Flip flop", "DVE", "Simple tools", "Rotates video by 180 degrees.", CanSize);
 
