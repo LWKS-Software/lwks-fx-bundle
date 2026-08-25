@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-08-25
 // @Author juhartik
 // @Created 2016-05-09
 
@@ -17,13 +17,14 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-01-13 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Show highs and lows", "User", "Technical", "This effect blinks blacks and whites that exceed preset levels", CanSize);
 
