@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-06
+// @Released 2026-08-25
 // @Author jwrl
 // @Created 2019-04-10
 
@@ -35,6 +35,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-07-06 jwrl.
 // Changed "Fade (in frames)" to "Fade (frames)".
 // Rewrote header block.
@@ -44,8 +47,6 @@
 //
 // Conversion 2023-01-11 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Lightning flash", "Stylize", "Special Effects", "Simulates a high energy lightning flash at the cut point", CanSize);
 
