@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-06
+// @Released 2026-08-25
 // @Author khaver
 // @Created 2011-06-28
 
@@ -19,6 +19,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-07-06 jwrl.
 // Added settings description to header block.
 //
@@ -27,8 +30,6 @@
 //
 // Conversion 2023-01-!! for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Kaleidoscope", "Stylize", "Special Effects", "This kaleidoscope effect varies the number of sides, position and scale", kNoFlags);
 
