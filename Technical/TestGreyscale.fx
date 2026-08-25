@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-05-16
+// @Released 2026-08-25
 // @Author jwrl
 // @Created 2017-04-01
 
@@ -18,13 +18,14 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //
 // Conversion 2023-01-11 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Test greyscale", "User", "Technical", "Generates a total of ten unique greyscale test patterns in either full gamut or broadcast limited ranges", kNoFlags);
 
