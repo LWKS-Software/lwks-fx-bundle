@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-23
+// @Released 2026-08-25
 // @Author juhartik
 // @Created 2011-08-01
 
@@ -22,6 +22,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-23 jwrl.
 // Renamed "Scanline count" to "Scanlines".
 //
@@ -33,8 +36,6 @@
 //
 // Conversion 2023-01-12 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Old monitor", "Stylize", "Video simulation", "This old monitor effect gives a black and white image with fully adjustable scan lines", kNoFlags);
 
