@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-23
+// @Released 2026-08-25
 // @Author jwrl
 // @Created 2021-12-21
 
@@ -39,6 +39,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-23 jwrl.
 // Added settings description to header text.
 // Renamed the group "Glitches / ghosts" to"Glitches/ghosting".
@@ -52,8 +55,6 @@
 //
 // Conversion 2023-01-26 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Analog TV disaster", "Stylize", "Video simulation", "Simulates just about anything that could go wrong with analog TV", kNoFlags);
 
