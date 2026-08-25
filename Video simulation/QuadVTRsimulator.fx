@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-23
+// @Released 2026-08-25
 // @Author jwrl
 // @Created 2018-09-07
 
@@ -46,6 +46,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-23 jwrl.
 // Added settings description to header text.
 // Changed "Tip penetration" to "Tip penetrate".
@@ -63,8 +66,6 @@
 //
 // Conversion 2023-01-26 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Quad VTR simulator", "Stylize", "Video simulation", "Emulates the faults that could occur with Quadruplex videotape playback", kNoFlags);
 
