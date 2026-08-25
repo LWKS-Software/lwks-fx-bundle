@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2023-08-29
+// @Released 2026-08-25
 // @Author khaver
 // @Created 2016-06-03
 
@@ -17,6 +17,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2023-08-29 jwrl.
 // Addressed Linux/Mac bug, added support for portrait formats.
 //
@@ -25,8 +28,6 @@
 //
 // Conversion 2023-01-11 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Tenderizer", "User", "Technical", "Converts 8 bit video to 10 bit video by adding intermediate levels using spline interpolation", CanSize);
 
