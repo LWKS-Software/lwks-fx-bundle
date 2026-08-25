@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-30
+// @Released 2026-08-25
 // @Author jwrl
 // @Created 2025-02-03
 
@@ -42,6 +42,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-30 jwrl.
 // Changed "Upper crop" to "Upper" and "Lower crop" to "Lower".
 // Changed "Master soften" to "Master".
@@ -53,8 +56,6 @@
 //
 // Built 2025-02-03 by jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Framed blend", "DVE", "Transform plus", "Blending with framing adjustment and masking.", CanSize);
 
