@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-23
+// @Released 2026-08-25
 // @Author jwrl
 // @Created 2018-05-23
 
@@ -27,6 +27,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-23 jwrl.
 // Added settings description to header text.
 //
@@ -38,8 +41,6 @@
 //
 // Conversion 2023-01-12 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Night vision", "Stylize", "Video simulation", "Simulates infra-red night time cinematography", CanSize);
 
