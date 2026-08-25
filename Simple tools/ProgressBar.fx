@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-26
+// @Released 2026-08-25
 // @Author jwrl
 // @Created 2023-03-11
 
@@ -34,14 +34,15 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-26 jwrl.
 // Added settings description to header block.
 //
 // Updated 2023-05-16 jwrl.
 // Header reformatted.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Progress bar", "Matte", "Simple tools", "A simple progress bar generator", kNoFlags);
 
