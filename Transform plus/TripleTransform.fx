@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-30
+// @Released 2026-08-25
 // @Author jwrl
 // @Created 2017-06-06
 
@@ -59,6 +59,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-30 jwrl.
 // Now uses Mask.rgba for masking rather than Mask.r.
 // Added settings description to header block.
@@ -78,8 +81,6 @@
 //
 // Conversion 2023-02-17 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Triple transform", "DVE", "Transform plus", "Foreground, background and the overall effect each have independent transformation.", CanSize);
 
