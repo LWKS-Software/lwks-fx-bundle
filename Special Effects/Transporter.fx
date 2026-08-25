@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-06
+// @Released 2026-08-25
 // @Author jwrl
 // @Author LWKS Software Ltd
 // @Created 2018-04-02
@@ -57,6 +57,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-07-06 jwrl.
 // Changed "Top left ..." to "High left ...".
 // Changed "Bottom right ..." to "Low right ...".
@@ -71,8 +74,6 @@
 //
 // Conversion 2023-02-17 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Transporter", "Key", "Special Effects", "A modified chromakey to provide a Star Trek-like transporter effect", kNoFlags);
 
