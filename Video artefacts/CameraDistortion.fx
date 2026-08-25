@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-01
+// @Released 2026-08-25
 // @Author jwrl
 // @Created 2016-03-12
 
@@ -77,6 +77,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-07-01 jwrl.
 // Added settings description to header block.
 // Changed "Optical errors" to "Optic errors".
@@ -90,8 +93,6 @@
 //
 // Conversion 2023-01-18 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Camera distortion", "Stylize", "Video artefacts", "Simulates a range of digital camera distortion artefacts", kNoFlags);
 
