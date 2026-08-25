@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-06
+// @Released 2026-08-25
 // @Author khaver
 // @Created 2018-08-01
 // @OriginalAuthor Martijn Steinrucken 2018
@@ -28,6 +28,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-07-06 jwrl.
 // Changed "Motion speed" to "Movement".
 //
@@ -39,8 +42,6 @@
 //
 // Conversion 2023-01-11 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("String Theory", "Matte", "Special Effects", "You really have to try this to see what it does", kNoFlags);
 
