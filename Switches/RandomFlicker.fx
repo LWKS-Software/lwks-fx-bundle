@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-22
+// @Released 2026-08-25
 // @Author jwrl
 // @Created 2018-08-24
 
@@ -22,6 +22,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-22 jwrl.
 // Changed "Randomness" to "Random".
 // Added settings description to header text.
@@ -31,8 +34,6 @@
 //
 // Conversion 2023-01-10 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Random flicker", "User", "Switches", "Does a pseudo random switch between two inputs.", CanSize);
 
