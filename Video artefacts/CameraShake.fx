@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-01
+// @Released 2026-08-25
 // @Author Gary Hango (khaver)
 // @Created 2012-12-04
 
@@ -51,6 +51,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-07-01 jwrl.
 // Added settings description to header block.
 //
@@ -62,8 +65,6 @@
 //
 // Conversion 2023-01-12 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Camera shake", "Stylize", "Video artefacts", "Adds simulated camera motion horizontally, vertically and/or rotationally", kNoFlags);
 
