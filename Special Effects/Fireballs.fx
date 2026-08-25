@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-07-06
+// @Released 2026-08-25
 // @Author jwrl
 // @Author Unknown
 // @Created 2020-06-28
@@ -45,6 +45,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-07-06 jwrl.
 // Changed "Fireball opacity" to "Opacity".
 // Changed "Flame intensity" to "Intensity".
@@ -55,8 +58,6 @@
 //
 // Conversion 2023-01-11 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Fireballs", "Stylize", "Special Effects", "Produces a hot fireball and optionally blends it with a background image", kNoFlags);
 
