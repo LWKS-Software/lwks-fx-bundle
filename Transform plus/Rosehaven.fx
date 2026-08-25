@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-30
+// @Released 2026-08-25
 // @Author jwrl
 // @Created 2020-05-08
 
@@ -37,6 +37,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-30 jwrl.
 // Added settings description to header block.
 //
@@ -48,8 +51,6 @@
 //
 // Conversion 2023-02-17 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Rosehaven", "DVE", "Transform plus", "Creates mirrored top/bottom or left/right images.", "ScaleAware|HasMinOutputSize");
 
