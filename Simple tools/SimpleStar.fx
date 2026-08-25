@@ -1,5 +1,5 @@
 // @Maintainer jwrl
-// @Released 2026-06-26
+// @Released 2026-08-25
 // @Author jwrl
 // @Created 2025-04-11
 
@@ -53,6 +53,9 @@
 //
 // Version history:
 //
+// Updated 2026-08-25 jwrl.
+// Removed redundant "_utils.fx" inclusion.
+//
 // Updated 2026-06-26 jwrl.
 // Added settings description to header block.
 //
@@ -61,8 +64,6 @@
 //
 // Conversion 2023-01-10 for LW 2023 jwrl.
 //-----------------------------------------------------------------------------------------//
-
-#include "_utils.fx"
 
 DeclareLightworksEffect ("Simple star", "Stylize", "Simple tools", "Creates a single rotatable star glint, with 4, 5, 6, 7 or 8 arms", kNoFlags);
 
