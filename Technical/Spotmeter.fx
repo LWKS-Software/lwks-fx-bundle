@@ -6,7 +6,7 @@
 /**
  Spotmeter shows a moveable crosshair and the IRE measurements at that point, averaged
  and per colour.  The crosshair can be dragged on the screen with the mouse to assist
- qith setup precision.  There are only five settings, and they are:
+ with setup precision.  There are only five settings, and they are:
 
    [*]Meter display:  Switches the IRE meter display between top right and bottom
       right, the default position.
