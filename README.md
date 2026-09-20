@@ -1,4 +1,4 @@
-# Lightworks user Fx library, September 14, 2026.
+# Lightworks user Fx library, September 21, 2026.
 
 The effects in this ZIP file were created by Lightworks users - thank you to all who have contributed, especially khaver, who started things off.  They will run on versions of Lightworks from 2023.1 upwards.  In the versions that support it you can directly browse and load these effects from within the Lightworks effects engine.
 
@@ -332,6 +332,13 @@ If you need to use two effects that have the same name, simply open one of them 
 |VHS simulator                 |VHSsimulator.fx         |Simulates a damaged VHS tape                                                  |
 
 ## TRANSITIONS
+
+## CATEGORY FOLDER: 3D transitions
+|EFFECT                       |DIRECT   |KEYED    |FILE NAME               |DESCRIPTION                                            |
+|:--------------------------- |:------- |:------- |:---------------------- |:----------------------------------------------------- |
+|3D Cube flip                 |Yes      |No       |3D CubeFlip.fx          |Uses a rotating cube with reflections to transition    |
+|3D Flip with curve           |Yes      |No       |3D FlipCurve.fx         |Rotates a double-sided TV panel with reflections       |
+|3D Swap                      |Yes      |No       |3D Swap.fx              |Swaps outgoing video to left, incoming from right      |
 
 ## CATEGORY FOLDER: Abstract transitions
 |EFFECT                       |DIRECT   |KEYED    |FILE NAME               |DESCRIPTION                                            |
