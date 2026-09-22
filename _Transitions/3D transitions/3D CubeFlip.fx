@@ -1,5 +1,5 @@
-// @Maintenance jwrl
-// @Released 2026-09-20
+// @Maintenance hugly
+// @Released 2026-09-22
 // @Author gre
 // @Author hugly
 // @Created 2026-09-12
@@ -13,13 +13,12 @@
    [*]Amount:  The progress of the transition.
    [*]Perspective:  Changes the cube's perspective.
    [*]Zoom amount:  The distance from the cube at halfway through the transition.
-   [*]Reflection
-      [*]Strength:  Sets the intensity of the reflection.
-      [*]Float:  Floats the cube rotation over its reflection.
-   [*]Smooth edges:  Smooth the horizontal edges of the cube to minimise jaggies.
+   [*]Reflection:  Sets the intensity of the reflection.
+   [*]Float:  Floats the cube rotation over its reflection.
+   [*]Feather:  Smooth the horizontal edges of the cube to minimise jaggies.
 
- Antialiassing is provided by the "Smooth edges" parameter, which smooths just the
- horizontal edges during rotation.
+ Antialiassing is provided using the "Feather" parameter, which smooths the horizontal
+ edges during the transition progress.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -33,6 +32,9 @@
 //-----------------------------------------------------------------------------------------//
 //
 // Version history.
+//
+// Updated 2026-09-22 hugly.
+// Renamed "Smooth edges" to "Feather".
 //
 // Code cleanup 2026-09-20 jwrl.
 //
@@ -51,16 +53,13 @@ DeclareInputs (Fg, Bg);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (amount, "Amount",   kNoGroup,     kNoFlags, 0.5,  0.0, 1.0);
-DeclareFloatParam (persp,      "Perspective",  kNoGroup,     kNoFlags, 0.7,  0.0, 1.0);
-DeclareFloatParam (unzoom,     "Zoom amount",  kNoGroup,     kNoFlags, 0.3,  0.0, 1.0);
+DeclareFloatParamAnimated (amount, "Amount",  kNoGroup, kNoFlags, 0.5,  0.0, 1.0);
 
-DeclareFloatParam (reflection, "Strength",     "Reflection", kNoFlags, 0.4,  0.0, 1.0);
-DeclareFloatParam (floating,   "Float",        "Reflection", "DisplayAsPercentage", 0.3,  0.1, 1.0);
-
-// Mapped smoothness UI value: 0.15 * 0.020 max width = 0.003 internal default sweet-spot
-
-DeclareFloatParam (smoothness, "Smooth edges", kNoGroup,     kNoFlags, 0.15, 0.0, 1.0);
+DeclareFloatParam (persp,      "Perspective", kNoGroup, kNoFlags, 0.7,  0.0, 1.0);
+DeclareFloatParam (unzoom,     "Zoom amount", kNoGroup, kNoFlags, 0.3,  0.0, 1.0);
+DeclareFloatParam (reflection, "Reflection",  kNoGroup, kNoFlags, 0.4,  0.0, 1.0);
+DeclareFloatParam (floating,   "Float",       kNoGroup, kNoFlags, 0.3,  0.1, 1.0);
+DeclareFloatParam (smoothness, "Feather",     kNoGroup, kNoFlags, 0.15, 0.0, 1.0);
 
 //-----------------------------------------------------------------------------------------//
 // Declarations and definitions
@@ -181,4 +180,3 @@ DeclareEntryPoint (CubeFlip)
 
    return lerp (outputColor, colorFrom, visibilityFrom);
 }
-
