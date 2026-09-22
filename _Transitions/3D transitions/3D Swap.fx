@@ -1,5 +1,5 @@
-// @Maintenance jwrl
-// @Released 2026-09-20
+// @Maintenance hugly
+// @Released 2026-09-22
 // @Author hugly
 // @Created 2026-09-12
 
@@ -14,10 +14,11 @@
    [*]Perspective:  Adjusts the 3D rotation (perspective distortion) of the video
       sources during the transition.
    [*]Depth:  Adjusts the distance that the video sources move during the transition.
-   [*]Smooth edges:  Smooth the horizontal edges of the cube to minimise jaggies.
+   [*]Float:  Adjusts the distance that the video sources move during the transition.
+   [*]Feather:  Smooth the horizontal edges of the cube to minimise jaggies.
 
- Antialiassing is provided using the "Smooth edges" parameter, which smooths just the
- horizontal edges during rotation.
+ Antialiassing is provided using the "Feather" parameter, which smooths the horizontal
+ edges during the transition progress.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -27,6 +28,10 @@
 // Cross-compiled from GLSL to Lightworks Multi-Pass Wipe Framework
 //
 // Version history.
+//
+// Updated 2026-09-22 hugly.
+// Added "Float" parameter.
+// Renamed "Smooth edges" to "Feather".
 //
 // Code cleanup 2026-09-20 jwrl.
 //
@@ -45,12 +50,13 @@ DeclareInputs (Fg, Bg);
 // Parameters
 //-----------------------------------------------------------------------------------------//
 
-DeclareFloatParamAnimated (amount, "Amount", kNoGroup, kNoFlags, 0.5,  0.0, 1.0);
+DeclareFloatParamAnimated (amount, "Amount",   kNoGroup, kNoFlags, 0.5,  0.0, 1.0);
 
-DeclareFloatParam (reflection,  "Reflection",   kNoGroup, kNoFlags, 0.4,  0.0, 1.0);
-DeclareFloatParam (perspective, "Perspective",  kNoGroup, kNoFlags, 0.2,  0.0, 1.0);
-DeclareFloatParam (depth,       "Depth",        kNoGroup, kNoFlags, 3.0,  1.0, 10.0);
-DeclareFloatParam (smoothness,  "Smooth edges", kNoGroup, kNoFlags, 0.15, 0.0, 1.0);
+DeclareFloatParam (reflection,  "Reflection",  kNoGroup, kNoFlags, 0.4,  0.0, 1.0);
+DeclareFloatParam (perspective, "Perspective", kNoGroup, kNoFlags, 0.2,  0.0, 1.0);
+DeclareFloatParam (depth,       "Depth",       kNoGroup, kNoFlags, 3.0,  1.0, 10.0);
+DeclareFloatParam (floating,    "Float",       kNoGroup, kNoFlags, 3.0,  1.0, 10.0);
+DeclareFloatParam (smoothness,  "Feather",     kNoGroup, kNoFlags, 0.15, 0.0, 1.0);
 
 //-----------------------------------------------------------------------------------------//
 // Declarations and definitions
@@ -160,7 +166,6 @@ DeclareEntryPoint (Warp3D)
 
      c = lerp (c, c + lerp (black, tex2D (Bgd, projectedPto), reflection * lerp (1.0, 0.0, projectedPto.y)), visibilityPto);
    }
-   
+
    return c;
 }
-
