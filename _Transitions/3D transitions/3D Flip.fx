@@ -8,19 +8,20 @@
  rotates the incoming video in from the same point.  The pivot point around which the
  rotation takes place is adjustable and curvature can be applied as the rotation takes
  place.  The images can reflect on a simulated floor and can be raised or lowered so
- that the reflection is closer to or further away from the floor.
+ that the reflection is closer to or further away from the main video.
 
    [*]Amount:  The progress of the transition.
+   [*]Transition type:  Switches the transition between linear and curved geometry.
    [*]Perspective:  Adjusts the 3D rotation (perspective distortion) of the video
       sources during the transition.
    [*]Pivot point X:  Adjusts the rotation pivot point horizontally.
-   [*]Geometry:  Switches the geometry between linear and curved.
    [*]Reflection:  Controls the intensity of the reflection.
-   [*]Float: Adjusts the distance of the refelction.
-   [*]Feather: Smooth the horizontal edges of the cube to minimise jaggies.
+   [*]Float: Adjusts the distance that the video is from the reflecting surface.
+   [*]Feather: Smooths the horizontal edges of the cube to minimise jaggies.
 
- Antialiassing is provided using the "Smooth edges" parameter, which smooths just the
- horizontal edges during rotation.
+ The feather setting is provided for antialiassing, and smooths just the horizontal edges
+ of the video.  This is usually necessary with 3D effects because of the "jaggies" that
+ can be produced as the video rotates through 3D space.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -33,7 +34,10 @@
 //
 // Version history.
 //
-// Modified 26-09-25 hugly
+// Modified 2026-09-27 jwrl.
+// Corrected typos in the header text.
+//
+// Modified 26-09-25 hugly.
 // Changed effect name to 3DFlip
 // Changed Pivot point X to display percent
 // Moved "Geometry" up and renamed it to "Transition type" to match the panel layout of 3D Doorway.fx
