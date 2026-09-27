@@ -7,17 +7,19 @@
 /**
  This transitions between the outgoing and incoming video sources using the classic
  rotating cube effect.  The amount of perspective distortion is adjustable from zero
- to an extremely wdie angle effect.  The distance to the cube at effect midpoint is
+ to an extremely wide angle effect.  The distance to the cube at effect midpoint is
  also adjustable.
 
    [*]Amount:  The progress of the transition.
    [*]Perspective:  Changes the cube's perspective.
-   [*]Distance:  The distance from the cube at halfway through the transition.
-   [*]Reflection: Sets the intensity of the reflection.
-   [*]Float: Adjusts the distance of the refelction.
-   [*]Feather:  Smooth the horizontal edges of the cube to minimise jaggies.
+   [*]Distance:  The distance from the cube at the halfway point of the transition.
+   [*]Reflection:  Sets the intensity of the reflection.
+   [*]Float:  Adjusts the distance of the reflection from the main video.
+   [*]Feather:  Smooths the horizontal edges of the cube to minimise jaggies.
 
- Antialiassing is provided to smooth the horizontal edges during rotation.
+ The feather setting is provided for antialiassing, and smooths just the horizontal edges
+ of the video.  This is usually necessary with 3D effects because of the "jaggies" that
+ can be produced as the video rotates through 3D space.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -31,6 +33,9 @@
 //-----------------------------------------------------------------------------------------//
 //
 // Version history.
+//
+// Modified 2026-09-27 jwrl.
+// Corrected typos in the header text.
 //
 // Modified 2026-09-25 hugly
 // Changed effect name to "3D CubeFlip"
