@@ -4,11 +4,17 @@
 // @Created 2026-09-12
 
 /**
- This effect has two modes.  The 2D mode splits the outgoing video apart as if it's
- a barndoor effect.  The incoming video is revealed by the split, and zooms up to full
- frame, reflecting in the black "floor" as it zooms.  The 3D mode splits and rotates
- to the right and left of frame, revealing the zooming incoming video.  All video,
- whether incoming or outgoing, has adjustable reflections.
+ This effect has two modes, each of which can operate in either of two directions,
+ reflecting the video in the black "floor" as it transitions.  The 2D mode in the split
+ apart direction splits the outgoing video apart in the same way as a barndoor effect
+ does.  This reveals the incoming video as it zooms to full frame.  In the join split
+ direction the outgoing video zooms out and is covered as the incoming split video joins
+ together.
+
+ The 3D mode in "3D Swing open" direction splits and rotates to the right and left of
+ frame, revealing the zooming incoming video.  "3D Swing shut" direction swings the
+ incoming video shut from the right and left of frame, as the outgoing video zooms out.
+ All video, whether incoming or outgoing, has adjustable reflections.
 
    [*]Amount:  The progress of the transition.
    [*]Transition type:  Selects from "3D Swing open", "3D Swing shut", "2D Split
@@ -17,11 +23,12 @@
       sources during the transition.
    [*]Distance:  Adjusts the distance that the sources move during the transition.
    [*]Reflection:  Controls the intensity of the reflection.
-   [*]Float:  Adjusts the distance that the video sources move during the transition.
-   [*]Feather:  Smooth the horizontal edges of the cube to minimise jaggies.
+   [*]Float:  Adjusts the distance that the video is from the reflecting surface.
+   [*]Feather:  Smooths the horizontal edges of the cube to minimise jaggies.
 
- Antialiassing is provided using the "Feather" parameter, which smooths the horizontal
- edges during the transition progress.
+ The feather setting is provided for antialiassing, and smooths just the horizontal edges
+ of the video.  This is usually necessary with 3D effects because of the "jaggies" that
+ can be produced as the video rotates through 3D space.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -34,7 +41,10 @@
 //
 // Version history.
 //
-// Modified 2026-09-27 jwrl
+// Modified 2026-09-27 jwrl.
+// Edited the header text for better readability.
+//
+// Modified 2026-09-26 jwrl.
 // Changed "3D Rigid Swing" to "3D Swing open" and added "3D Swing shut" mode.
 // Changed "2D Split" to "2D Split apart" and added "2D Join split" mode.
 //
