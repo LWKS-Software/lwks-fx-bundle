@@ -10,15 +10,15 @@
  adjustable.
 
    [*]Amount:  The progress of the transition.
-   [*]Perspective:  Adjusts the 3D rotation (perspective distortion) of the video
-   [*]Distance:  Adjusts the distance that the video sources move during the transition.
-      sources during the transition.
+   [*]Perspective:  Adjusts the 3D rotation (perspective distortion) of the video.
+   [*]Distance:  Sets the distance that the video sources move during the transition.
    [*]Reflection:  Controls the intensity of the reflection.
-   [*]Float: Adjusts the distance of the refelction.
-   [*]Feather:  Smooth the horizontal edges of the cube to minimise jaggies.
+   [*]Float: Adjusts the distance of the reflection from the video sources.
+   [*]Feather:  Smooths the horizontal edges of the cube to minimise jaggies.
 
- Antialiassing is provided using the "Smooth edges" parameter, which smooths just the
- horizontal edges during rotation.
+ The feather setting is provided for antialiassing, and smooths just the horizontal edges
+ of the video.  This is usually necessary with 3D effects because of the "jaggies" that
+ can be produced as the video rotates through 3D space.
 */
 
 //-----------------------------------------------------------------------------------------//
@@ -31,7 +31,10 @@
 //
 // Version history.
 //
-// Modified 2026-09-21 hugly//
+// Modified 2026-09-27 jwrl.
+// Edited the header text to improve readability.
+//
+// Modified 2026-09-21 hugly.
 // Changed "Distance" to show percentage
 // 
 // Modified 2026-09-21 hugly
